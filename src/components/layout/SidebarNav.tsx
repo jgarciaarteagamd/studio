@@ -12,8 +12,8 @@ import { LayoutDashboard, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/patients", label: "Patients", icon: Users },
+  { href: "/", label: "Panel", icon: LayoutDashboard },
+  { href: "/patients", label: "Pacientes", icon: Users },
 ];
 
 export function SidebarNav() {

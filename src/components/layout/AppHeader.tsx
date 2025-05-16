@@ -10,7 +10,7 @@ import Link from 'next/link';
 export function AppHeader() {
   const handleConnectDrive = () => {
     // Placeholder for Google Drive connection logic
-    alert('Connect to Google Drive (not implemented yet)');
+    alert('Conectar a Google Drive (funcionalidad no implementada aún)');
   };
 
   return (
@@ -25,7 +25,7 @@ export function AppHeader() {
       <div className="ml-auto flex items-center gap-4">
         <Button variant="outline" size="sm" onClick={handleConnectDrive}>
           <LogIn className="mr-2 h-4 w-4" />
-          Connect Google Drive
+          Conectar Google Drive
         </Button>
         {/* User profile/avatar placeholder could go here */}
       </div>

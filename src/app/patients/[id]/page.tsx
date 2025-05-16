@@ -21,10 +21,14 @@ export default function PatientDetailPage() {
   const { toast } = useToast();
   const [patient, setPatient] = useState<PatientRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentLocale, setCurrentLocale] = useState('es-ES'); // Default to Spanish
 
   const patientId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   useEffect(() => {
+    // Set locale from browser, fallback to Spanish
+    setCurrentLocale(navigator.language || 'es-ES');
+
     if (patientId) {
       const fetchedPatient = getPatientById(patientId as string);
       if (fetchedPatient) {
@@ -32,7 +36,7 @@ export default function PatientDetailPage() {
       } else {
         toast({
           title: "Error",
-          description: "Patient record not found.",
+          description: "Historial del paciente no encontrado.",
           variant: "destructive",
         });
         router.push("/patients");
@@ -46,8 +50,8 @@ export default function PatientDetailPage() {
       const updatedRecord = updatePatient(patient.id, data);
       setPatient(updatedRecord || patient); // Update local state
       toast({
-        title: "Record Updated",
-        description: `${patient.name}'s record has been successfully updated.`,
+        title: "Historial Actualizado",
+        description: `El historial de ${patient.name} ha sido actualizado exitosamente.`,
       });
     }
   };
@@ -66,8 +70,8 @@ export default function PatientDetailPage() {
       const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
       setPatient(updatedRecord || patient);
       toast({
-        title: "File Attached",
-        description: `${file.name} has been attached.`,
+        title: "Archivo Adjuntado",
+        description: `${file.name} ha sido adjuntado.`,
       });
     }
   };
@@ -75,7 +79,7 @@ export default function PatientDetailPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <p>Loading patient details...</p> {/* Replace with Skeleton loader */}
+        <p>Cargando detalles del paciente...</p> {/* Replace with Skeleton loader */}
       </div>
     );
   }
@@ -83,9 +87,9 @@ export default function PatientDetailPage() {
   if (!patient) {
     return (
       <div className="text-center">
-        <p className="text-xl text-muted-foreground">Patient not found.</p>
+        <p className="text-xl text-muted-foreground">Paciente no encontrado.</p>
         <Button asChild className="mt-4">
-          <Link href="/patients">Go to Patients List</Link>
+          <Link href="/patients">Ir a la Lista de Pacientes</Link>
         </Button>
       </div>
     );
@@ -96,36 +100,36 @@ export default function PatientDetailPage() {
        <Button variant="outline" size="sm" asChild className="mb-4">
         <Link href="/patients">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Patients
+          Volver a Pacientes
         </Link>
       </Button>
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-3xl">{patient.name}</CardTitle>
           <CardDescription>
-            Date of Birth: {new Date(patient.dateOfBirth).toLocaleDateString()} | Contact: {patient.contactInfo}
+            Fecha de Nacimiento: {new Date(patient.dateOfBirth).toLocaleDateString(currentLocale)} | Contacto: {patient.contactInfo}
           </CardDescription>
         </CardHeader>
       </Card>
 
       <Tabs defaultValue="details" className="w-full">
         <TabsList className="grid w-full grid-cols-3 md:max-w-md">
-          <TabsTrigger value="details"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Details</TabsTrigger>
-          <TabsTrigger value="attachments"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Attachments</TabsTrigger>
-          <TabsTrigger value="reports"><Activity className="mr-1 h-4 w-4 sm:mr-2"/> Reports</TabsTrigger>
+          <TabsTrigger value="details"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Detalles</TabsTrigger>
+          <TabsTrigger value="attachments"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
+          <TabsTrigger value="reports"><Activity className="mr-1 h-4 w-4 sm:mr-2"/> Informes</TabsTrigger>
         </TabsList>
         
         <TabsContent value="details">
           <Card>
             <CardHeader>
-              <CardTitle>Edit Patient Record</CardTitle>
-              <CardDescription>Update the patient's information below.</CardDescription>
+              <CardTitle>Editar Historial del Paciente</CardTitle>
+              <CardDescription>Actualice la información del paciente a continuación.</CardDescription>
             </CardHeader>
             <CardContent>
               <PatientForm 
                 onSubmit={handleFormSubmit} 
                 initialData={patient}
-                submitButtonText="Save Changes"
+                submitButtonText="Guardar Cambios"
               />
             </CardContent>
           </Card>
@@ -134,8 +138,8 @@ export default function PatientDetailPage() {
         <TabsContent value="attachments">
           <Card>
             <CardHeader>
-              <CardTitle>File Attachments</CardTitle>
-              <CardDescription>Manage files like lab results or imaging scans linked to this patient.</CardDescription>
+              <CardTitle>Archivos Adjuntos</CardTitle>
+              <CardDescription>Administre archivos como resultados de laboratorio o escaneos de imágenes vinculados a este paciente.</CardDescription>
             </CardHeader>
             <CardContent>
               <FileUploadSection 
@@ -149,8 +153,8 @@ export default function PatientDetailPage() {
         <TabsContent value="reports">
           <Card>
             <CardHeader>
-              <CardTitle>AI-Powered Reports</CardTitle>
-              <CardDescription>Generate summaries and full reports for this patient.</CardDescription>
+              <CardTitle>Informes con IA</CardTitle>
+              <CardDescription>Genere resúmenes e informes completos para este paciente.</CardDescription>
             </CardHeader>
             <CardContent>
               <ReportGenerationSection patient={patient} />

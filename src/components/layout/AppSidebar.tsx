@@ -29,7 +29,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-2">
         <Button variant="ghost" className="w-full justify-start group-data-[collapsible=icon]:justify-center">
           <LogOut className="mr-2 h-5 w-5 group-data-[collapsible=icon]:mr-0" />
-          <span className="group-data-[collapsible=icon]:hidden">Logout</span>
+          <span className="group-data-[collapsible=icon]:hidden">Cerrar Sesión</span>
         </Button>
       </SidebarFooter>
     </Sidebar>

@@ -2,13 +2,13 @@
 "use client";
 
 import type React from 'react';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, FileText, ExternalLink } from "lucide-react";
 import type { PatientRecord } from "@/lib/types";
-import { summarizeRecord, generateReport } from "@/ai/flows"; // Assuming these are correctly set up
+import { summarizeRecord, generateReport } from "@/ai/flows"; 
 import { useToast } from "@/hooks/use-toast";
 
 interface ReportGenerationSectionProps {
@@ -20,36 +20,41 @@ export function ReportGenerationSection({ patient }: ReportGenerationSectionProp
   const [isGeneratingFullReport, setIsGeneratingFullReport] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const { toast } = useToast();
+  const [currentLocale, setCurrentLocale] = useState('es-ES');
+
+  useEffect(() => {
+    setCurrentLocale(navigator.language || 'es-ES');
+  }, []);
 
   const handleSummarizeRecord = async () => {
     setIsSummarizing(true);
     setSummary(null);
     try {
       const recordText = `
-        Patient Name: ${patient.name}
-        Date of Birth: ${new Date(patient.dateOfBirth).toLocaleDateString()}
-        Contact: ${patient.contactInfo}
+        Nombre del Paciente: ${patient.name}
+        Fecha de Nacimiento: ${new Date(patient.dateOfBirth).toLocaleDateString(currentLocale)}
+        Contacto: ${patient.contactInfo}
 
-        Medical History:
+        Historial Médico:
         ${patient.medicalHistory}
 
-        Examination Results:
+        Resultados del Examen:
         ${patient.examinationResults}
 
-        Treatment Plans:
+        Planes de Tratamiento:
         ${patient.treatmentPlans}
       `;
       const result = await summarizeRecord({ recordText });
       setSummary(result.summary);
       toast({
-        title: "Summary Generated",
-        description: "AI-powered summary created successfully.",
+        title: "Resumen Generado",
+        description: "Resumen con IA creado exitosamente.",
       });
     } catch (error) {
-      console.error("Error summarizing record:", error);
+      console.error("Error resumiendo historial:", error);
       toast({
         title: "Error",
-        description: "Failed to generate summary. See console for details.",
+        description: "Falló la generación del resumen. Ver consola para detalles.",
         variant: "destructive",
       });
     } finally {
@@ -68,17 +73,17 @@ export function ReportGenerationSection({ patient }: ReportGenerationSectionProp
       };
       const result = await generateReport(input);
       // In a real app, this 'result.report' would be used to create/update a Google Doc
-      console.log("Generated Full Report Content (mock):", result.report);
-      alert("Full report content generated (see console). Google Docs creation not implemented.");
+      console.log("Contenido del Informe Completo Generado (simulado):", result.report);
+      alert("Contenido del informe completo generado (ver consola). Creación en Google Docs no implementada.");
       toast({
-        title: "Full Report Generated (Mock)",
-        description: "Report content ready. Google Docs integration pending.",
+        title: "Informe Completo Generado (Simulado)",
+        description: "Contenido del informe listo. Integración con Google Docs pendiente.",
       });
     } catch (error) {
-      console.error("Error generating full report:", error);
+      console.error("Error generando informe completo:", error);
       toast({
         title: "Error",
-        description: "Failed to generate full report. See console for details.",
+        description: "Falló la generación del informe completo. Ver consola para detalles.",
         variant: "destructive",
       });
     } finally {
@@ -90,8 +95,8 @@ export function ReportGenerationSection({ patient }: ReportGenerationSectionProp
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Generate Patient Summary</CardTitle>
-          <CardDescription>Use AI to quickly summarize the patient's current record.</CardDescription>
+          <CardTitle>Generar Resumen del Paciente</CardTitle>
+          <CardDescription>Use IA para resumir rápidamente el historial actual del paciente.</CardDescription>
         </CardHeader>
         <CardContent>
           <Button onClick={handleSummarizeRecord} disabled={isSummarizing} className="w-full sm:w-auto">
@@ -100,11 +105,11 @@ export function ReportGenerationSection({ patient }: ReportGenerationSectionProp
             ) : (
               <FileText className="mr-2 h-4 w-4" />
             )}
-            {isSummarizing ? "Generating Summary..." : "Generate Summary"}
+            {isSummarizing ? "Generando Resumen..." : "Generar Resumen"}
           </Button>
           {summary && (
             <div className="mt-4 space-y-2">
-              <h4 className="font-semibold">AI Generated Summary:</h4>
+              <h4 className="font-semibold">Resumen Generado por IA:</h4>
               <Textarea value={summary} readOnly rows={8} className="bg-muted text-sm" />
             </div>
           )}
@@ -113,10 +118,10 @@ export function ReportGenerationSection({ patient }: ReportGenerationSectionProp
 
       <Card>
         <CardHeader>
-          <CardTitle>Generate Full Report (Google Docs)</CardTitle>
+          <CardTitle>Generar Informe Completo (Google Docs)</CardTitle>
           <CardDescription>
-            Create a comprehensive report document in Google Drive using AI.
-            (This is a mock action for UI purposes).
+            Cree un documento de informe completo en Google Drive usando IA.
+            (Esta es una acción simulada para propósitos de UI).
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -126,12 +131,12 @@ export function ReportGenerationSection({ patient }: ReportGenerationSectionProp
             ) : (
               <ExternalLink className="mr-2 h-4 w-4" />
             )}
-            {isGeneratingFullReport ? "Generating Report..." : "Generate & Save to Google Docs"}
+            {isGeneratingFullReport ? "Generando Informe..." : "Generar y Guardar en Google Docs"}
           </Button>
         </CardContent>
         <CardFooter>
             <p className="text-xs text-muted-foreground">
-                Note: Actual Google Docs creation requires Google Drive API integration and authentication, which is not implemented in this version.
+                Nota: La creación real de Google Docs requiere integración con la API de Google Drive y autenticación, lo cual no está implementado en esta versión.
             </p>
         </CardFooter>
       </Card>

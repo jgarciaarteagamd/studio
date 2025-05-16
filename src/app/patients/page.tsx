@@ -26,36 +26,36 @@ export default function PatientsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Patient Records</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Historiales de Pacientes</h1>
           <p className="text-muted-foreground">
-            View, manage, and create patient records.
+            Ver, gestionar y crear historiales de pacientes.
           </p>
         </div>
         <Button asChild size="lg">
           <Link href="/patients/new">
             <PlusCircle className="mr-2 h-5 w-5" />
-            Add New Patient
+            Agregar Nuevo Paciente
           </Link>
         </Button>
       </div>
 
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle>All Patients</CardTitle>
+          <CardTitle>Todos los Pacientes</CardTitle>
           <CardDescription>
-            A list of all patient records in the system.
+            Una lista de todos los historiales de pacientes en el sistema.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p>Loading patient data...</p> // Replace with Skeleton loader for better UX
+            <p>Cargando datos de pacientes...</p> 
           ) : patients.length > 0 ? (
             <PatientTable patients={patients} />
           ) : (
             <div className="text-center py-10">
-              <p className="text-lg text-muted-foreground">No patients found.</p>
+              <p className="text-lg text-muted-foreground">No se encontraron pacientes.</p>
               <Button asChild className="mt-4">
-                <Link href="/patients/new">Create First Patient Record</Link>
+                <Link href="/patients/new">Crear Primer Historial de Paciente</Link>
               </Button>
             </div>
           )}

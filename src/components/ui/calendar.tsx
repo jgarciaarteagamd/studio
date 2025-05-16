@@ -1,8 +1,10 @@
+// src/components/ui/calendar.tsx
 "use client"
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker } from "react-day-picker"
+import { es } from 'date-fns/locale'; // Import Spanish locale
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -13,6 +15,7 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  locale = es, // Set default locale to Spanish
   ...props
 }: CalendarProps) {
   return (
@@ -61,6 +64,7 @@ function Calendar({
           <ChevronRight className={cn("h-4 w-4", className)} {...props} />
         ),
       }}
+      locale={locale} // Pass locale to DayPicker
       {...props}
     />
   )

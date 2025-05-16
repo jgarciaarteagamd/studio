@@ -15,13 +15,14 @@ import { CalendarIcon,ClipboardList, Stethoscope, NotebookText } from 'lucide-re
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { es } from 'date-fns/locale'; // Import Spanish locale for date-fns
 import { cn } from "@/lib/utils";
 
 // Define Zod schema for validation
 const patientFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters."),
-  dateOfBirth: z.date({ required_error: "Date of birth is required." }),
-  contactInfo: z.string().min(5, "Contact info seems too short."),
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
+  dateOfBirth: z.date({ required_error: "La fecha de nacimiento es obligatoria." }),
+  contactInfo: z.string().min(5, "La información de contacto parece demasiado corta."),
   medicalHistory: z.string().optional(),
   examinationResults: z.string().optional(),
   treatmentPlans: z.string().optional(),
@@ -35,7 +36,7 @@ interface PatientFormProps {
   submitButtonText?: string;
 }
 
-export function PatientForm({ onSubmit, initialData, submitButtonText = "Save Patient" }: PatientFormProps) {
+export function PatientForm({ onSubmit, initialData, submitButtonText = "Guardar Paciente" }: PatientFormProps) {
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientFormSchema),
     defaultValues: {
@@ -65,9 +66,9 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Save Pa
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name</FormLabel>
+              <FormLabel>Nombre Completo</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Maria Gonzalez" {...field} />
+                <Input placeholder="Ej: María González" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -80,7 +81,7 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Save Pa
             name="dateOfBirth"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Date of Birth</FormLabel>
+                <FormLabel>Fecha de Nacimiento</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -92,9 +93,9 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Save Pa
                         )}
                       >
                         {field.value ? (
-                          format(field.value, "PPP")
+                          format(field.value, "PPP", { locale: es }) // Use Spanish locale
                         ) : (
-                          <span>Pick a date</span>
+                          <span>Seleccione una fecha</span>
                         )}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
@@ -109,6 +110,7 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Save Pa
                         date > new Date() || date < new Date("1900-01-01")
                       }
                       initialFocus
+                      locale={es} // Use Spanish locale for Calendar
                     />
                   </PopoverContent>
                 </Popover>
@@ -122,9 +124,9 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Save Pa
             name="contactInfo"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Contact Information</FormLabel>
+                <FormLabel>Información de Contacto</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., email@example.com | 555-1234" {...field} />
+                  <Input placeholder="Ej: email@example.com | 555-1234" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -137,10 +139,10 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Save Pa
           name="medicalHistory"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center"><ClipboardList className="mr-2 h-5 w-5 text-primary" /> Medical History</FormLabel>
+              <FormLabel className="flex items-center"><ClipboardList className="mr-2 h-5 w-5 text-primary" /> Historial Médico</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Detail patient's past illnesses, surgeries, allergies, medications, family history..."
+                  placeholder="Detalle enfermedades pasadas, cirugías, alergias, medicamentos, antecedentes familiares..."
                   className="min-h-[120px]"
                   {...field}
                 />
@@ -155,10 +157,10 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Save Pa
           name="examinationResults"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center"><Stethoscope className="mr-2 h-5 w-5 text-primary" /> Examination Results</FormLabel>
+              <FormLabel className="flex items-center"><Stethoscope className="mr-2 h-5 w-5 text-primary" /> Resultados del Examen</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Record findings from physical exams, lab tests, imaging studies..."
+                  placeholder="Registre hallazgos de exámenes físicos, pruebas de laboratorio, estudios de imagen..."
                   className="min-h-[120px]"
                   {...field}
                 />
@@ -173,10 +175,10 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Save Pa
           name="treatmentPlans"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center"><NotebookText className="mr-2 h-5 w-5 text-primary" /> Treatment Plans</FormLabel>
+              <FormLabel className="flex items-center"><NotebookText className="mr-2 h-5 w-5 text-primary" /> Planes de Tratamiento</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Outline medication prescriptions, lifestyle recommendations, referrals, follow-up schedules..."
+                  placeholder="Describa prescripciones de medicamentos, recomendaciones de estilo de vida, derivaciones, programas de seguimiento..."
                   className="min-h-[120px]"
                   {...field}
                 />
@@ -188,7 +190,7 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Save Pa
         
         <div className="flex justify-end">
           <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Saving..." : submitButtonText}
+            {form.formState.isSubmitting ? "Guardando..." : submitButtonText}
           </Button>
         </div>
       </form>

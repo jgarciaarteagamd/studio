@@ -3,7 +3,7 @@
 
 import { PatientForm } from "@/components/patients/PatientForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { addPatient, mockAttachments } from "@/lib/mock-data"; // Using mockAttachments for initial example
+import { addPatient } from "@/lib/mock-data"; 
 import type { PatientRecord } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -12,16 +12,15 @@ export default function NewPatientPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleSubmit = (data: Omit<PatientRecord, 'id' | 'createdAt' | 'updatedAt'>) => {
-    // In a real app, you'd send this to your backend/Google Sheets
+  const handleSubmit = (data: Omit<PatientRecord, 'id' | 'createdAt' | 'updatedAt' | 'attachments'>) => {
     const newPatient = addPatient(data); 
-    console.log("New patient data (mock save):", newPatient);
+    console.log("Nuevos datos del paciente (guardado simulado):", newPatient);
     toast({
-      title: "Patient Record Created",
-      description: `${newPatient.name}'s record has been successfully created.`,
-      variant: "default", // 'default' variant will use accent color from theme if styled correctly
+      title: "Historial del Paciente Creado",
+      description: `El historial de ${newPatient.name} ha sido creado exitosamente.`,
+      variant: "default", 
     });
-    router.push(`/patients/${newPatient.id}`); // Redirect to the new patient's detail page
+    router.push(`/patients/${newPatient.id}`); 
   };
 
   const initialValues: Partial<PatientRecord> = {
@@ -31,23 +30,23 @@ export default function NewPatientPage() {
     medicalHistory: '',
     examinationResults: '',
     treatmentPlans: '',
-    attachments: [], // Start with no attachments for a new record
+    attachments: [], 
   };
 
   return (
     <div className="space-y-6">
       <Card className="max-w-4xl mx-auto shadow-lg">
         <CardHeader>
-          <CardTitle className="text-3xl">Create New Patient Record</CardTitle>
+          <CardTitle className="text-3xl">Crear Nuevo Historial de Paciente</CardTitle>
           <CardDescription>
-            Fill in the details below to add a new patient to the system.
+            Complete los detalles a continuación para agregar un nuevo paciente al sistema.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <PatientForm 
             onSubmit={handleSubmit} 
             initialData={initialValues}
-            submitButtonText="Create Patient Record"
+            submitButtonText="Crear Historial de Paciente"
           />
         </CardContent>
       </Card>

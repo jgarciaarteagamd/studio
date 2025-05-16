@@ -2,7 +2,7 @@
 "use client";
 
 import type React from 'react';
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,11 @@ interface FileUploadSectionProps {
 export function FileUploadSection({ attachments, onFileUpload }: FileUploadSectionProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentLocale, setCurrentLocale] = useState('es-ES');
+
+  useEffect(() => {
+    setCurrentLocale(navigator.language || 'es-ES');
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -34,7 +39,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
         fileInputRef.current.value = ""; // Reset file input
       }
     } else {
-      alert("Please select a file first.");
+      alert("Por favor, seleccione un archivo primero.");
     }
   };
 
@@ -45,12 +50,12 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
   };
   
   const handleOpenFile = (driveLink: string) => {
-    alert(`Opening file (mock): ${driveLink}. In a real app, this would open the Google Drive file.`);
+    alert(`Abriendo archivo (simulado): ${driveLink}. En una aplicación real, esto abriría el archivo de Google Drive.`);
   };
 
   const handleDeleteFile = (attachmentId: string) => {
-    if(confirm("Are you sure you want to delete this attachment? This action might be irreversible depending on Google Drive settings.")) {
-      alert(`Deleting attachment ${attachmentId} (not implemented)`);
+    if(confirm("¿Está seguro de que desea eliminar este archivo adjunto? Esta acción podría ser irreversible dependiendo de la configuración de Google Drive.")) {
+      alert(`Eliminando archivo adjunto ${attachmentId} (no implementado)`);
       // Call onFileDelete(attachmentId) here when implemented
     }
   };
@@ -60,8 +65,8 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Upload New Attachment</CardTitle>
-          <CardDescription>Select a file (PDF, image, etc.) to link to this patient's record. Files will be stored in your Google Drive.</CardDescription>
+          <CardTitle>Subir Nuevo Adjunto</CardTitle>
+          <CardDescription>Seleccione un archivo (PDF, imagen, etc.) para vincularlo al historial de este paciente. Los archivos se guardarán en su Google Drive.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row items-center gap-4">
           <Input 
@@ -72,19 +77,19 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
           />
           <Button onClick={handleUploadClick} disabled={!selectedFile}>
             <UploadCloud className="mr-2 h-4 w-4" />
-            Upload File
+            Subir Archivo
           </Button>
         </CardContent>
         {selectedFile && (
             <CardFooter>
-                <p className="text-sm text-muted-foreground">Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)</p>
+                <p className="text-sm text-muted-foreground">Seleccionado: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)</p>
             </CardFooter>
         )}
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Attached Files</CardTitle>
+          <CardTitle>Archivos Adjuntos</CardTitle>
         </CardHeader>
         <CardContent>
           {attachments.length > 0 ? (
@@ -92,10 +97,10 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px]">Type</TableHead>
-                  <TableHead>File Name</TableHead>
-                  <TableHead className="hidden sm:table-cell">Uploaded</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-[50px]">Tipo</TableHead>
+                  <TableHead>Nombre del Archivo</TableHead>
+                  <TableHead className="hidden sm:table-cell">Subido</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -107,12 +112,12 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
                         {attachment.name}
                       </button>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">{new Date(attachment.uploadedAt).toLocaleDateString()}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{new Date(attachment.uploadedAt).toLocaleDateString(currentLocale)}</TableCell>
                     <TableCell className="text-right space-x-2">
-                       <Button variant="outline" size="icon" onClick={() => handleOpenFile(attachment.driveLink)} title="Open/Download File (mock)">
+                       <Button variant="outline" size="icon" onClick={() => handleOpenFile(attachment.driveLink)} title="Abrir/Descargar Archivo (simulado)">
                          <Download className="h-4 w-4" />
                        </Button>
-                       <Button variant="destructive" size="icon" onClick={() => handleDeleteFile(attachment.id)} title="Delete File (mock)">
+                       <Button variant="destructive" size="icon" onClick={() => handleDeleteFile(attachment.id)} title="Eliminar Archivo (simulado)">
                          <Trash2 className="h-4 w-4" />
                        </Button>
                     </TableCell>
@@ -122,7 +127,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             </Table>
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-4">No files attached to this record yet.</p>
+            <p className="text-muted-foreground text-center py-4">Aún no hay archivos adjuntos a este historial.</p>
           )}
         </CardContent>
       </Card>
