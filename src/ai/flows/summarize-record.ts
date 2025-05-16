@@ -1,4 +1,4 @@
-// 'use server';
+'use server';
 
 /**
  * @fileOverview Summarizes a patient's medical record using AI.
@@ -7,8 +7,6 @@
  * - SummarizeRecordInput - The input type for the summarizeRecord function.
  * - SummarizeRecordOutput - The return type for the summarizeRecord function.
  */
-
-'use server';
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
@@ -37,7 +35,7 @@ const prompt = ai.definePrompt({
 
   Please provide a concise and accurate summary of the following medical record:
 
-  {{recordText}}
+  {{{recordText}}}
   `,
 });
 
