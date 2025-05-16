@@ -7,6 +7,20 @@ import { mockPatients } from "@/lib/mock-data";
 import { FileText, Users, BarChart3, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import Image from 'next/image';
+import { useState, useEffect } from 'react'; // Added
+
+// Helper component to render date on client-side to avoid hydration mismatch
+const PatientLastUpdatedDisplay = ({ updatedAt }: { updatedAt: string }) => {
+  const [formattedDate, setFormattedDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    // This effect runs only on the client, after initial hydration
+    setFormattedDate(new Date(updatedAt).toLocaleDateString());
+  }, [updatedAt]); // Recalculate if updatedAt changes
+
+  // Render placeholder during SSR and initial client render, then client-side formatted date
+  return <>{formattedDate || "..."}</>;
+};
 
 export default function DashboardPage() {
   const recentPatients = mockPatients.slice(0, 3); // Show 3 most recent for demo
@@ -91,7 +105,7 @@ export default function DashboardPage() {
                     <Link href={`/patients/${patient.id}`} className="font-medium text-primary hover:underline">
                       {patient.name}
                     </Link>
-                    <p className="text-sm text-muted-foreground">Last updated: {new Date(patient.updatedAt).toLocaleDateString()}</p>
+                    <p className="text-sm text-muted-foreground">Last updated: <PatientLastUpdatedDisplay updatedAt={patient.updatedAt} /></p>
                   </div>
                   <Button asChild variant="outline" size="sm">
                     <Link href={`/patients/${patient.id}`}>View Record</Link>
