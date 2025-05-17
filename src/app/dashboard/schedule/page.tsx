@@ -1,7 +1,7 @@
 // src/app/dashboard/schedule/page.tsx
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -17,7 +17,7 @@ import * as z from "zod";
 import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock } from "lucide-react";
-import { format, parseISO, setHours, setMinutes, startOfDay } from "date-fns";
+import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday } from "date-fns";
 import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 
@@ -39,12 +39,12 @@ export default function SchedulePage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const { toast } = useToast();
   const [currentLocale, setCurrentLocale] = useState('es-ES');
+  const [displayedMonth, setDisplayedMonth] = useState<Date>(startOfMonth(new Date()));
 
   useEffect(() => {
     setCurrentLocale(navigator.language || 'es-ES');
-    // Simulate data fetching
     setAppointments(getAppointments());
-    setPatients(mockPatients); // Assuming mockPatients is available globally or imported
+    setPatients(mockPatients); 
     setIsLoading(false);
   }, []);
 
@@ -61,7 +61,7 @@ export default function SchedulePage() {
   });
 
   const onSubmit: SubmitHandler<AppointmentFormValues> = (data) => {
-    const selectedDate = startOfDay(data.date);
+    const selectedDate = startOfDay(data.date); // data.date is already a Date object
     const [hours, minutes] = data.time.split(':').map(Number);
     const dateTime = setMinutes(setHours(selectedDate, hours), minutes);
 
@@ -75,13 +75,20 @@ export default function SchedulePage() {
 
     try {
       addAppointment(newAppointmentData);
-      setAppointments(getAppointments()); // Refresh list
+      setAppointments(getAppointments()); 
       toast({
         title: "Cita Agendada",
         description: "La nueva cita ha sido programada exitosamente.",
       });
       setIsFormOpen(false);
-      form.reset();
+      form.reset({ // Reset form with current date as default or a sensible default
+        patientId: "",
+        date: new Date(),
+        time: "09:00",
+        durationMinutes: 30,
+        notes: "",
+        status: "programada",
+      });
     } catch (error) {
       console.error("Error agendando cita:", error);
       toast({
@@ -125,6 +132,41 @@ export default function SchedulePage() {
 
   const sortedGroupKeys = useMemo(() => Object.keys(groupedAppointments).sort(), [groupedAppointments]);
 
+  const daysWithAppointments = useMemo(() => {
+    return appointments.map(app => parseISO(app.dateTime));
+  }, [appointments]);
+
+  const calendarModifiers = {
+    hasAppointments: daysWithAppointments,
+  };
+  const calendarModifiersClassNames = {
+    hasAppointments: 'day-with-appointments',
+  };
+
+  const handleDayClick = useCallback((day: Date | undefined) => {
+    if (day) {
+      const dayStart = startOfDay(day);
+      if (!isPast(dayStart) || isToday(dayStart)) {
+        form.reset({
+          ...form.getValues(),
+          date: day,
+          time: "09:00", // Default time when selecting a day
+          patientId: "", // Clear patient when selecting a new day
+          notes: "",
+          durationMinutes: 30,
+          status: "programada",
+        });
+        setIsFormOpen(true);
+      } else {
+        toast({
+          title: "Fecha Pasada",
+          description: "No se pueden programar citas en fechas pasadas.",
+          variant: "default"
+        });
+      }
+    }
+  }, [form, toast, setIsFormOpen]);
+
 
   return (
     <div className="space-y-6">
@@ -137,7 +179,17 @@ export default function SchedulePage() {
         </div>
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
-            <Button size="lg" onClick={() => { form.reset(); setIsFormOpen(true); }}>
+            <Button size="lg" onClick={() => { 
+              form.reset({ // Reset form with current date as default when opening manually
+                patientId: "",
+                date: new Date(),
+                time: "09:00",
+                durationMinutes: 30,
+                notes: "",
+                status: "programada",
+              }); 
+              setIsFormOpen(true); 
+            }}>
               <PlusCircle className="mr-2 h-5 w-5" />
               Programar Nueva Cita
             </Button>
@@ -155,7 +207,7 @@ export default function SchedulePage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Paciente</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Seleccione un paciente" />
@@ -206,7 +258,7 @@ export default function SchedulePage() {
                               onSelect={field.onChange}
                               initialFocus
                               locale={es}
-                              disabled={(date) => date < startOfDay(new Date())} // Disable past dates
+                              disabled={(date) => isPast(date) && !isToday(date)}
                             />
                           </PopoverContent>
                         </Popover>
@@ -260,7 +312,7 @@ export default function SchedulePage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Estado de la Cita</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Seleccione un estado" />
@@ -288,6 +340,31 @@ export default function SchedulePage() {
           </DialogContent>
         </Dialog>
       </div>
+      
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle>Calendario de Citas</CardTitle>
+          <CardDescription>Navegue por los meses y haga clic en un día para programar una nueva cita.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center p-0 sm:p-4 md:p-6">
+          <Calendar
+            mode="single" // 'single' for selecting one day, or undefined if no selection needed from main calendar
+            month={displayedMonth}
+            onMonthChange={setDisplayedMonth}
+            onSelect={handleDayClick}
+            modifiers={calendarModifiers}
+            modifiersClassNames={calendarModifiersClassNames}
+            locale={es}
+            className="rounded-md border shadow-md w-full max-w-md lg:max-w-xl"
+            classNames={{
+                caption_label: "text-lg font-medium",
+                head_cell: "w-10 sm:w-12 md:w-14", // Adjust cell width for responsiveness
+                day: "h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14", // Adjust day size
+            }}
+
+          />
+        </CardContent>
+      </Card>
 
       {isLoading ? (
         <p>Cargando agenda...</p>
@@ -302,7 +379,7 @@ export default function SchedulePage() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-4">
-                  {groupedAppointments[dateKey].map((appointment) => (
+                  {groupedAppointments[dateKey].sort((a,b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime()).map((appointment) => (
                     <li key={appointment.id} className="border p-4 rounded-lg hover:shadow-lg transition-shadow">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                         <div>
@@ -318,9 +395,9 @@ export default function SchedulePage() {
                         </div>
                         <div className="flex items-center gap-2 mt-2 sm:mt-0">
                            <span className={cn("text-xs font-medium mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full", {
-                             "bg-blue-100 text-blue-800": appointment.status === "programada",
-                             "bg-green-100 text-green-800": appointment.status === "confirmada" || appointment.status === "completada",
-                             "bg-red-100 text-red-800": appointment.status === "cancelada",
+                             "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200": appointment.status === "programada",
+                             "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200": appointment.status === "confirmada" || appointment.status === "completada",
+                             "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200": appointment.status === "cancelada",
                            })}>
                             {getStatusIcon(appointment.status)}
                             <span className="ml-1">{getStatusText(appointment.status)}</span>
