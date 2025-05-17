@@ -352,17 +352,17 @@ export default function SchedulePage() {
           <CardTitle>Calendario de Citas</CardTitle>
           <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use el botón "+ Programar Nueva Cita" para agendar.</CardDescription>
         </CardHeader>
-        <CardContent className="p-0 sm:p-4 md:p-6"> {/* Removed flex justify-center */}
+        <CardContent className="p-0 sm:p-4 md:p-6">
           <Calendar
             mode="single" 
-            selected={selectedCalendarDay || undefined} // For visual feedback on selected day
-            onSelect={handleCalendarDayClick} // Changed handler
+            selected={selectedCalendarDay || undefined} 
+            onSelect={handleCalendarDayClick} 
             month={displayedMonth}
             onMonthChange={setDisplayedMonth}
             modifiers={calendarModifiers}
             modifiersClassNames={calendarModifiersClassNames}
             locale={es}
-            className="rounded-md border shadow-md w-full max-w-md lg:max-w-xl mx-auto" // Added mx-auto for centering if max-width is hit
+            className="rounded-md border shadow-md w-full" 
             classNames={{
                 caption_label: "text-lg font-medium",
                 head_cell: "w-10 sm:w-12 md:w-14 text-center p-0", 
@@ -372,7 +372,6 @@ export default function SchedulePage() {
         </CardContent>
       </Card>
 
-      {/* Sidebar for displaying appointments of a selected day */}
       <DayAppointmentsSidebar
         isOpen={isDaySidebarOpen}
         onOpenChange={setIsDaySidebarOpen}
@@ -380,8 +379,6 @@ export default function SchedulePage() {
         appointmentsForDay={appointmentsOnSelectedDay}
       />
 
-
-      {/* List of all appointments, grouped by day (existing functionality) */}
       {isLoading ? (
         <p>Cargando agenda...</p>
       ) : sortedGroupKeys.length > 0 ? (
@@ -446,4 +443,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
