@@ -17,9 +17,10 @@ import * as z from "zod";
 import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock } from "lucide-react";
-import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday } from "date-fns";
+import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
 import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
+import { DayAppointmentsSidebar } from "@/components/schedule/DayAppointmentsSidebar";
 
 const appointmentFormSchema = z.object({
   patientId: z.string().min(1, "Debe seleccionar un paciente."),
@@ -36,10 +37,14 @@ export default function SchedulePage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<PatientRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false); // For new appointment dialog
   const { toast } = useToast();
   const [currentLocale, setCurrentLocale] = useState('es-ES');
   const [displayedMonth, setDisplayedMonth] = useState<Date>(startOfMonth(new Date()));
+
+  // States for DayAppointmentsSidebar
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState<Date | null>(null);
+  const [isDaySidebarOpen, setIsDaySidebarOpen] = useState(false);
 
   useEffect(() => {
     setCurrentLocale(navigator.language || 'es-ES');
@@ -61,7 +66,7 @@ export default function SchedulePage() {
   });
 
   const onSubmit: SubmitHandler<AppointmentFormValues> = (data) => {
-    const selectedDate = startOfDay(data.date); // data.date is already a Date object
+    const selectedDate = startOfDay(data.date);
     const [hours, minutes] = data.time.split(':').map(Number);
     const dateTime = setMinutes(setHours(selectedDate, hours), minutes);
 
@@ -81,7 +86,7 @@ export default function SchedulePage() {
         description: "La nueva cita ha sido programada exitosamente.",
       });
       setIsFormOpen(false);
-      form.reset({ // Reset form with current date as default or a sensible default
+      form.reset({ 
         patientId: "",
         date: new Date(),
         time: "09:00",
@@ -138,34 +143,27 @@ export default function SchedulePage() {
 
   const calendarModifiers = {
     hasAppointments: daysWithAppointments,
+    selected: selectedCalendarDay || undefined, // Highlight the selected day for the sidebar
   };
   const calendarModifiersClassNames = {
     hasAppointments: 'day-with-appointments',
+    selected: 'rdp-day_selected', // Standard class for selected day styling
   };
 
-  const handleDayClick = useCallback((day: Date | undefined) => {
+  const handleCalendarDayClick = useCallback((day: Date | undefined) => {
     if (day) {
-      const dayStart = startOfDay(day);
-      if (!isPast(dayStart) || isToday(dayStart)) {
-        form.reset({
-          ...form.getValues(),
-          date: day,
-          time: "09:00", // Default time when selecting a day
-          patientId: "", // Clear patient when selecting a new day
-          notes: "",
-          durationMinutes: 30,
-          status: "programada",
-        });
-        setIsFormOpen(true);
-      } else {
-        toast({
-          title: "Fecha Pasada",
-          description: "No se pueden programar citas en fechas pasadas.",
-          variant: "default"
-        });
-      }
+      setSelectedCalendarDay(day);
+      setIsDaySidebarOpen(true);
+      // Do not open new appointment form here
     }
-  }, [form, toast, setIsFormOpen]);
+  }, []);
+
+  const appointmentsOnSelectedDay = useMemo(() => {
+    if (!selectedCalendarDay) return [];
+    return appointments.filter(app =>
+      isSameDay(parseISO(app.dateTime), selectedCalendarDay)
+    ).sort((a, b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime());
+  }, [appointments, selectedCalendarDay]);
 
 
   return (
@@ -180,7 +178,7 @@ export default function SchedulePage() {
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
             <Button size="lg" onClick={() => { 
-              form.reset({ // Reset form with current date as default when opening manually
+              form.reset({
                 patientId: "",
                 date: new Date(),
                 time: "09:00",
@@ -255,7 +253,15 @@ export default function SchedulePage() {
                             <Calendar
                               mode="single"
                               selected={field.value}
-                              onSelect={field.onChange}
+                              onSelect={(date) => {
+                                if (date) {
+                                   if (!isPast(date) || isToday(date)) {
+                                    field.onChange(date)
+                                  } else {
+                                     toast({title: "Fecha Pasada", description: "No se puede seleccionar una fecha pasada.", variant: "default"})
+                                  }
+                                }
+                              }}
                               initialFocus
                               locale={es}
                               disabled={(date) => isPast(date) && !isToday(date)}
@@ -344,28 +350,38 @@ export default function SchedulePage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Calendario de Citas</CardTitle>
-          <CardDescription>Navegue por los meses y haga clic en un día para programar una nueva cita.</CardDescription>
+          <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use el botón "+ Programar Nueva Cita" para agendar.</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center p-0 sm:p-4 md:p-6">
           <Calendar
-            mode="single" // 'single' for selecting one day, or undefined if no selection needed from main calendar
+            mode="single" 
+            selected={selectedCalendarDay || undefined} // For visual feedback on selected day
+            onSelect={handleCalendarDayClick} // Changed handler
             month={displayedMonth}
             onMonthChange={setDisplayedMonth}
-            onSelect={handleDayClick}
             modifiers={calendarModifiers}
             modifiersClassNames={calendarModifiersClassNames}
             locale={es}
             className="rounded-md border shadow-md w-full max-w-md lg:max-w-xl"
             classNames={{
                 caption_label: "text-lg font-medium",
-                head_cell: "w-10 sm:w-12 md:w-14", // Adjust cell width for responsiveness
-                day: "h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14", // Adjust day size
+                head_cell: "w-10 sm:w-12 md:w-14", 
+                day: "h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14", 
             }}
-
           />
         </CardContent>
       </Card>
 
+      {/* Sidebar for displaying appointments of a selected day */}
+      <DayAppointmentsSidebar
+        isOpen={isDaySidebarOpen}
+        onOpenChange={setIsDaySidebarOpen}
+        selectedDate={selectedCalendarDay}
+        appointmentsForDay={appointmentsOnSelectedDay}
+      />
+
+
+      {/* List of all appointments, grouped by day (existing functionality) */}
       {isLoading ? (
         <p>Cargando agenda...</p>
       ) : sortedGroupKeys.length > 0 ? (
@@ -402,9 +418,6 @@ export default function SchedulePage() {
                             {getStatusIcon(appointment.status)}
                             <span className="ml-1">{getStatusText(appointment.status)}</span>
                           </span>
-                          {/* Placeholder for Edit/Delete buttons */}
-                          {/* <Button variant="outline" size="icon" onClick={() => alert('Editar cita (no implementado)')}><Edit3 className="h-4 w-4"/></Button> */}
-                          {/* <Button variant="destructive" size="icon" onClick={() => alert('Cancelar cita (no implementado)')}><Trash2 className="h-4 w-4"/></Button> */}
                         </div>
                       </div>
                       {appointment.notes && (
