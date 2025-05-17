@@ -1,9 +1,9 @@
-// src/app/dashboard/patients/page.tsx (Anteriormente src/app/patients/page.tsx)
+// src/app/dashboard/patients/page.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PatientTable } from "@/components/patients/PatientTable";
+import { PatientTable } from "@/components/patients/PatientTable"; // PatientTable needs to be adapted
 import { mockPatients } from "@/lib/mock-data";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
@@ -17,7 +17,7 @@ export default function PatientsPage() {
   useEffect(() => {
     // Simulate data fetching
     setTimeout(() => {
-      setPatients(mockPatients);
+      setPatients(mockPatients); // mockPatients should now have the new structure
       setIsLoading(false);
     }, 500);
   }, []);

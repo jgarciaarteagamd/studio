@@ -6,10 +6,12 @@ import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { PatientRecord } from "@/lib/types";
+import type { PatientRecord } from "@/lib/types"; // PatientRecord type is updated
 import { MoreHorizontal, FileEdit, FileText, Trash2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 
 interface PatientTableProps {
@@ -25,15 +27,20 @@ export function PatientTable({ patients }: PatientTableProps) {
   }, []);
 
   const handleGenerateReport = (patientId: string) => {
-    alert(`Generar informe para el paciente ${patientId} (no implementado)`);
-    // Potentially navigate to a report generation page or open a modal
-    // router.push(`/dashboard/patients/${patientId}/report`);
+     // Navigate to the patient's detail page, specifically to the reports tab
+    router.push(`/dashboard/patients/${patientId}#reports`); 
+    // toast({ // Consider using toast for feedback
+    //   title: "Navegando a Informes",
+    //   description: `Abriendo la sección de informes para el paciente.`,
+    // });
   };
   
   const handleDeletePatient = (patientId: string) => {
     if (confirm("¿Está seguro de que desea eliminar este historial de paciente? Esta acción no se puede deshacer.")) {
       alert(`Eliminar paciente ${patientId} (no implementado)`);
       // Add logic to remove patient from mock data or call API
+      // Consider updating state to reflect deletion:
+      // setPatients(prevPatients => prevPatients.filter(p => p.id !== patientId));
     }
   };
 
@@ -55,12 +62,12 @@ export function PatientTable({ patients }: PatientTableProps) {
             <TableRow key={patient.id}>
               <TableCell className="font-medium">
                 <Link href={`/dashboard/patients/${patient.id}`} className="hover:underline text-primary">
-                  {patient.name}
+                  {patient.personalDetails.name}
                 </Link>
               </TableCell>
-              <TableCell className="hidden md:table-cell">{new Date(patient.dateOfBirth).toLocaleDateString(currentLocale)}</TableCell>
-              <TableCell className="hidden lg:table-cell text-sm text-muted-foreground truncate max-w-xs">{patient.contactInfo}</TableCell>
-              <TableCell>{new Date(patient.updatedAt).toLocaleDateString(currentLocale)}</TableCell>
+              <TableCell className="hidden md:table-cell">{format(new Date(patient.personalDetails.dateOfBirth), "P", { locale: es })}</TableCell>
+              <TableCell className="hidden lg:table-cell text-sm text-muted-foreground truncate max-w-xs">{patient.personalDetails.contactInfo}</TableCell>
+              <TableCell>{format(new Date(patient.updatedAt), "P", { locale: es })}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -73,11 +80,11 @@ export function PatientTable({ patients }: PatientTableProps) {
                     <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => router.push(`/dashboard/patients/${patient.id}`)}>
                       <FileEdit className="mr-2 h-4 w-4" />
-                      Ver/Editar
+                      Ver/Editar Historial
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleGenerateReport(patient.id)}>
                       <FileText className="mr-2 h-4 w-4" />
-                      Generar Informe
+                      Generar Informe IA
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 

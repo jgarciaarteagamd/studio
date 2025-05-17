@@ -30,21 +30,13 @@ export function ReportGenerationSection({ patient }: ReportGenerationSectionProp
     setIsSummarizing(true);
     setSummary(null);
     try {
-      const recordText = `
-        Nombre del Paciente: ${patient.name}
-        Fecha de Nacimiento: ${new Date(patient.dateOfBirth).toLocaleDateString(currentLocale)}
-        Contacto: ${patient.contactInfo}
-
-        Historial Médico:
-        ${patient.medicalHistory}
-
-        Resultados del Examen:
-        ${patient.examinationResults}
-
-        Planes de Tratamiento:
-        ${patient.treatmentPlans}
-      `;
-      const result = await summarizeRecord({ recordText });
+      // Prepare input based on the new PatientRecord structure
+      const inputForSummary = {
+        personalDetails: patient.personalDetails,
+        backgroundInformation: patient.backgroundInformation,
+        medicalEncounters: patient.medicalEncounters,
+      };
+      const result = await summarizeRecord(inputForSummary);
       setSummary(result.summary);
       toast({
         title: "Resumen Generado",
@@ -65,19 +57,36 @@ export function ReportGenerationSection({ patient }: ReportGenerationSectionProp
   const handleGenerateFullReport = async () => {
     setIsGeneratingFullReport(true);
     try {
-      const input = {
-        patientName: patient.name,
-        medicalHistory: patient.medicalHistory,
-        examinationResults: patient.examinationResults,
-        treatmentPlans: patient.treatmentPlans,
+      // Prepare input for the full report
+      const inputForReport = {
+        personalDetails: patient.personalDetails,
+        backgroundInformation: patient.backgroundInformation,
+        medicalEncounters: patient.medicalEncounters,
       };
-      const result = await generateReport(input);
-      // In a real app, this 'result.report' would be used to create/update a Google Doc
+      const result = await generateReport(inputForReport);
+      
       console.log("Contenido del Informe Completo Generado (simulado):", result.report);
-      alert("Contenido del informe completo generado (ver consola). Creación en Google Docs no implementada.");
+      
+      // Create a Blob with the report content
+      const blob = new Blob([result.report], { type: 'text/markdown;charset=utf-8' });
+      // Create a link element
+      const link = document.createElement('a');
+      // Set the download attribute with a filename
+      link.download = `Informe_${patient.personalDetails.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.md`;
+      // Create a URL for the Blob and set it as the href attribute
+      link.href = URL.createObjectURL(blob);
+      // Append the link to the body (required for Firefox)
+      document.body.appendChild(link);
+      // Programmatically click the link to trigger the download
+      link.click();
+      // Remove the link from the body
+      document.body.removeChild(link);
+      // Revoke the Blob URL to free up resources
+      URL.revokeObjectURL(link.href);
+
       toast({
-        title: "Informe Completo Generado (Simulado)",
-        description: "Contenido del informe listo. Integración con Google Docs pendiente.",
+        title: "Informe Completo Generado y Descargado",
+        description: "El informe en formato Markdown se ha descargado.",
       });
     } catch (error) {
       console.error("Error generando informe completo:", error);
@@ -99,7 +108,7 @@ export function ReportGenerationSection({ patient }: ReportGenerationSectionProp
           <CardDescription>Use IA para resumir rápidamente el historial actual del paciente.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={handleSummarizeRecord} disabled={isSummarizing} className="w-full sm:w-auto">
+          <Button onClick={handleSummarizeRecord} disabled={isSummarizing || !patient.medicalEncounters || patient.medicalEncounters.length === 0} className="w-full sm:w-auto">
             {isSummarizing ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -110,35 +119,37 @@ export function ReportGenerationSection({ patient }: ReportGenerationSectionProp
           {summary && (
             <div className="mt-4 space-y-2">
               <h4 className="font-semibold">Resumen Generado por IA:</h4>
-              <Textarea value={summary} readOnly rows={8} className="bg-muted text-sm" />
+              <Textarea value={summary} readOnly rows={10} className="bg-muted text-sm whitespace-pre-wrap" />
             </div>
+          )}
+           {(!patient.medicalEncounters || patient.medicalEncounters.length === 0) && !isSummarizing && (
+            <p className="mt-4 text-sm text-muted-foreground">Se requiere al menos una consulta médica para generar un resumen.</p>
           )}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Generar Informe Completo (Google Docs)</CardTitle>
+          <CardTitle>Generar Informe Completo (Descargar Markdown)</CardTitle>
           <CardDescription>
-            Cree un documento de informe completo en Google Drive usando IA.
-            (Esta es una acción simulada para propósitos de UI).
+            Cree un documento de informe completo en formato Markdown usando IA.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={handleGenerateFullReport} disabled={isGeneratingFullReport} className="w-full sm:w-auto">
+          <Button onClick={handleGenerateFullReport} disabled={isGeneratingFullReport || !patient.medicalEncounters || patient.medicalEncounters.length === 0} className="w-full sm:w-auto">
              {isGeneratingFullReport ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <ExternalLink className="mr-2 h-4 w-4" />
             )}
-            {isGeneratingFullReport ? "Generando Informe..." : "Generar y Guardar en Google Docs"}
+            {isGeneratingFullReport ? "Generando Informe..." : "Generar y Descargar Informe"}
           </Button>
         </CardContent>
-        <CardFooter>
-            <p className="text-xs text-muted-foreground">
-                Nota: La creación real de Google Docs requiere integración con la API de Google Drive y autenticación, lo cual no está implementado en esta versión.
-            </p>
-        </CardFooter>
+         {(!patient.medicalEncounters || patient.medicalEncounters.length === 0) && !isGeneratingFullReport && (
+            <CardFooter>
+                <p className="text-sm text-muted-foreground">Se requiere al menos una consulta médica para generar un informe completo.</p>
+            </CardFooter>
+          )}
       </Card>
     </div>
   );

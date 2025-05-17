@@ -1,36 +1,52 @@
-// src/app/dashboard/patients/new/page.tsx (Anteriormente src/app/patients/new/page.tsx)
+// src/app/dashboard/patients/new/page.tsx
 "use client";
 
 import { PatientForm } from "@/components/patients/PatientForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { addPatient } from "@/lib/mock-data"; 
-import type { PatientRecord } from "@/lib/types";
+import type { PatientRecord, PersonalDetails, BackgroundInformation } from "@/lib/types"; // Updated types
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+
+// Type for the data structure handled by PatientForm
+type PatientFormData = {
+  personalDetails: PersonalDetails;
+  backgroundInformation: BackgroundInformation;
+};
 
 export default function NewPatientPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleSubmit = (data: Omit<PatientRecord, 'id' | 'createdAt' | 'updatedAt' | 'attachments'>) => {
-    const newPatient = addPatient(data); 
+  const handleSubmit = (data: PatientFormData) => {
+    // addPatient now expects an object with personalDetails and backgroundInformation
+    const newPatient = addPatient({
+      personalDetails: data.personalDetails,
+      backgroundInformation: data.backgroundInformation,
+    }); 
+    
     console.log("Nuevos datos del paciente (guardado simulado):", newPatient);
     toast({
       title: "Historial del Paciente Creado",
-      description: `El historial de ${newPatient.name} ha sido creado exitosamente.`,
+      description: `El historial de ${newPatient.personalDetails.name} ha sido creado exitosamente.`,
       variant: "default", 
     });
     router.push(`/dashboard/patients/${newPatient.id}`); 
   };
 
-  const initialValues: Partial<PatientRecord> = {
-    name: '',
-    dateOfBirth: '',
-    contactInfo: '',
-    medicalHistory: '',
-    examinationResults: '',
-    treatmentPlans: '',
-    attachments: [], 
+  // Initial values for the form, matching the structure PatientForm expects
+  const initialValues: Partial<Pick<PatientRecord, 'personalDetails' | 'backgroundInformation'>> = {
+    personalDetails: {
+      name: '',
+      dateOfBirth: '', 
+      contactInfo: '',
+    },
+    backgroundInformation: {
+      personalHistory: '',
+      allergies: '',
+      habitualMedication: '',
+    },
+    // medicalEncounters and attachments are not part of this form's initial data
   };
 
   return (
@@ -39,13 +55,13 @@ export default function NewPatientPage() {
         <CardHeader>
           <CardTitle className="text-3xl">Crear Nuevo Historial de Paciente</CardTitle>
           <CardDescription>
-            Complete los detalles a continuación para agregar un nuevo paciente al sistema.
+            Complete los detalles personales y antecedentes del paciente a continuación. El historial de consultas se gestionará por separado.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <PatientForm 
             onSubmit={handleSubmit} 
-            initialData={initialValues}
+            initialData={initialValues} // Pass the correctly structured initial data
             submitButtonText="Crear Historial de Paciente"
           />
         </CardContent>

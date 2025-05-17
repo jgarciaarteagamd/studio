@@ -1,49 +1,90 @@
 // src/lib/mock-data.ts
-import type { PatientRecord, Attachment } from './types';
+import type { PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment } from './types';
 
 const today = new Date().toISOString();
+const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString();
+const threeMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString();
+const sixMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString();
 
 export const mockAttachments: Attachment[] = [
   { id: 'attach1', name: 'Lab_Results_Jan2024.pdf', type: 'pdf', driveLink: '#', uploadedAt: today },
-  { id: 'attach2', name: 'Thyroid_Scan.jpg', type: 'image', driveLink: '#', uploadedAt: today },
+  { id: 'attach2', name: 'Thyroid_Scan.jpg', type: 'image', driveLink: '#', uploadedAt: yesterday },
 ];
 
 export const mockPatients: PatientRecord[] = [
   {
     id: '1',
-    name: 'Maria Gonzalez',
-    dateOfBirth: '1985-05-15',
-    contactInfo: 'maria.gonzalez@example.com | 555-0101',
-    medicalHistory: 'Type 2 Diabetes diagnosed in 2020, Hypertension. No known drug allergies.',
-    examinationResults: 'A1c: 7.5%, BP: 140/90 mmHg. Thyroid normal on palpation. Weight: 75kg.',
-    treatmentPlans: 'Metformin 1000mg BID, Lisinopril 10mg OD. Recommended lifestyle changes including diet and exercise. Follow-up in 3 months.',
+    personalDetails: {
+      name: 'Maria Gonzalez',
+      dateOfBirth: '1985-05-15',
+      contactInfo: 'maria.gonzalez@example.com | 555-0101',
+    },
+    backgroundInformation: {
+      personalHistory: 'Diabetes tipo 2 diagnosticada en 2020. Hipertensión.',
+      allergies: 'Penicilina (rash cutáneo).',
+      habitualMedication: 'Metformina 1000mg BID, Lisinopril 10mg OD.',
+    },
+    medicalEncounters: [
+      {
+        id: 'enc1-1',
+        date: threeMonthsAgo,
+        details: 'Consulta de seguimiento diabetes. A1c: 7.5%, TA: 140/90 mmHg. Peso: 75kg. Se recomienda continuar tratamiento y reforzar cambios en estilo de vida. Próximo control en 3 meses.',
+      },
+      {
+        id: 'enc1-2',
+        date: today,
+        details: 'Control trimestral. A1c: 7.2%, TA: 135/85 mmHg. Refiere buena adherencia al tratamiento. Se ajusta dosis de Lisinopril a 20mg OD por picos tensionales ocasionales. Se solicita perfil lipídico.',
+      },
+    ],
     attachments: [mockAttachments[0]],
-    createdAt: today,
+    createdAt: sixMonthsAgo,
     updatedAt: today,
   },
   {
     id: '2',
-    name: 'John Smith',
-    dateOfBirth: '1970-11-22',
-    contactInfo: 'john.smith@example.com | 555-0102',
-    medicalHistory: 'Hypothyroidism diagnosed in 2015. History of hyperlipidemia.',
-    examinationResults: 'TSH: 3.2 mIU/L (within target range on current Levo dose). LDL: 130 mg/dL. Weight: 88kg.',
-    treatmentPlans: 'Levothyroxine 100mcg OD. Atorvastatin 20mg OD. Continue current management. Annual follow-up.',
+    personalDetails: {
+      name: 'John Smith',
+      dateOfBirth: '1970-11-22',
+      contactInfo: 'john.smith@example.com | 555-0102',
+    },
+    backgroundInformation: {
+      personalHistory: 'Hipotiroidismo diagnosticado en 2015. Hiperlipidemia.',
+      allergies: 'No conocidas.',
+      habitualMedication: 'Levotiroxina 100mcg OD, Atorvastatina 20mg OD.',
+    },
+    medicalEncounters: [
+      {
+        id: 'enc2-1',
+        date: sixMonthsAgo,
+        details: 'Control anual hipotiroidismo. TSH: 3.2 mUI/L (en rango). LDL: 130 mg/dL. Peso: 88kg. Continuar mismo tratamiento. Próximo control en 1 año.',
+      },
+    ],
     attachments: mockAttachments,
-    createdAt: today,
-    updatedAt: today,
+    createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString(),
+    updatedAt: sixMonthsAgo,
   },
   {
     id: '3',
-    name: 'Luisa Fernandez',
-    dateOfBirth: '1992-08-01',
-    contactInfo: 'luisa.fernandez@example.com | 555-0103',
-    medicalHistory: 'Polycystic Ovary Syndrome (PCOS). Trying to conceive.',
-    examinationResults: 'Irregular menses. Mild hirsutism. Ultrasound confirms polycystic ovaries. BMI: 28.',
-    treatmentPlans: 'Metformin 500mg BID to improve insulin sensitivity. Clomiphene citrate for ovulation induction. Advised on weight management.',
+    personalDetails: {
+      name: 'Luisa Fernandez',
+      dateOfBirth: '1992-08-01',
+      contactInfo: 'luisa.fernandez@example.com | 555-0103',
+    },
+    backgroundInformation: {
+      personalHistory: 'Síndrome de Ovario Poliquístico (SOP). Buscando embarazo.',
+      allergies: 'AINEs (malestar gástrico).',
+      habitualMedication: 'Ácido fólico 5mg OD.',
+    },
+    medicalEncounters: [
+      {
+        id: 'enc3-1',
+        date: yesterday,
+        details: 'Consulta por SOP e infertilidad. Menstruaciones irregulares, hirsutismo leve. Ecografía confirma ovarios poliquísticos. IMC: 28. Se inicia Metformina 500mg BID para mejorar sensibilidad a la insulina. Se discute Clomifeno para inducción de ovulación. Asesoramiento sobre manejo de peso.',
+      },
+    ],
     attachments: [],
-    createdAt: today,
-    updatedAt: today,
+    createdAt: yesterday,
+    updatedAt: yesterday,
   },
 ];
 
@@ -53,13 +94,18 @@ export const getPatientById = (id: string): PatientRecord | undefined => {
 };
 
 // Function to add a patient (mock)
-export const addPatient = (patient: Omit<PatientRecord, 'id' | 'createdAt' | 'updatedAt' | 'attachments'> & { attachments?: Attachment[] }): PatientRecord => {
+// For adding, medicalEncounters and attachments are typically empty or minimal initially.
+export const addPatient = (
+  data: { personalDetails: PersonalDetails; backgroundInformation: BackgroundInformation }
+): PatientRecord => {
   const newPatient: PatientRecord = {
-    ...patient,
     id: String(mockPatients.length + 1 + Math.random()), // simple unique ID
+    personalDetails: data.personalDetails,
+    backgroundInformation: data.backgroundInformation,
+    medicalEncounters: [], // Start with no encounters
+    attachments: [], // Start with no attachments
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    attachments: patient.attachments || [],
   };
   mockPatients.push(newPatient);
   console.log("Added new patient (mock):", newPatient);
@@ -67,10 +113,22 @@ export const addPatient = (patient: Omit<PatientRecord, 'id' | 'createdAt' | 'up
 };
 
 // Function to update a patient (mock)
-export const updatePatient = (id: string, updates: Partial<PatientRecord>): PatientRecord | undefined => {
+// This can update personalDetails, backgroundInformation, or add new encounters/attachments.
+export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, 'id' | 'createdAt' >>): PatientRecord | undefined => {
   const patientIndex = mockPatients.findIndex(p => p.id === id);
   if (patientIndex !== -1) {
-    mockPatients[patientIndex] = { ...mockPatients[patientIndex], ...updates, updatedAt: new Date().toISOString() };
+    // Merge updates, ensuring arrays are handled correctly if needed (e.g., adding to encounters)
+    const currentPatient = mockPatients[patientIndex];
+    const updatedPatientData = {
+      ...currentPatient,
+      ...updates,
+      // If encounters are part of updates, ensure they are merged or replaced as intended
+      // For this example, we'll assume 'updates' might replace encounters or add to them if handled by caller
+      medicalEncounters: updates.medicalEncounters || currentPatient.medicalEncounters,
+      attachments: updates.attachments || currentPatient.attachments,
+      updatedAt: new Date().toISOString(),
+    };
+    mockPatients[patientIndex] = updatedPatientData;
     console.log("Updated patient (mock):", mockPatients[patientIndex]);
     return mockPatients[patientIndex];
   }
