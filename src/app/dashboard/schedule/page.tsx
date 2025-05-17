@@ -352,7 +352,7 @@ export default function SchedulePage() {
           <CardTitle>Calendario de Citas</CardTitle>
           <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use el botón "+ Programar Nueva Cita" para agendar.</CardDescription>
         </CardHeader>
-        <CardContent className="p-0 sm:p-4 md:p-6">
+        <CardContent className="p-0 sm:p-4 md:p-6"> {/* Ensure this CardContent allows full width */}
           <Calendar
             mode="single" 
             selected={selectedCalendarDay || undefined} 
@@ -363,10 +363,10 @@ export default function SchedulePage() {
             modifiersClassNames={calendarModifiersClassNames}
             locale={es}
             className="rounded-md border shadow-md w-full" 
-            classNames={{ // Overrides for responsive cell sizes
+            classNames={{ 
                 caption_label: "text-lg font-medium",
-                head_cell: "h-10 sm:h-12 md:h-14", // Added height for consistency
-                day: "h-10 sm:h-12 md:h-14", // Responsive height for day cells/buttons
+                head_cell: "h-10 sm:h-12 md:h-14", 
+                day: "h-10 sm:h-12 md:h-14", 
             }}
           />
         </CardContent>
@@ -443,4 +443,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
