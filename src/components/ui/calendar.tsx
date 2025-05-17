@@ -1,3 +1,4 @@
+
 // src/components/ui/calendar.tsx
 "use client"
 
@@ -37,7 +38,7 @@ function Calendar({
         table: "w-full border-collapse space-y-1",
         head_row: "flex",
         head_cell:
-          "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] p-0 text-center", // Added p-0 and text-center
+          "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] p-0 flex items-center justify-center", // Changed to flex centering
         row: "flex w-full mt-2",
         cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
         day: cn(
@@ -57,11 +58,11 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ className, ...props }) => (
-          <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
+        IconLeft: ({ className: iconClassName, ...restIconProps }) => ( // Renamed props to avoid conflict
+          <ChevronLeft className={cn("h-4 w-4", iconClassName)} {...restIconProps} />
         ),
-        IconRight: ({ className, ...props }) => (
-          <ChevronRight className={cn("h-4 w-4", className)} {...props} />
+        IconRight: ({ className: iconClassName, ...restIconProps }) => ( // Renamed props to avoid conflict
+          <ChevronRight className={cn("h-4 w-4", iconClassName)} {...restIconProps} />
         ),
       }}
       locale={locale} // Pass locale to DayPicker
@@ -72,3 +73,4 @@ function Calendar({
 Calendar.displayName = "Calendar"
 
 export { Calendar }
+
