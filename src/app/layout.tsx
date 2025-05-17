@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'EndoCloud Notes',
+  title: 'EndoCloud',
   description: 'Gestiona historiales médicos de endocrinología con facilidad.',
 };
 

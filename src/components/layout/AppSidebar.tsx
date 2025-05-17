@@ -29,7 +29,7 @@ export function AppSidebar() {
         <Link href="/dashboard" className="flex items-center gap-2">
           <ActivitySquare className="h-8 w-8 text-primary" />
           <span className="text-lg font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-            EndoCloud Notes
+            EndoCloud
           </span>
         </Link>
       </SidebarHeader>

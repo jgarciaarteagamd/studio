@@ -10,8 +10,8 @@ import { AppHeader } from '@/components/layout/AppHeader';
 // y las variables de fuente estarán disponibles.
 
 export const metadata: Metadata = {
-  title: 'Panel | EndoCloud Notes',
-  description: 'Panel de administración de EndoCloud Notes.',
+  title: 'Panel | EndoCloud',
+  description: 'Panel de administración de EndoCloud.',
 };
 
 export default function DashboardLayout({
