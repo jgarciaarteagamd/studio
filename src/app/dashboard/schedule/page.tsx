@@ -1,4 +1,3 @@
-
 // src/app/dashboard/schedule/page.tsx
 "use client";
 
@@ -21,6 +20,7 @@ import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Tra
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
 import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button"; // Import buttonVariants
 import { DayAppointmentsSidebar } from "@/components/schedule/DayAppointmentsSidebar";
 
 const appointmentFormSchema = z.object({
@@ -352,7 +352,7 @@ export default function SchedulePage() {
           <CardTitle>Calendario de Citas</CardTitle>
           <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use el botón "+ Programar Nueva Cita" para agendar.</CardDescription>
         </CardHeader>
-        <CardContent className="p-0 sm:p-4 md:p-6"> {/* Ensure this CardContent allows full width */}
+        <CardContent className="p-0 sm:p-4 md:p-6">
           <Calendar
             mode="single" 
             selected={selectedCalendarDay || undefined} 
@@ -365,8 +365,19 @@ export default function SchedulePage() {
             className="rounded-md border shadow-md w-full" 
             classNames={{ 
                 caption_label: "text-lg font-medium",
-                head_cell: "h-10 sm:h-12 md:h-14", 
-                day: "h-10 sm:h-12 md:h-14", 
+                // Combine base styles with responsive heights
+                head_cell: cn(
+                  "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-sm p-0 text-center", // Base styles from calendar.tsx
+                  "h-10 sm:h-12 md:h-14" // Responsive height
+                ),
+                cell: cn(
+                  "flex-1 min-w-0 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20", // Base styles from calendar.tsx (excluding h-9)
+                  "h-10 sm:h-12 md:h-14" // Responsive height
+                ),
+                day: cn( // Ensure day fills the taller cell and has button styles
+                  buttonVariants({ variant: "ghost" }), 
+                  "h-full w-full p-0 font-normal aria-selected:opacity-100" // Base styles from calendar.tsx
+                ),
             }}
           />
         </CardContent>
