@@ -352,7 +352,7 @@ export default function SchedulePage() {
           <CardTitle>Calendario de Citas</CardTitle>
           <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use el botón "+ Programar Nueva Cita" para agendar.</CardDescription>
         </CardHeader>
-        <CardContent className="flex justify-center p-0 sm:p-4 md:p-6">
+        <CardContent className="p-0 sm:p-4 md:p-6"> {/* Removed flex justify-center */}
           <Calendar
             mode="single" 
             selected={selectedCalendarDay || undefined} // For visual feedback on selected day
@@ -362,10 +362,10 @@ export default function SchedulePage() {
             modifiers={calendarModifiers}
             modifiersClassNames={calendarModifiersClassNames}
             locale={es}
-            className="rounded-md border shadow-md w-full max-w-md lg:max-w-xl"
+            className="rounded-md border shadow-md w-full max-w-md lg:max-w-xl mx-auto" // Added mx-auto for centering if max-width is hit
             classNames={{
                 caption_label: "text-lg font-medium",
-                head_cell: "w-10 sm:w-12 md:w-14", 
+                head_cell: "w-10 sm:w-12 md:w-14 text-center p-0", 
                 day: "h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14", 
             }}
           />
@@ -446,3 +446,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
