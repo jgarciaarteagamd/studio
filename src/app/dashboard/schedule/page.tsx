@@ -1,3 +1,4 @@
+
 // src/app/dashboard/schedule/page.tsx
 "use client";
 
@@ -143,18 +144,17 @@ export default function SchedulePage() {
 
   const calendarModifiers = {
     hasAppointments: daysWithAppointments,
-    selected: selectedCalendarDay || undefined, // Highlight the selected day for the sidebar
+    selected: selectedCalendarDay || undefined, 
   };
   const calendarModifiersClassNames = {
     hasAppointments: 'day-with-appointments',
-    selected: 'rdp-day_selected', // Standard class for selected day styling
+    selected: 'rdp-day_selected', 
   };
 
   const handleCalendarDayClick = useCallback((day: Date | undefined) => {
     if (day) {
       setSelectedCalendarDay(day);
       setIsDaySidebarOpen(true);
-      // Do not open new appointment form here
     }
   }, []);
 
@@ -363,10 +363,10 @@ export default function SchedulePage() {
             modifiersClassNames={calendarModifiersClassNames}
             locale={es}
             className="rounded-md border shadow-md w-full" 
-            classNames={{
+            classNames={{ // Overrides for responsive cell sizes
                 caption_label: "text-lg font-medium",
-                head_cell: "w-10 sm:w-12 md:w-14 text-center p-0", 
-                day: "h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14", 
+                head_cell: "h-10 sm:h-12 md:h-14", // Added height for consistency
+                day: "h-10 sm:h-12 md:h-14", // Responsive height for day cells/buttons
             }}
           />
         </CardContent>
@@ -443,3 +443,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
