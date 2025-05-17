@@ -22,10 +22,10 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("w-full p-3", className)} // Added w-full here
+      className={cn("w-full", className)} // Eliminado p-3, w-full se mantiene y se puede sobreescribir
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-4",
+        month: "space-y-4 w-full", // Añadido w-full aquí
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-sm font-medium",
         nav: "space-x-1 flex items-center",
@@ -35,15 +35,15 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-y-1",
-        head_row: "flex w-full", // Ensured w-full
+        table: "w-full border-collapse space-y-1", // Mantiene w-full
+        head_row: "flex w-full",
         head_cell:
-          "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-sm p-0 text-center",
+          "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-sm p-0 flex items-center justify-center", // flex-1 para distribución
         row: "flex w-full mt-2",
-        cell: "h-9 flex-1 min-w-0 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+        cell: "h-9 flex-1 min-w-0 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20", // flex-1 para distribución, h-9 es base, se puede sobreescribir
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-full w-full p-0 font-normal aria-selected:opacity-100"
+          "h-full w-full p-0 font-normal aria-selected:opacity-100" // h-full w-full para llenar la celda
         ),
         day_range_end: "day-range-end",
         day_selected:
@@ -73,3 +73,4 @@ function Calendar({
 Calendar.displayName = "Calendar"
 
 export { Calendar }
+
