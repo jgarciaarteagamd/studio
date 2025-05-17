@@ -27,7 +27,7 @@ export function PatientTable({ patients }: PatientTableProps) {
   const handleGenerateReport = (patientId: string) => {
     alert(`Generar informe para el paciente ${patientId} (no implementado)`);
     // Potentially navigate to a report generation page or open a modal
-    // router.push(`/patients/${patientId}/report`);
+    // router.push(`/dashboard/patients/${patientId}/report`);
   };
   
   const handleDeletePatient = (patientId: string) => {
@@ -54,7 +54,7 @@ export function PatientTable({ patients }: PatientTableProps) {
           {patients.map((patient) => (
             <TableRow key={patient.id}>
               <TableCell className="font-medium">
-                <Link href={`/patients/${patient.id}`} className="hover:underline text-primary">
+                <Link href={`/dashboard/patients/${patient.id}`} className="hover:underline text-primary">
                   {patient.name}
                 </Link>
               </TableCell>
@@ -71,7 +71,7 @@ export function PatientTable({ patients }: PatientTableProps) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => router.push(`/patients/${patient.id}`)}>
+                    <DropdownMenuItem onClick={() => router.push(`/dashboard/patients/${patient.id}`)}>
                       <FileEdit className="mr-2 h-4 w-4" />
                       Ver/Editar
                     </DropdownMenuItem>

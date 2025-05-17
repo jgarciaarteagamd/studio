@@ -12,8 +12,8 @@ import { LayoutDashboard, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Panel", icon: LayoutDashboard },
-  { href: "/patients", label: "Pacientes", icon: Users },
+  { href: "/dashboard", label: "Panel", icon: LayoutDashboard },
+  { href: "/dashboard/patients", label: "Pacientes", icon: Users },
 ];
 
 export function SidebarNav() {
@@ -22,7 +22,7 @@ export function SidebarNav() {
   return (
     <SidebarMenu>
       {navItems.map((item) => {
-        const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+        const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
         return (
           <SidebarMenuItem key={item.href}>
             <Link href={item.href} passHref legacyBehavior>

@@ -18,7 +18,7 @@ export function AppHeader() {
       <div className="md:hidden">
         <SidebarTrigger />
       </div>
-      <Link href="/" className="flex items-center gap-2 text-lg font-semibold md:text-base">
+      <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold md:text-base">
         <ActivitySquare className="h-6 w-6 text-primary" />
         <h1 className="text-xl font-bold text-foreground">EndoCloud Notes</h1>
       </Link>
