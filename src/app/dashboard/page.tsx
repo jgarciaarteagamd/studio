@@ -1,4 +1,4 @@
-// src/app/dashboard/page.tsx (Anteriormente src/app/page.tsx)
+// src/app/dashboard/page.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,15 @@ const PatientLastUpdatedDisplay = ({ updatedAt }: { updatedAt: string }) => {
   const [currentLocale, setCurrentLocale] = useState('es-ES');
 
   useEffect(() => {
-    setCurrentLocale(navigator.language || 'es-ES');
+    const userLocale = navigator.language || 'es-ES';
+    setCurrentLocale(userLocale);
     // This effect runs only on the client, after initial hydration
-    setFormattedDate(new Date(updatedAt).toLocaleDateString(navigator.language || 'es-ES')); // Prioritize browser locale, fallback to Spanish
+    try {
+      setFormattedDate(new Date(updatedAt).toLocaleDateString(userLocale));
+    } catch (e) {
+      console.error("Error formatting date:", updatedAt, e);
+      setFormattedDate("Fecha inválida");
+    }
   }, [updatedAt]); // Recalculate if updatedAt changes
 
   // Render placeholder during SSR and initial client render, then client-side formatted date
@@ -105,7 +111,7 @@ export default function DashboardPage() {
                 <li key={patient.id} className="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors">
                   <div>
                     <Link href={`/dashboard/patients/${patient.id}`} className="font-medium text-primary hover:underline">
-                      {patient.name}
+                      {patient.personalDetails?.name || '(Nombre no disponible)'}
                     </Link>
                     <p className="text-sm text-muted-foreground">Última actualización: <PatientLastUpdatedDisplay updatedAt={patient.updatedAt} /></p>
                   </div>
