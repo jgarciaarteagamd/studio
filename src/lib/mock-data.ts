@@ -1,13 +1,16 @@
 // src/lib/mock-data.ts
-import type { PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment } from './types';
+import type { PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment, Appointment } from './types';
+import { addMinutes, formatISO, parseISO, setHours, setMinutes } from 'date-fns';
 
-const today = new Date().toISOString();
+const today = new Date();
+const todayISO = today.toISOString();
 const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString();
+const tomorrow = new Date(new Date().setDate(new Date().getDate() + 1));
 const threeMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString();
 const sixMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString();
 
 export const mockAttachments: Attachment[] = [
-  { id: 'attach1', name: 'Lab_Results_Jan2024.pdf', type: 'pdf', driveLink: '#', uploadedAt: today },
+  { id: 'attach1', name: 'Lab_Results_Jan2024.pdf', type: 'pdf', driveLink: '#', uploadedAt: todayISO },
   { id: 'attach2', name: 'Thyroid_Scan.jpg', type: 'image', driveLink: '#', uploadedAt: yesterday },
 ];
 
@@ -32,13 +35,13 @@ export const mockPatients: PatientRecord[] = [
       },
       {
         id: 'enc1-2',
-        date: today,
+        date: todayISO,
         details: 'Control trimestral. A1c: 7.2%, TA: 135/85 mmHg. Refiere buena adherencia al tratamiento. Se ajusta dosis de Lisinopril a 20mg OD por picos tensionales ocasionales. Se solicita perfil lipídico.',
       },
     ],
     attachments: [mockAttachments[0]],
     createdAt: sixMonthsAgo,
-    updatedAt: today,
+    updatedAt: todayISO,
   },
   {
     id: '2',
@@ -94,7 +97,6 @@ export const getPatientById = (id: string): PatientRecord | undefined => {
 };
 
 // Function to add a patient (mock)
-// For adding, medicalEncounters and attachments are typically empty or minimal initially.
 export const addPatient = (
   data: { personalDetails: PersonalDetails; backgroundInformation: BackgroundInformation }
 ): PatientRecord => {
@@ -102,35 +104,83 @@ export const addPatient = (
     id: String(mockPatients.length + 1 + Math.random()), // simple unique ID
     personalDetails: data.personalDetails,
     backgroundInformation: data.backgroundInformation,
-    medicalEncounters: [], // Start with no encounters
-    attachments: [], // Start with no attachments
+    medicalEncounters: [], 
+    attachments: [], 
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
   mockPatients.push(newPatient);
-  console.log("Added new patient (mock):", newPatient);
   return newPatient;
 };
 
 // Function to update a patient (mock)
-// This can update personalDetails, backgroundInformation, or add new encounters/attachments.
 export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, 'id' | 'createdAt' >>): PatientRecord | undefined => {
   const patientIndex = mockPatients.findIndex(p => p.id === id);
   if (patientIndex !== -1) {
-    // Merge updates, ensuring arrays are handled correctly if needed (e.g., adding to encounters)
     const currentPatient = mockPatients[patientIndex];
     const updatedPatientData = {
       ...currentPatient,
       ...updates,
-      // If encounters are part of updates, ensure they are merged or replaced as intended
-      // For this example, we'll assume 'updates' might replace encounters or add to them if handled by caller
       medicalEncounters: updates.medicalEncounters || currentPatient.medicalEncounters,
       attachments: updates.attachments || currentPatient.attachments,
       updatedAt: new Date().toISOString(),
     };
     mockPatients[patientIndex] = updatedPatientData;
-    console.log("Updated patient (mock):", mockPatients[patientIndex]);
     return mockPatients[patientIndex];
   }
   return undefined;
 };
+
+
+// Appointments Mock Data
+export let mockAppointments: Appointment[] = [
+  {
+    id: 'appt1',
+    patientId: '1',
+    patientName: 'Maria Gonzalez',
+    dateTime: setHours(setMinutes(today, 0), 10).toISOString(), // Hoy a las 10:00
+    durationMinutes: 30,
+    status: 'confirmada',
+    notes: 'Control de diabetes.'
+  },
+  {
+    id: 'appt2',
+    patientId: '2',
+    patientName: 'John Smith',
+    dateTime: setHours(setMinutes(today, 30), 11).toISOString(), // Hoy a las 11:30
+    durationMinutes: 45,
+    status: 'programada',
+    notes: 'Seguimiento hipotiroidismo.'
+  },
+  {
+    id: 'appt3',
+    patientId: '3',
+    patientName: 'Luisa Fernandez',
+    dateTime: setHours(setMinutes(tomorrow, 0), 9).toISOString(), // Mañana a las 09:00
+    durationMinutes: 60,
+    status: 'programada',
+    notes: 'Consulta SOP.'
+  }
+];
+
+export const getAppointments = (): Appointment[] => {
+  return mockAppointments.sort((a,b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime());
+};
+
+export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'>): Appointment => {
+  const patient = getPatientById(data.patientId);
+  if (!patient) {
+    throw new Error("Paciente no encontrado para la cita.");
+  }
+  const newAppointment: Appointment = {
+    ...data,
+    id: `appt-${Date.now()}`,
+    patientName: patient.personalDetails.name,
+  };
+  mockAppointments.push(newAppointment);
+  return newAppointment;
+};
+
+// Placeholder for future update/delete appointment functions
+// export const updateAppointment = (id: string, updates: Partial<Omit<Appointment, 'id'>>): Appointment | undefined => { ... }
+// export const deleteAppointment = (id: string): boolean => { ... }

@@ -39,3 +39,13 @@ export interface PatientRecord {
   // Date of the last general update or last encounter
   updatedAt: string; 
 }
+
+export interface Appointment {
+  id: string;
+  patientId: string;
+  patientName: string; // Denormalized for easy display in lists
+  dateTime: string; // ISO string for full date and time
+  durationMinutes: number;
+  notes?: string;
+  status: 'programada' | 'confirmada' | 'cancelada' | 'completada';
+}
