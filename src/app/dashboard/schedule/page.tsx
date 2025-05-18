@@ -11,13 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
+// Checkbox ya no es necesario para "isBlocker" en el formulario
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock } from "lucide-react"; // Added Lock
+import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react"; // Added ShieldOff for Blocker
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
 import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
@@ -28,7 +28,7 @@ const appointmentFormSchema = z.object({
   patientId: z.string().optional(),
   date: z.date({ required_error: "La fecha es obligatoria." }),
   time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Formato de hora inválido (HH:MM)."),
-  durationMinutes: z.coerce.number().min(5, "La duración debe ser al menos 5 minutos.").max(1440, "La duración no puede exceder 1 día (1440 min)."), // Max 1 day
+  durationMinutes: z.coerce.number().min(5, "La duración debe ser al menos 5 minutos.").max(1440, "La duración no puede exceder 1 día (1440 min)."),
   notes: z.string().optional(), // For patient appointments
   status: z.enum(['programada', 'confirmada', 'cancelada', 'completada']).default('programada'),
   isBlocker: z.boolean().optional().default(false),
@@ -43,7 +43,7 @@ const appointmentFormSchema = z.object({
   return true;
 }, {
   message: "Si es un bloqueo, debe indicar un motivo. Si es una cita, debe seleccionar un paciente.",
-  path: ["isBlocker"], // Or a more general path
+  path: ["isBlocker"], 
 });
 
 
@@ -83,6 +83,22 @@ export default function SchedulePage() {
 
   const isBlockerWatch = form.watch("isBlocker");
 
+  const openFormDialog = (blockerMode: boolean) => {
+    form.reset({ // Reset form with appropriate defaults
+      patientId: "",
+      date: new Date(),
+      time: "09:00",
+      durationMinutes: blockerMode ? 60 : 30, // Default 60 min for blockers, 30 for appointments
+      notes: "",
+      status: "programada",
+      isBlocker: blockerMode,
+      blockerReason: "",
+    });
+    form.setValue('isBlocker', blockerMode); // Explicitly set isBlocker after reset
+    setIsFormOpen(true);
+  };
+
+
   const onSubmit: SubmitHandler<AppointmentFormValues> = (data) => {
     const selectedDate = startOfDay(data.date);
     const [hours, minutes] = data.time.split(':').map(Number);
@@ -91,13 +107,13 @@ export default function SchedulePage() {
     const newAppointmentData: Omit<Appointment, 'id' | 'patientName'> = {
       dateTime: dateTime.toISOString(),
       durationMinutes: data.durationMinutes,
-      status: data.status,
+      status: data.isBlocker ? 'programada' : data.status, // Blockers can default to 'programada' or a specific status
       isBlocker: data.isBlocker,
     };
 
     if (data.isBlocker) {
       newAppointmentData.blockerReason = data.blockerReason;
-      newAppointmentData.patientId = undefined; // Ensure no patientId for blockers
+      newAppointmentData.patientId = undefined; 
       newAppointmentData.notes = undefined;
     } else {
       newAppointmentData.patientId = data.patientId;
@@ -113,16 +129,7 @@ export default function SchedulePage() {
         description: data.isBlocker ? "El periodo ha sido bloqueado exitosamente." : "La nueva cita ha sido programada exitosamente.",
       });
       setIsFormOpen(false);
-      form.reset({ 
-        patientId: "",
-        date: new Date(),
-        time: "09:00",
-        durationMinutes: 30,
-        notes: "",
-        status: "programada",
-        isBlocker: false,
-        blockerReason: "",
-      });
+      // Form is reset when opening the dialog now
     } catch (error) {
       console.error("Error agendando/bloqueando:", error);
       toast({
@@ -176,7 +183,7 @@ export default function SchedulePage() {
   };
   const calendarModifiersClassNames = {
     hasAppointments: 'day-with-appointments',
-    selected: 'rdp-day_selected', 
+    // selected: 'rdp-day_selected', // Handled by custom day render function
   };
 
   const handleCalendarDayClick = useCallback((day: Date | undefined) => {
@@ -203,189 +210,164 @@ export default function SchedulePage() {
             Ver y programar citas o bloqueos de horario.
           </p>
         </div>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button size="lg" onClick={() => { 
-              form.reset({
-                patientId: "",
-                date: new Date(),
-                time: "09:00",
-                durationMinutes: 30,
-                notes: "",
-                status: "programada",
-                isBlocker: false,
-                blockerReason: "",
-              }); 
-              setIsFormOpen(true); 
-            }}>
-              <PlusCircle className="mr-2 h-5 w-5" />
-              Programar Cita/Bloqueo
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{isBlockerWatch ? "Bloquear Horario" : "Programar Nueva Cita"}</DialogTitle>
-              <DialogDescriptionComponent>Complete los detalles para la nueva {isBlockerWatch ? "entrada de bloqueo" : "cita"}.</DialogDescriptionComponent>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
+        <div className="flex gap-2">
+          <Button size="lg" onClick={() => openFormDialog(false)}>
+            <PlusCircle className="mr-2 h-5 w-5" />
+            Programar Cita
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => openFormDialog(true)}>
+            <ShieldOff className="mr-2 h-5 w-5" />
+            Bloquear Horario
+          </Button>
+        </div>
+      </div>
+      
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        {/* DialogTrigger is no longer needed here as buttons control openFormDialog */}
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{isBlockerWatch ? "Bloquear Horario" : "Programar Nueva Cita"}</DialogTitle>
+            <DialogDescriptionComponent>Complete los detalles para la nueva {isBlockerWatch ? "entrada de bloqueo" : "cita"}.</DialogDescriptionComponent>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
+              {/* Checkbox for isBlocker is removed */}
+
+              {!isBlockerWatch && (
                 <FormField
                   control={form.control}
-                  name="isBlocker"
+                  name="patientId"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>
-                          Marcar como bloqueo de horario
-                        </FormLabel>
-                        <ShadCNFormDescription>
-                          Seleccione esto si no es una cita de paciente (ej. almuerzo, reunión).
-                        </ShadCNFormDescription>
-                      </div>
+                    <FormItem>
+                      <FormLabel>Paciente</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccione un paciente" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {patients.map((patient) => (
+                            <SelectItem key={patient.id} value={patient.id}>
+                              {patient.personalDetails.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
+              )}
 
-                {!isBlockerWatch && (
-                  <FormField
-                    control={form.control}
-                    name="patientId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Paciente</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccione un paciente" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {patients.map((patient) => (
-                              <SelectItem key={patient.id} value={patient.id}>
-                                {patient.personalDetails.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="date"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Fecha</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "PPP", { locale: es })
-                                ) : (
-                                  <span>Seleccione una fecha</span>
-                                )}
-                                <LucideCalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={(date) => {
-                                if (date) {
-                                   if (!isPast(date) || isToday(date)) {
-                                    field.onChange(date)
-                                  } else {
-                                     toast({title: "Fecha Pasada", description: "No se puede seleccionar una fecha pasada.", variant: "default"})
-                                  }
-                                }
-                              }}
-                              initialFocus
-                              locale={es}
-                              disabled={(date) => isPast(date) && !isToday(date)}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Hora</FormLabel>
-                        <FormControl>
-                          <Input type="time" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="durationMinutes"
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Fecha</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP", { locale: es })
+                              ) : (
+                                <span>Seleccione una fecha</span>
+                              )}
+                              <LucideCalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={(date) => {
+                              if (date) {
+                                 if (!isPast(date) || isToday(date)) {
+                                  field.onChange(date)
+                                } else {
+                                   toast({title: "Fecha Pasada", description: "No se puede seleccionar una fecha pasada.", variant: "default"})
+                                }
+                              }
+                            }}
+                            initialFocus
+                            locale={es}
+                            disabled={(date) => isPast(date) && !isToday(date)}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="time"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Duración (minutos)</FormLabel>
+                      <FormLabel>Hora</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input type="time" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
-                {isBlockerWatch ? (
-                   <FormField
-                    control={form.control}
-                    name="blockerReason"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Motivo del Bloqueo</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Ej: Almuerzo, Reunión importante, Mantenimiento" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ) : (
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Notas Adicionales (Opcional)</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Notas sobre la cita, motivo, etc." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              </div>
+              <FormField
+                control={form.control}
+                name="durationMinutes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duración (minutos)</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
+              />
+              
+              {isBlockerWatch ? (
+                 <FormField
+                  control={form.control}
+                  name="blockerReason"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Motivo del Bloqueo</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Ej: Almuerzo, Reunión importante, Mantenimiento" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notas Adicionales (Opcional)</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Notas sobre la cita, motivo, etc." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
+              {!isBlockerWatch && ( // Only show Status for non-blockers
                  <FormField
                     control={form.control}
                     name="status"
@@ -409,65 +391,70 @@ export default function SchedulePage() {
                       </FormItem>
                     )}
                   />
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
-                  <Button type="submit" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? "Guardando..." : (isBlockerWatch ? "Guardar Bloqueo" : "Guardar Cita")}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </div>
+              )}
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? "Guardando..." : (isBlockerWatch ? "Guardar Bloqueo" : "Guardar Cita")}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
       
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Calendario de Citas</CardTitle>
-          <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use el botón "+ Programar Cita/Bloqueo" para agendar.</CardDescription>
+          <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
         </CardHeader>
         <CardContent className="p-4">
-          <Calendar
-            mode="single" 
-            selected={selectedCalendarDay || undefined} 
-            onSelect={handleCalendarDayClick} 
+           <Calendar
+            mode="single"
+            selected={selectedCalendarDay || undefined}
+            onSelect={handleCalendarDayClick}
             month={displayedMonth}
             onMonthChange={setDisplayedMonth}
             modifiers={calendarModifiers}
             modifiersClassNames={calendarModifiersClassNames}
             locale={es}
-            className="rounded-md border shadow-md w-full" 
-            classNames={{ 
+            className="rounded-md border shadow-md w-full"
+            classNames={{
                 caption_label: "text-lg font-medium",
                 head_cell: cn(
                   "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-sm p-0 text-center",
-                  "h-10 sm:h-12 md:h-14"
+                  "h-10 sm:h-12 md:h-14" // Heights from schedule page
                 ),
                 cell: cn(
                   "flex-1 min-w-0 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                  "flex items-center justify-center", 
-                  "h-10 sm:h-12 md:h-14" 
+                  "flex items-center justify-center", // Center content in cell
+                  "h-10 sm:h-12 md:h-14" // Heights from schedule page
                 ),
                 day: (date, modifiers, dayProps) => {
                   let klasses = cn(
                     buttonVariants({ variant: "ghost" }),
-                    "h-full w-full p-0 font-normal text-foreground" 
+                    "h-full w-full p-0 font-normal text-foreground" // Default: button fills cell, dark text
                   );
+                  
                   if (modifiers.selected) {
-                    klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-primary-foreground");
+                     // Selected day: smaller light blue circle, dark text
+                    klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-foreground hover:bg-primary/60");
                   } else if (modifiers.today) {
-                    klasses = cn(klasses, "ring-1 ring-primary rounded-full");
+                     // Today (not selected): subtle primary ring, dark text, button fills cell
+                    klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
                   } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter) {
-                    klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full");
+                     // Hover on normal day: smaller muted circle, dark text
+                    klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full text-foreground");
                   }
+
                   if (modifiers.disabled) {
                     klasses = cn(klasses, "opacity-50");
                   }
                   if (modifiers.outside) {
-                    klasses = cn(klasses, "text-muted-foreground opacity-50");
-                    if (modifiers.selected) {
-                      klasses = cn(klasses, "bg-primary/20");
-                    }
+                     klasses = cn(klasses, "text-muted-foreground opacity-50");
+                     if (modifiers.selected) {
+                        klasses = cn(klasses, "bg-primary/20"); 
+                     }
                   }
                   return klasses;
                 },
@@ -499,7 +486,7 @@ export default function SchedulePage() {
                   {groupedAppointments[dateKey].sort((a,b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime()).map((appointment) => (
                     <li key={appointment.id} className={cn(
                       "border p-4 rounded-lg hover:shadow-lg transition-shadow",
-                      appointment.isBlocker && "bg-muted/70 border-dashed" // Style for blockers
+                      appointment.isBlocker && "bg-muted/70 border-dashed" 
                     )}>
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                         <div>
@@ -548,9 +535,9 @@ export default function SchedulePage() {
         <Card>
           <CardContent className="py-10 text-center">
             <p className="text-lg text-muted-foreground">No hay citas ni bloqueos programados.</p>
-            <Button className="mt-4" onClick={() => { form.reset(); setIsFormOpen(true); }}>
+            <Button className="mt-4" onClick={() => openFormDialog(false)}>
               <PlusCircle className="mr-2 h-5 w-5" />
-              Programar la Primera Cita/Bloqueo
+              Programar la Primera Cita
             </Button>
           </CardContent>
         </Card>
@@ -558,3 +545,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
