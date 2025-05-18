@@ -151,7 +151,7 @@ export function PatientForm({
               <FormItem>
                 <FormLabel className="flex items-center"><FileTextIcon className="mr-2 h-4 w-4 text-primary" /> Documento de Identidad</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ej: 12345678A (Cédula en Ecuador)" {...field} value={field.value || ''} />
+                  <Input placeholder="Ej: 1712345678 (Cédula en Ecuador)" {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -222,7 +222,7 @@ export function PatientForm({
               name="personalDetails.telefono1"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Teléfono móvil (1)</FormLabel>
+                  <FormLabel>Teléfono móvil</FormLabel>
                   <FormControl>
                     <Input type="tel" placeholder="Ej: 0987654321" {...field} value={field.value || ''} />
                   </FormControl>
@@ -235,7 +235,7 @@ export function PatientForm({
               name="personalDetails.telefono2"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Teléfono opcional (2)</FormLabel>
+                  <FormLabel>Teléfono opcional</FormLabel>
                   <FormControl>
                     <Input type="tel" placeholder="Ej: 025551234" {...field} value={field.value || ''} />
                   </FormControl>
@@ -270,7 +270,7 @@ export function PatientForm({
                 <FormItem>
                     <FormLabel>Registro Único de Contribuyente (RUC)</FormLabel>
                     <FormControl>
-                    <Input placeholder="Ej: 17XXXXXXXXX001 (Ecuador)" {...field} value={field.value || ''} disabled={!allowEditFacturacionInfo} />
+                    <Input placeholder="Ej: 1712345678001 (Ecuador)" {...field} value={field.value || ''} disabled={!allowEditFacturacionInfo} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -414,5 +414,3 @@ export function PatientForm({
     </Form>
   );
 }
-
-    

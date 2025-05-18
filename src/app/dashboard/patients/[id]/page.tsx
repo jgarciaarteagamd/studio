@@ -173,8 +173,8 @@ export default function PatientDetailPage() {
              <p>Fecha de Nacimiento: {format(new Date(patient.personalDetails.fechaNacimiento), "PPP", { locale: es })} {calculatedAge && `(${calculatedAge})`}</p>
             )}
             {patient.personalDetails.email && (<p className="flex items-center"><User className="mr-2 h-4 w-4 text-primary/70" /> Email: {patient.personalDetails.email}</p>)}
-            {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil (1): {patient.personalDetails.telefono1}</p>)}
-            {patient.personalDetails.telefono2 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono opcional (2): {patient.personalDetails.telefono2}</p>)}
+            {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil: {patient.personalDetails.telefono1}</p>)}
+            {patient.personalDetails.telefono2 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono opcional: {patient.personalDetails.telefono2}</p>)}
           </div>
            <Badge variant="secondary" className="w-fit mt-3">
             Última actualización general: {new Date(patient.updatedAt).toLocaleDateString(currentLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -303,5 +303,3 @@ export default function PatientDetailPage() {
     </div>
   );
 }
-
-    
