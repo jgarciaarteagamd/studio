@@ -9,9 +9,21 @@ export interface Attachment {
 }
 
 export interface PersonalDetails {
-  name: string;
-  dateOfBirth: string; // ISO date string
-  contactInfo: string;
+  nombres: string; // Changed from name
+  apellidos: string; // New field
+  documentoIdentidad?: string; // New field
+  fechaNacimiento: string; // Changed from dateOfBirth
+  // contactInfo (string) is replaced by:
+  telefono1?: string;
+  telefono2?: string;
+  email?: string;
+}
+
+export interface DatosFacturacion {
+  ruc?: string;
+  direccionFiscal?: string;
+  telefonoFacturacion?: string;
+  emailFacturacion?: string;
 }
 
 export interface BackgroundInformation {
@@ -31,6 +43,7 @@ export interface MedicalEncounter {
 export interface PatientRecord {
   id: string;
   personalDetails: PersonalDetails;
+  datosFacturacion?: DatosFacturacion; // New section
   backgroundInformation?: BackgroundInformation; // Secretaria podría no llenarlo al crear
   medicalEncounters: MedicalEncounter[];
   // General attachments, or could be moved/linked to encounters

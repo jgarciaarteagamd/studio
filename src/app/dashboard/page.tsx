@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockPatients } from "@/lib/mock-data";
+import { mockPatients, getPatientFullName } from "@/lib/mock-data";
 import { FileText, Users, BarChart3, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import Image from 'next/image';
@@ -31,7 +31,10 @@ const PatientLastUpdatedDisplay = ({ updatedAt }: { updatedAt: string }) => {
 };
 
 export default function DashboardPage() {
-  const recentPatients = mockPatients.slice(0, 3); // Show 3 most recent for demo
+  // Ordenar pacientes por updatedAt para obtener los más recientes primero
+  const recentPatients = [...mockPatients]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 3); 
 
   return (
     <div className="space-y-6">
@@ -78,7 +81,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">
               Informes creados con IA
             </p>
-             <Button size="sm" className="mt-4 w-full" variant="outline" onClick={() => alert("Funcionalidad no implementada completamente")}>
+             <Button size="sm" className="mt-4 w-full" variant="outline" onClick={() => alert("Funcionalidad no implementada completamente. Ve a un paciente específico para generar informes.")}>
               Generar Nuevo Informe
             </Button>
           </CardContent>
@@ -111,7 +114,7 @@ export default function DashboardPage() {
                 <li key={patient.id} className="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors">
                   <div>
                     <Link href={`/dashboard/patients/${patient.id}`} className="font-medium text-primary hover:underline">
-                      {patient.personalDetails?.name || '(Nombre no disponible)'}
+                      {getPatientFullName(patient) || '(Nombre no disponible)'}
                     </Link>
                     <p className="text-sm text-muted-foreground">Última actualización: <PatientLastUpdatedDisplay updatedAt={patient.updatedAt} /></p>
                   </div>

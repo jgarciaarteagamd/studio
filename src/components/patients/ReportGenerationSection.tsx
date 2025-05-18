@@ -10,6 +10,7 @@ import { Loader2, FileText, ExternalLink } from "lucide-react";
 import type { PatientRecord } from "@/lib/types";
 import { summarizeRecord, generateReport } from "@/ai/flows"; 
 import { useToast } from "@/hooks/use-toast";
+import { getPatientFullName } from '@/lib/mock-data';
 
 interface ReportGenerationSectionProps {
   patient: PatientRecord;
@@ -32,9 +33,15 @@ export function ReportGenerationSection({ patient }: ReportGenerationSectionProp
     try {
       // Prepare input based on the new PatientRecord structure
       const inputForSummary = {
-        personalDetails: patient.personalDetails,
+        personalDetails: {
+          ...patient.personalDetails,
+          fechaNacimiento: new Date(patient.personalDetails.fechaNacimiento).toLocaleDateString('es-ES'), // Format for AI
+        },
         backgroundInformation: patient.backgroundInformation,
-        medicalEncounters: patient.medicalEncounters,
+        medicalEncounters: patient.medicalEncounters.map(enc => ({
+            ...enc,
+            date: new Date(enc.date).toLocaleDateString('es-ES'), // Format for AI
+        })),
       };
       const result = await summarizeRecord(inputForSummary);
       setSummary(result.summary);
@@ -59,29 +66,27 @@ export function ReportGenerationSection({ patient }: ReportGenerationSectionProp
     try {
       // Prepare input for the full report
       const inputForReport = {
-        personalDetails: patient.personalDetails,
+        personalDetails: {
+          ...patient.personalDetails,
+          fechaNacimiento: new Date(patient.personalDetails.fechaNacimiento).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }),
+        },
+        datosFacturacion: patient.datosFacturacion,
         backgroundInformation: patient.backgroundInformation,
-        medicalEncounters: patient.medicalEncounters,
+        medicalEncounters: patient.medicalEncounters.map(enc => ({
+            ...enc,
+            date: new Date(enc.date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }),
+        })),
       };
       const result = await generateReport(inputForReport);
       
-      console.log("Contenido del Informe Completo Generado (simulado):", result.report);
-      
-      // Create a Blob with the report content
       const blob = new Blob([result.report], { type: 'text/markdown;charset=utf-8' });
-      // Create a link element
       const link = document.createElement('a');
-      // Set the download attribute with a filename
-      link.download = `Informe_${patient.personalDetails.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.md`;
-      // Create a URL for the Blob and set it as the href attribute
+      const patientFullName = getPatientFullName(patient).replace(/\s+/g, '_');
+      link.download = `Informe_${patientFullName}_${new Date().toISOString().split('T')[0]}.md`;
       link.href = URL.createObjectURL(blob);
-      // Append the link to the body (required for Firefox)
       document.body.appendChild(link);
-      // Programmatically click the link to trigger the download
       link.click();
-      // Remove the link from the body
       document.body.removeChild(link);
-      // Revoke the Blob URL to free up resources
       URL.revokeObjectURL(link.href);
 
       toast({

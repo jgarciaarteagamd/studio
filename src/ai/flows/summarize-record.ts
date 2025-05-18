@@ -9,30 +9,43 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import type { PersonalDetails, BackgroundInformation, MedicalEncounter } from '@/lib/types'; // Import new types
+import type { PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from '@/lib/types';
 
 // Define Zod schemas for the new structured input
 const PersonalDetailsSchema = z.object({
-  name: z.string(),
-  dateOfBirth: z.string(),
-  contactInfo: z.string(),
+  nombres: z.string(),
+  apellidos: z.string(),
+  documentoIdentidad: z.string().optional(),
+  fechaNacimiento: z.string(), // Keep as string for AI, will be ISO date
+  telefono1: z.string().optional(),
+  telefono2: z.string().optional(),
+  email: z.string().email().optional(),
 });
+
+const DatosFacturacionSchema = z.object({
+  ruc: z.string().optional(),
+  direccionFiscal: z.string().optional(),
+  telefonoFacturacion: z.string().optional(),
+  emailFacturacion: z.string().email().optional(),
+}).optional();
+
 
 const BackgroundInformationSchema = z.object({
   personalHistory: z.string().optional(),
   allergies: z.string().optional(),
   habitualMedication: z.string().optional(),
-});
+}).optional(); // Make the whole object optional
 
 const MedicalEncounterSchema = z.object({
   id: z.string(),
-  date: z.string(),
+  date: z.string(), // Keep as string for AI, will be ISO date
   details: z.string(),
 });
 
 const SummarizeRecordInputSchema = z.object({
   personalDetails: PersonalDetailsSchema.describe("Detalles personales del paciente."),
-  backgroundInformation: BackgroundInformationSchema.describe("Antecedentes e información general del paciente."),
+  // datosFacturacion is not typically needed for a medical summary, so we omit it here
+  backgroundInformation: BackgroundInformationSchema.describe("Antecedentes e información general del paciente.").nullable(),
   medicalEncounters: z.array(MedicalEncounterSchema).describe("Lista de encuentros o consultas médicas del paciente."),
 });
 export type SummarizeRecordInput = z.infer<typeof SummarizeRecordInputSchema>;
@@ -66,14 +79,19 @@ const prompt = ai.definePrompt({
   Por favor, proporciona un resumen conciso y preciso del siguiente historial médico:
 
   === Detalles Personales ===
-  Nombre: {{{personalDetails.name}}}
-  Fecha de Nacimiento: {{{personalDetails.dateOfBirth}}}
-  Contacto: {{{personalDetails.contactInfo}}}
+  Nombre Completo: {{{personalDetails.nombres}}} {{{personalDetails.apellidos}}}
+  Fecha de Nacimiento: {{{personalDetails.fechaNacimiento}}}
+  Documento: {{{personalDetails.documentoIdentidad}}}
+  Contacto: Email: {{{personalDetails.email}}}, Tel1: {{{personalDetails.telefono1}}}, Tel2: {{{personalDetails.telefono2}}}
 
   === Antecedentes e Información General ===
+  {{#if backgroundInformation}}
   Antecedentes Personales: {{{backgroundInformation.personalHistory}}}
   Alergias: {{{backgroundInformation.allergies}}}
   Medicación Habitual: {{{backgroundInformation.habitualMedication}}}
+  {{else}}
+  No se proporcionaron antecedentes o medicación habitual.
+  {{/if}}
 
   === Historial de Consultas Médicas ===
   {{{formatEncountersForPrompt medicalEncounters}}}
@@ -81,7 +99,6 @@ const prompt = ai.definePrompt({
   Proporciona un resumen que integre la información más relevante de todas las secciones.
   `,
   customize: (model) => {
-    // Register the helper with Handlebars - IMPORTANT for server-side rendering of prompts
     const Handlebars = model.registry?.lookupHandler('handlebars');
     if (Handlebars) {
       Handlebars.registerHelper('formatEncountersForPrompt', formatEncountersForPrompt);

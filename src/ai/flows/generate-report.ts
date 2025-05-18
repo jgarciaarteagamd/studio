@@ -11,30 +11,44 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import type { PersonalDetails, BackgroundInformation, MedicalEncounter } from '@/lib/types'; // Import new types
+import type { PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from '@/lib/types'; // Import new types
 
 // Define Zod schemas for the new structured input, similar to summarize-record.ts
 const PersonalDetailsSchema = z.object({
-  name: z.string(),
-  dateOfBirth: z.string(),
-  contactInfo: z.string(),
+  nombres: z.string(),
+  apellidos: z.string(),
+  documentoIdentidad: z.string().optional(),
+  fechaNacimiento: z.string(), // Keep as string for AI, will be ISO date
+  telefono1: z.string().optional(),
+  telefono2: z.string().optional(),
+  email: z.string().email().optional(),
 });
+
+// DatosFacturacion is not usually part of a clinical report, so we might omit it or make it optional if needed for some reports
+const DatosFacturacionSchema = z.object({
+  ruc: z.string().optional(),
+  direccionFiscal: z.string().optional(),
+  telefonoFacturacion: z.string().optional(),
+  emailFacturacion: z.string().email().optional(),
+}).optional();
+
 
 const BackgroundInformationSchema = z.object({
   personalHistory: z.string().optional(),
   allergies: z.string().optional(),
   habitualMedication: z.string().optional(),
-});
+}).optional(); // Make the whole object optional
 
 const MedicalEncounterSchema = z.object({
   id: z.string(),
-  date: z.string(),
+  date: z.string(), // Keep as string for AI, will be ISO date
   details: z.string(),
 });
 
 const GenerateReportInputSchema = z.object({
   personalDetails: PersonalDetailsSchema.describe("Detalles personales del paciente."),
-  backgroundInformation: BackgroundInformationSchema.describe("Antecedentes e información general del paciente."),
+  datosFacturacion: DatosFacturacionSchema.describe("Datos de facturación del paciente (opcional para el informe clínico).").nullable(),
+  backgroundInformation: BackgroundInformationSchema.describe("Antecedentes e información general del paciente.").nullable(),
   medicalEncounters: z.array(MedicalEncounterSchema).describe("Lista de encuentros o consultas médicas del paciente."),
 });
 export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
@@ -73,11 +87,20 @@ const generateReportPrompt = ai.definePrompt({
   Genera un informe médico completo para el paciente basado en la siguiente información:
 
   **DATOS DEL PACIENTE**
-  Nombre: {{{personalDetails.name}}}
-  Fecha de Nacimiento: {{{personalDetails.dateOfBirth}}}
-  Información de Contacto: {{{personalDetails.contactInfo}}}
+  Nombre Completo: {{{personalDetails.nombres}}} {{{personalDetails.apellidos}}}
+  Documento de Identidad: {{#if personalDetails.documentoIdentidad}}{{{personalDetails.documentoIdentidad}}}{{else}}No registrado{{/if}}
+  Fecha de Nacimiento: {{{personalDetails.fechaNacimiento}}}
+  Teléfono Principal: {{#if personalDetails.telefono1}}{{{personalDetails.telefono1}}}{{else}}No registrado{{/if}}
+  Correo Electrónico: {{#if personalDetails.email}}{{{personalDetails.email}}}{{else}}No registrado{{/if}}
+
+  {{#if datosFacturacion.ruc}}
+  **DATOS DE FACTURACIÓN (Si es relevante para el contexto del informe)**
+  RUC: {{{datosFacturacion.ruc}}}
+  Dirección Fiscal: {{{datosFacturacion.direccionFiscal}}}
+  {{/if}}
 
   **ANTECEDENTES Y MEDICACIÓN HABITUAL**
+  {{#if backgroundInformation}}
   Antecedentes Personales Relevantes:
   {{{backgroundInformation.personalHistory}}}
 
@@ -86,6 +109,9 @@ const generateReportPrompt = ai.definePrompt({
 
   Medicación Habitual:
   {{{backgroundInformation.habitualMedication}}}
+  {{else}}
+  No se proporcionaron antecedentes o medicación habitual.
+  {{/if}}
 
   **HISTORIAL DE CONSULTAS**
   (Ordenado de la más reciente a la más antigua)
@@ -100,7 +126,6 @@ const generateReportPrompt = ai.definePrompt({
   Utiliza Markdown para el formato del informe (encabezados, negritas, listas).
   `,
   customize: (model) => {
-    // Register the helper with Handlebars
     const Handlebars = model.registry?.lookupHandler('handlebars');
     if (Handlebars) {
       Handlebars.registerHelper('formatEncountersForReport', formatEncountersForReport);

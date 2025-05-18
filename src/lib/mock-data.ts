@@ -1,5 +1,5 @@
 // src/lib/mock-data.ts
-import type { PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment, Appointment } from './types';
+import type { PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment, Appointment, DatosFacturacion } from './types';
 import { addMinutes, formatISO, parseISO, setHours, setMinutes } from 'date-fns';
 
 const today = new Date();
@@ -18,9 +18,17 @@ export const mockPatients: PatientRecord[] = [
   {
     id: '1',
     personalDetails: {
-      name: 'Maria Gonzalez',
-      dateOfBirth: '1985-05-15',
-      contactInfo: 'maria.gonzalez@example.com | 555-0101',
+      nombres: 'Maria',
+      apellidos: 'Gonzalez Perez',
+      documentoIdentidad: '12345678A',
+      fechaNacimiento: '1985-05-15',
+      email: 'maria.gonzalez@example.com',
+      telefono1: '555-0101',
+    },
+    datosFacturacion: {
+      ruc: '12345678901',
+      direccionFiscal: 'Av. Siempreviva 742',
+      emailFacturacion: 'facturacion.maria@example.com',
     },
     backgroundInformation: {
       personalHistory: 'Diabetes tipo 2 diagnosticada en 2020. Hipertensión.',
@@ -46,9 +54,16 @@ export const mockPatients: PatientRecord[] = [
   {
     id: '2',
     personalDetails: {
-      name: 'John Smith',
-      dateOfBirth: '1970-11-22',
-      contactInfo: 'john.smith@example.com | 555-0102',
+      nombres: 'John',
+      apellidos: 'Smith Miller',
+      documentoIdentidad: '87654321B',
+      fechaNacimiento: '1970-11-22',
+      email: 'john.smith@example.com',
+      telefono1: '555-0102',
+    },
+    datosFacturacion: {
+      ruc: '10987654321',
+      direccionFiscal: 'Calle Falsa 123',
     },
     backgroundInformation: {
       personalHistory: 'Hipotiroidismo diagnosticado en 2015. Hiperlipidemia.',
@@ -69,10 +84,14 @@ export const mockPatients: PatientRecord[] = [
   {
     id: '3',
     personalDetails: {
-      name: 'Luisa Fernandez',
-      dateOfBirth: '1992-08-01',
-      contactInfo: 'luisa.fernandez@example.com | 555-0103',
+      nombres: 'Luisa',
+      apellidos: 'Fernandez Garcia',
+      documentoIdentidad: '11223344C',
+      fechaNacimiento: '1992-08-01',
+      email: 'luisa.fernandez@example.com',
+      telefono1: '555-0103',
     },
+    // No datosFacturacion for this patient initially
     backgroundInformation: {
       personalHistory: 'Síndrome de Ovario Poliquístico (SOP). Buscando embarazo.',
       allergies: 'AINEs (malestar gástrico).',
@@ -98,12 +117,17 @@ export const getPatientById = (id: string): PatientRecord | undefined => {
 
 // Function to add a patient (mock)
 export const addPatient = (
-  data: { personalDetails: PersonalDetails; backgroundInformation?: BackgroundInformation } // backgroundInformation is now optional
+  data: { 
+    personalDetails: PersonalDetails; 
+    datosFacturacion?: DatosFacturacion;
+    backgroundInformation?: BackgroundInformation 
+  }
 ): PatientRecord => {
   const newPatient: PatientRecord = {
     id: String(mockPatients.length + 1 + Math.random()), // simple unique ID
     personalDetails: data.personalDetails,
-    backgroundInformation: data.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' }, // Provide default if not given
+    datosFacturacion: data.datosFacturacion || { ruc: '', direccionFiscal: '', telefonoFacturacion: '', emailFacturacion: ''},
+    backgroundInformation: data.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' }, 
     medicalEncounters: [], 
     attachments: [], 
     createdAt: new Date().toISOString(),
@@ -122,6 +146,7 @@ export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, '
       ...currentPatient,
       ...updates,
       personalDetails: updates.personalDetails || currentPatient.personalDetails,
+      datosFacturacion: updates.datosFacturacion !== undefined ? updates.datosFacturacion : currentPatient.datosFacturacion,
       backgroundInformation: updates.backgroundInformation !== undefined ? updates.backgroundInformation : currentPatient.backgroundInformation,
       medicalEncounters: updates.medicalEncounters || currentPatient.medicalEncounters,
       attachments: updates.attachments || currentPatient.attachments,
@@ -139,7 +164,7 @@ export let mockAppointments: Appointment[] = [
   {
     id: 'appt1',
     patientId: '1',
-    patientName: 'Maria Gonzalez',
+    patientName: 'Maria Gonzalez Perez', // Updated full name
     dateTime: setHours(setMinutes(today, 0), 10).toISOString(), // Hoy a las 10:00
     durationMinutes: 30,
     status: 'confirmada',
@@ -157,7 +182,7 @@ export let mockAppointments: Appointment[] = [
   {
     id: 'appt2',
     patientId: '2',
-    patientName: 'John Smith',
+    patientName: 'John Smith Miller', // Updated full name
     dateTime: setHours(setMinutes(today, 30), 11).toISOString(), // Hoy a las 11:30
     durationMinutes: 45,
     status: 'programada',
@@ -167,7 +192,7 @@ export let mockAppointments: Appointment[] = [
   {
     id: 'appt3',
     patientId: '3',
-    patientName: 'Luisa Fernandez',
+    patientName: 'Luisa Fernandez Garcia', // Updated full name
     dateTime: setHours(setMinutes(tomorrow, 0), 9).toISOString(), // Mañana a las 09:00
     durationMinutes: 60,
     status: 'programada',
@@ -187,7 +212,7 @@ export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & {
     if (!patient) {
       throw new Error("Paciente no encontrado para la cita.");
     }
-    patientName = patient.personalDetails.name;
+    patientName = `${patient.personalDetails.nombres} ${patient.personalDetails.apellidos}`;
   } else if (data.isBlocker) {
     patientName = undefined; // No patient name for blockers
   }
@@ -206,4 +231,13 @@ export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & {
   };
   mockAppointments.push(newAppointment);
   return newAppointment;
+};
+
+// Helper function to get patient full name for display
+export const getPatientFullName = (patient: PatientRecord | PersonalDetails): string => {
+  if ('personalDetails' in patient) { // It's a PatientRecord
+    return `${patient.personalDetails.nombres} ${patient.personalDetails.apellidos}`;
+  }
+  // It's PersonalDetails
+  return `${patient.nombres} ${patient.apellidos}`;
 };

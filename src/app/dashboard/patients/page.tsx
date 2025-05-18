@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PatientTable } from "@/components/patients/PatientTable"; // PatientTable needs to be adapted
+import { PatientTable } from "@/components/patients/PatientTable";
 import { mockPatients } from "@/lib/mock-data";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
@@ -16,10 +16,10 @@ export default function PatientsPage() {
 
   useEffect(() => {
     // Simulate data fetching
-    setTimeout(() => {
-      setPatients(mockPatients); // mockPatients should now have the new structure
-      setIsLoading(false);
-    }, 500);
+    // En una aplicación real, esto podría ser una llamada a una API
+    // y la paginación/búsqueda podrían ser del lado del servidor.
+    setPatients(mockPatients.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()));
+    setIsLoading(false);
   }, []);
 
   return (
@@ -28,7 +28,7 @@ export default function PatientsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Historiales de Pacientes</h1>
           <p className="text-muted-foreground">
-            Ver, gestionar y crear historiales de pacientes.
+            Ver, buscar, gestionar y crear historiales de pacientes.
           </p>
         </div>
         <Button asChild size="lg">
@@ -43,21 +43,14 @@ export default function PatientsPage() {
         <CardHeader>
           <CardTitle>Todos los Pacientes</CardTitle>
           <CardDescription>
-            Una lista de todos los historiales de pacientes en el sistema.
+            Lista de todos los historiales de pacientes en el sistema. Use el buscador para filtrar.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <p>Cargando datos de pacientes...</p> 
-          ) : patients.length > 0 ? (
+          ) : ( // PatientTable ahora maneja el estado de "no hay pacientes"
             <PatientTable patients={patients} />
-          ) : (
-            <div className="text-center py-10">
-              <p className="text-lg text-muted-foreground">No se encontraron pacientes.</p>
-              <Button asChild className="mt-4">
-                <Link href="/dashboard/patients/new">Crear Primer Historial de Paciente</Link>
-              </Button>
-            </div>
           )}
         </CardContent>
       </Card>
