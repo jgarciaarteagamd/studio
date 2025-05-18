@@ -9,8 +9,9 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label'; // Importar Label estándar
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'; // FormLabel de react-hook-form
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
@@ -88,7 +89,7 @@ export default function NewConsultationPage() {
     if (updatedPatient) {
       toast({
         title: "Consulta Guardada",
-        description: `Nueva consulta para ${getPatientFullName(selectedPatient)} guardada exitosamente.`,
+        description: `Nueva consulta para ${getPatientFullName(updatedPatient)} guardada exitosamente.`,
       });
       setSelectedPatient(updatedPatient); // Actualizar el paciente seleccionado con la nueva consulta
       form.reset();
@@ -127,7 +128,7 @@ export default function NewConsultationPage() {
         <CardContent>
           {!selectedPatient ? (
             <>
-              <FormLabel htmlFor="patientSearch">Buscar Paciente</FormLabel>
+              <Label htmlFor="patientSearch">Buscar Paciente</Label> {/* Cambiado a Label estándar */}
               <div className="flex items-center space-x-2 mb-4">
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <Input
