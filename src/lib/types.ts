@@ -42,10 +42,13 @@ export interface PatientRecord {
 
 export interface Appointment {
   id: string;
-  patientId: string;
-  patientName: string; // Denormalized for easy display in lists
+  patientId?: string; // Optional if it's a blocker
+  patientName?: string; // Denormalized for easy display, optional for blockers
   dateTime: string; // ISO string for full date and time
   durationMinutes: number;
-  notes?: string;
+  notes?: string; // For regular appointments
   status: 'programada' | 'confirmada' | 'cancelada' | 'completada';
+  isBlocker?: boolean; // True if this is a time block rather than a patient appointment
+  blockerReason?: string; // Reason for the block (e.g., "Lunch", "Meeting")
 }
+

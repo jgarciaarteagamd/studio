@@ -141,7 +141,16 @@ export let mockAppointments: Appointment[] = [
     dateTime: setHours(setMinutes(today, 0), 10).toISOString(), // Hoy a las 10:00
     durationMinutes: 30,
     status: 'confirmada',
-    notes: 'Control de diabetes.'
+    notes: 'Control de diabetes.',
+    isBlocker: false,
+  },
+  {
+    id: 'appt-block-lunch',
+    dateTime: setHours(setMinutes(today, 0), 13).toISOString(), // Hoy a las 13:00
+    durationMinutes: 60,
+    status: 'programada', // Or a new status like 'blocked'
+    isBlocker: true,
+    blockerReason: 'Almuerzo del Personal',
   },
   {
     id: 'appt2',
@@ -150,7 +159,8 @@ export let mockAppointments: Appointment[] = [
     dateTime: setHours(setMinutes(today, 30), 11).toISOString(), // Hoy a las 11:30
     durationMinutes: 45,
     status: 'programada',
-    notes: 'Seguimiento hipotiroidismo.'
+    notes: 'Seguimiento hipotiroidismo.',
+    isBlocker: false,
   },
   {
     id: 'appt3',
@@ -159,7 +169,8 @@ export let mockAppointments: Appointment[] = [
     dateTime: setHours(setMinutes(tomorrow, 0), 9).toISOString(), // Mañana a las 09:00
     durationMinutes: 60,
     status: 'programada',
-    notes: 'Consulta SOP.'
+    notes: 'Consulta SOP.',
+    isBlocker: false,
   }
 ];
 
@@ -167,15 +178,29 @@ export const getAppointments = (): Appointment[] => {
   return mockAppointments.sort((a,b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime());
 };
 
-export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'>): Appointment => {
-  const patient = getPatientById(data.patientId);
-  if (!patient) {
-    throw new Error("Paciente no encontrado para la cita.");
+export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & { patientName?: string }): Appointment => {
+  let patientName = data.patientName;
+  if (data.patientId && !data.isBlocker) {
+    const patient = getPatientById(data.patientId);
+    if (!patient) {
+      throw new Error("Paciente no encontrado para la cita.");
+    }
+    patientName = patient.personalDetails.name;
+  } else if (data.isBlocker) {
+    patientName = undefined; // No patient name for blockers
   }
+
+
   const newAppointment: Appointment = {
-    ...data,
     id: `appt-${Date.now()}`,
-    patientName: patient.personalDetails.name,
+    patientId: data.isBlocker ? undefined : data.patientId,
+    patientName: data.isBlocker ? undefined : patientName,
+    dateTime: data.dateTime,
+    durationMinutes: data.durationMinutes,
+    notes: data.isBlocker ? undefined : data.notes,
+    status: data.status,
+    isBlocker: data.isBlocker || false,
+    blockerReason: data.isBlocker ? data.blockerReason : undefined,
   };
   mockAppointments.push(newAppointment);
   return newAppointment;
@@ -184,3 +209,4 @@ export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'>): A
 // Placeholder for future update/delete appointment functions
 // export const updateAppointment = (id: string, updates: Partial<Omit<Appointment, 'id'>>): Appointment | undefined => { ... }
 // export const deleteAppointment = (id: string): boolean => { ... }
+

@@ -11,26 +11,41 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock } from "lucide-react";
+import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock } from "lucide-react"; // Added Lock
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
 import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button"; // Import buttonVariants
+import { buttonVariants } from "@/components/ui/button";
 import { DayAppointmentsSidebar } from "@/components/schedule/DayAppointmentsSidebar";
 
 const appointmentFormSchema = z.object({
-  patientId: z.string().min(1, "Debe seleccionar un paciente."),
+  patientId: z.string().optional(),
   date: z.date({ required_error: "La fecha es obligatoria." }),
   time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Formato de hora inválido (HH:MM)."),
-  durationMinutes: z.coerce.number().min(5, "La duración debe ser al menos 5 minutos.").max(240, "La duración no puede exceder 240 minutos."),
-  notes: z.string().optional(),
+  durationMinutes: z.coerce.number().min(5, "La duración debe ser al menos 5 minutos.").max(1440, "La duración no puede exceder 1 día (1440 min)."), // Max 1 day
+  notes: z.string().optional(), // For patient appointments
   status: z.enum(['programada', 'confirmada', 'cancelada', 'completada']).default('programada'),
+  isBlocker: z.boolean().optional().default(false),
+  blockerReason: z.string().optional(), // For blockers
+}).refine(data => {
+  if (data.isBlocker && !data.blockerReason) {
+    return false; // Blocker must have a reason
+  }
+  if (!data.isBlocker && !data.patientId) {
+    return false; // Appointment must have a patient
+  }
+  return true;
+}, {
+  message: "Si es un bloqueo, debe indicar un motivo. Si es una cita, debe seleccionar un paciente.",
+  path: ["isBlocker"], // Or a more general path
 });
+
 
 type AppointmentFormValues = z.infer<typeof appointmentFormSchema>;
 
@@ -38,12 +53,10 @@ export default function SchedulePage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<PatientRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isFormOpen, setIsFormOpen] = useState(false); // For new appointment dialog
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const { toast } = useToast();
   const [currentLocale, setCurrentLocale] = useState('es-ES');
   const [displayedMonth, setDisplayedMonth] = useState<Date>(startOfMonth(new Date()));
-
-  // States for DayAppointmentsSidebar
   const [selectedCalendarDay, setSelectedCalendarDay] = useState<Date | null>(null);
   const [isDaySidebarOpen, setIsDaySidebarOpen] = useState(false);
 
@@ -63,28 +76,41 @@ export default function SchedulePage() {
       durationMinutes: 30,
       notes: "",
       status: "programada",
+      isBlocker: false,
+      blockerReason: "",
     },
   });
+
+  const isBlockerWatch = form.watch("isBlocker");
 
   const onSubmit: SubmitHandler<AppointmentFormValues> = (data) => {
     const selectedDate = startOfDay(data.date);
     const [hours, minutes] = data.time.split(':').map(Number);
     const dateTime = setMinutes(setHours(selectedDate, hours), minutes);
 
-    const newAppointmentData = {
-      patientId: data.patientId,
+    const newAppointmentData: Omit<Appointment, 'id' | 'patientName'> = {
       dateTime: dateTime.toISOString(),
       durationMinutes: data.durationMinutes,
-      notes: data.notes,
       status: data.status,
+      isBlocker: data.isBlocker,
     };
+
+    if (data.isBlocker) {
+      newAppointmentData.blockerReason = data.blockerReason;
+      newAppointmentData.patientId = undefined; // Ensure no patientId for blockers
+      newAppointmentData.notes = undefined;
+    } else {
+      newAppointmentData.patientId = data.patientId;
+      newAppointmentData.notes = data.notes;
+      newAppointmentData.blockerReason = undefined;
+    }
 
     try {
       addAppointment(newAppointmentData);
       setAppointments(getAppointments()); 
       toast({
-        title: "Cita Agendada",
-        description: "La nueva cita ha sido programada exitosamente.",
+        title: data.isBlocker ? "Horario Bloqueado" : "Cita Agendada",
+        description: data.isBlocker ? "El periodo ha sido bloqueado exitosamente." : "La nueva cita ha sido programada exitosamente.",
       });
       setIsFormOpen(false);
       form.reset({ 
@@ -94,12 +120,14 @@ export default function SchedulePage() {
         durationMinutes: 30,
         notes: "",
         status: "programada",
+        isBlocker: false,
+        blockerReason: "",
       });
     } catch (error) {
-      console.error("Error agendando cita:", error);
+      console.error("Error agendando/bloqueando:", error);
       toast({
         title: "Error",
-        description: (error as Error).message || "No se pudo agendar la cita.",
+        description: (error as Error).message || (data.isBlocker ? "No se pudo bloquear el horario." : "No se pudo agendar la cita."),
         variant: "destructive",
       });
     }
@@ -172,7 +200,7 @@ export default function SchedulePage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Agenda de Citas</h1>
           <p className="text-muted-foreground">
-            Ver y programar citas para los pacientes.
+            Ver y programar citas o bloqueos de horario.
           </p>
         </div>
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
@@ -185,51 +213,79 @@ export default function SchedulePage() {
                 durationMinutes: 30,
                 notes: "",
                 status: "programada",
+                isBlocker: false,
+                blockerReason: "",
               }); 
               setIsFormOpen(true); 
             }}>
               <PlusCircle className="mr-2 h-5 w-5" />
-              Programar Nueva Cita
+              Programar Cita/Bloqueo
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Programar Nueva Cita</DialogTitle>
-              <DialogDescription>Complete los detalles para la nueva cita.</DialogDescription>
+              <DialogTitle>{isBlockerWatch ? "Bloquear Horario" : "Programar Nueva Cita"}</DialogTitle>
+              <DialogDescription>Complete los detalles para la nueva {isBlockerWatch ? "entrada de bloqueo" : "cita"}.</DialogDescription>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
                 <FormField
                   control={form.control}
-                  name="patientId"
+                  name="isBlocker"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Paciente</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccione un paciente" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {patients.map((patient) => (
-                            <SelectItem key={patient.id} value={patient.id}>
-                              {patient.personalDetails.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          Marcar como bloqueo de horario
+                        </FormLabel>
+                        <FormDescription>
+                          Seleccione esto si no es una cita de paciente (ej. almuerzo, reunión).
+                        </FormDescription>
+                      </div>
                     </FormItem>
                   )}
                 />
+
+                {!isBlockerWatch && (
+                  <FormField
+                    control={form.control}
+                    name="patientId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Paciente</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccione un paciente" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {patients.map((patient) => (
+                              <SelectItem key={patient.id} value={patient.id}>
+                                {patient.personalDetails.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="date"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Fecha de la Cita</FormLabel>
+                        <FormLabel>Fecha</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -277,7 +333,7 @@ export default function SchedulePage() {
                     name="time"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Hora de la Cita</FormLabel>
+                        <FormLabel>Hora</FormLabel>
                         <FormControl>
                           <Input type="time" {...field} />
                         </FormControl>
@@ -299,25 +355,43 @@ export default function SchedulePage() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notas Adicionales (Opcional)</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Notas sobre la cita, motivo, etc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                
+                {isBlockerWatch ? (
+                   <FormField
+                    control={form.control}
+                    name="blockerReason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Motivo del Bloqueo</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Ej: Almuerzo, Reunión importante, Mantenimiento" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notas Adicionales (Opcional)</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Notas sobre la cita, motivo, etc." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                  <FormField
                     control={form.control}
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Estado de la Cita</FormLabel>
+                        <FormLabel>Estado</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -338,7 +412,7 @@ export default function SchedulePage() {
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
                   <Button type="submit" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? "Guardando..." : "Guardar Cita"}
+                    {form.formState.isSubmitting ? "Guardando..." : (isBlockerWatch ? "Guardar Bloqueo" : "Guardar Cita")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -350,9 +424,9 @@ export default function SchedulePage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Calendario de Citas</CardTitle>
-          <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use el botón "+ Programar Nueva Cita" para agendar.</CardDescription>
+          <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use el botón "+ Programar Cita/Bloqueo" para agendar.</CardDescription>
         </CardHeader>
-        <CardContent className="p-0 sm:p-4 md:p-6">
+        <CardContent className="p-4"> {/* Ajustado padding para consistencia */}
           <Calendar
             mode="single" 
             selected={selectedCalendarDay || undefined} 
@@ -365,19 +439,38 @@ export default function SchedulePage() {
             className="rounded-md border shadow-md w-full" 
             classNames={{ 
                 caption_label: "text-lg font-medium",
-                // Combine base styles with responsive heights
                 head_cell: cn(
-                  "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-sm p-0 text-center", // Base styles from calendar.tsx
-                  "h-10 sm:h-12 md:h-14" // Responsive height
+                  "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-sm p-0 text-center",
+                  "h-10 sm:h-12 md:h-14"
                 ),
                 cell: cn(
-                  "flex-1 min-w-0 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20", // Base styles from calendar.tsx (excluding h-9)
-                  "h-10 sm:h-12 md:h-14" // Responsive height
+                  "flex-1 min-w-0 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                  "flex items-center justify-center", // Ensure cell centers its content (the day button)
+                  "h-10 sm:h-12 md:h-14" 
                 ),
-                day: cn( // Ensure day fills the taller cell and has button styles
-                  buttonVariants({ variant: "ghost" }), 
-                  "h-full w-full p-0 font-normal aria-selected:opacity-100" // Base styles from calendar.tsx
-                ),
+                day: (date, modifiers, dayProps) => {
+                  let klasses = cn(
+                    buttonVariants({ variant: "ghost" }),
+                    "h-full w-full p-0 font-normal text-foreground" 
+                  );
+                  if (modifiers.selected) {
+                    klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-primary-foreground");
+                  } else if (modifiers.today) {
+                    klasses = cn(klasses, "ring-1 ring-primary rounded-full");
+                  } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter) {
+                    klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full");
+                  }
+                  if (modifiers.disabled) {
+                    klasses = cn(klasses, "opacity-50");
+                  }
+                  if (modifiers.outside) {
+                    klasses = cn(klasses, "text-muted-foreground opacity-50");
+                    if (modifiers.selected) {
+                      klasses = cn(klasses, "bg-primary/20");
+                    }
+                  }
+                  return klasses;
+                },
             }}
           />
         </CardContent>
@@ -404,31 +497,42 @@ export default function SchedulePage() {
               <CardContent>
                 <ul className="space-y-4">
                   {groupedAppointments[dateKey].sort((a,b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime()).map((appointment) => (
-                    <li key={appointment.id} className="border p-4 rounded-lg hover:shadow-lg transition-shadow">
+                    <li key={appointment.id} className={cn(
+                      "border p-4 rounded-lg hover:shadow-lg transition-shadow",
+                      appointment.isBlocker && "bg-muted/70 border-dashed" // Style for blockers
+                    )}>
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                         <div>
                           <p className="font-semibold text-primary text-lg flex items-center">
-                            <Clock className="mr-2 h-5 w-5" />
+                            {appointment.isBlocker ? <Lock className="mr-2 h-5 w-5 text-gray-500" /> : <Clock className="mr-2 h-5 w-5" />}
                             {format(parseISO(appointment.dateTime), "HH:mm", { locale: es })}
                             <span className="text-muted-foreground text-sm ml-2">({appointment.durationMinutes} min)</span>
                           </p>
                           <p className="text-md flex items-center mt-1">
-                            <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                            {appointment.patientName}
+                            {appointment.isBlocker ? (
+                              <span className="text-gray-700 font-medium">{appointment.blockerReason || "Horario Bloqueado"}</span>
+                            ) : (
+                              <>
+                                <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                                {appointment.patientName}
+                              </>
+                            )}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                           <span className={cn("text-xs font-medium mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full", {
-                             "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200": appointment.status === "programada",
-                             "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200": appointment.status === "confirmada" || appointment.status === "completada",
-                             "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200": appointment.status === "cancelada",
-                           })}>
-                            {getStatusIcon(appointment.status)}
-                            <span className="ml-1">{getStatusText(appointment.status)}</span>
-                          </span>
-                        </div>
+                        {!appointment.isBlocker && (
+                          <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                            <span className={cn("text-xs font-medium mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full", {
+                              "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200": appointment.status === "programada",
+                              "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200": appointment.status === "confirmada" || appointment.status === "completada",
+                              "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200": appointment.status === "cancelada",
+                            })}>
+                              {getStatusIcon(appointment.status)}
+                              <span className="ml-1">{getStatusText(appointment.status)}</span>
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      {appointment.notes && (
+                      {appointment.notes && !appointment.isBlocker && (
                         <p className="text-sm text-muted-foreground mt-2 pt-2 border-t border-dashed">
                           <strong>Notas:</strong> {appointment.notes}
                         </p>
@@ -443,10 +547,10 @@ export default function SchedulePage() {
       ) : (
         <Card>
           <CardContent className="py-10 text-center">
-            <p className="text-lg text-muted-foreground">No hay citas programadas.</p>
+            <p className="text-lg text-muted-foreground">No hay citas ni bloqueos programados.</p>
             <Button className="mt-4" onClick={() => { form.reset(); setIsFormOpen(true); }}>
               <PlusCircle className="mr-2 h-5 w-5" />
-              Programar la Primera Cita
+              Programar la Primera Cita/Bloqueo
             </Button>
           </CardContent>
         </Card>
@@ -454,3 +558,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
