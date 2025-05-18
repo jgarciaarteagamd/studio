@@ -37,8 +37,8 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-3xl">Bienvenido a EndoCloud</CardTitle>
-          <CardDescription>Tu centro de gestión de pacientes de endocrinología.</CardDescription>
+          <CardTitle className="text-3xl">Bienvenido a e-medlog</CardTitle>
+          <CardDescription>Tu centro de gestión de pacientes e historiales médicos.</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="mb-4">
