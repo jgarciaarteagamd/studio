@@ -1,6 +1,6 @@
 // src/lib/mock-data.ts
-import type { PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment, Appointment, DatosFacturacion } from './types';
-import { addMinutes, formatISO, parseISO, setHours, setMinutes } from 'date-fns';
+import type { PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment, Appointment, DatosFacturacion, Recipe, MedicationItem } from './types';
+import { formatISO, parseISO, setHours, setMinutes } from 'date-fns';
 
 const today = new Date();
 const todayISO = today.toISOString();
@@ -8,6 +8,8 @@ const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOSt
 const tomorrow = new Date(new Date().setDate(new Date().getDate() + 1));
 const threeMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString();
 const sixMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString();
+const oneWeekAgo = new Date(new Date().setDate(new Date().getDate() - 7)).toISOString();
+
 
 export const mockAttachments: Attachment[] = [
   { id: 'attach1', name: 'Lab_Results_Jan2024.pdf', type: 'pdf', driveLink: '#', uploadedAt: todayISO },
@@ -49,6 +51,20 @@ export let mockPatients: PatientRecord[] = [
         details: '**Anamnesis:**\nControl trimestral. Refiere mejor adherencia a la dieta, aunque con picos de estrés laboral que dificultan ejercicio regular. Presentó un episodio de cefalea tensional la semana pasada.\n\n**Exploración Física:**\nTA: 135/85 mmHg, FC: 72 lpm, Peso: 74kg. No edemas. Resto sin cambios significativos.\n\n**Estudios Complementarios:**\nA1c: 7.2%. Perfil lipídico: Col Total 190, LDL 110, HDL 45, TG 150.\n\n**Impresión Diagnóstica:**\nDiabetes Mellitus tipo 2, en mejoría. Hipertensión Arterial controlada. Dislipidemia mixta leve.\n\n**Plan:**\nContinuar Metformina 1000mg BID. Ajustar Lisinopril a 20mg OD por picos tensionales ocasionales reportados. Iniciar Atorvastatina 10mg OD. Cita en 3 meses con control de A1c y perfil lipídico.',
       },
     ],
+    recipes: [
+      {
+        id: 'recipe1-1',
+        patientId: '1',
+        date: oneWeekAgo,
+        medications: [
+          { id: 'med1-1-1', drugName: 'Amoxicilina + Ácido Clavulánico', presentation: 'Comprimidos 875mg/125mg', indications: 'Tomar 1 comprimido cada 12 horas por 7 días.'},
+          { id: 'med1-1-2', drugName: 'Paracetamol', presentation: 'Comprimidos 500mg', indications: 'Tomar 1 comprimido cada 6-8 horas si presenta fiebre o dolor.'},
+        ],
+        preventiveMeasures: 'Reposo relativo. Aumentar ingesta de líquidos. Evitar cambios bruscos de temperatura.',
+        diagnoses: 'Faringoamigdalitis Aguda Bacteriana',
+        observations: 'Paciente refiere buena tolerancia gástrica a medicación previa similar.',
+      }
+    ],
     attachments: [mockAttachments[0]],
     createdAt: sixMonthsAgo,
     updatedAt: todayISO,
@@ -79,6 +95,7 @@ export let mockPatients: PatientRecord[] = [
         details: '**Anamnesis:**\nControl anual hipotiroidismo. Paciente asintomático, buena adherencia al tratamiento.\n\n**Exploración Física:**\nTA: 120/80 mmHg, FC: 68 lpm, Peso: 88kg. Piel y faneras normales. No bocio.\n\n**Estudios Complementarios:**\nTSH: 3.2 mUI/L (rango normal). Perfil lipídico: LDL 130 mg/dL.\n\n**Impresión Diagnóstica:**\nEutroidismo bajo tratamiento. Hiperlipidemia mixta.\n\n**Plan:**\nContinuar Levotiroxina 100mcg OD. Continuar Atorvastatina 20mg OD. Control anual o antes si hay síntomas.',
       },
     ],
+    recipes: [],
     attachments: mockAttachments,
     createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString(),
     updatedAt: sixMonthsAgo,
@@ -93,7 +110,6 @@ export let mockPatients: PatientRecord[] = [
       email: 'ana.martinez@example.com',
       telefono1: '0976543210',
     },
-    // No datosFacturacion for this patient initially
     backgroundInformation: {
       personalHistory: 'Síndrome de Ovario Poliquístico (SOP). Buscando embarazo.',
       allergies: 'AINEs (malestar gástrico).',
@@ -106,18 +122,17 @@ export let mockPatients: PatientRecord[] = [
         details: '**Anamnesis:**\nConsulta por SOP e infertilidad. Ciclos menstruales irregulares (cada 45-60 días). Hirsutismo leve en rostro. Acné persistente. Niega galactorrea. Deseo gestacional activo desde hace 1 año sin éxito.\n\n**Exploración Física:**\nTA: 110/70 mmHg, Peso: 70kg, Talla: 1.65m (IMC 25.7). Hirsutismo facial leve (score Ferriman-Gallwey 9). Acné comedoniano en rostro y espalda. No bocio, no acantosis nigricans.\n\n**Estudios Complementarios:**\nEcografía transvaginal (previa): Ovarios de aspecto poliquístico (15 folículos en ovario derecho, 12 en izquierdo). Perfil hormonal (día 3 del ciclo, referido): FSH 6 UI/L, LH 15 UI/L, Testosterona Total 70 ng/dL, Prolactina 12 ng/mL.\n\n**Impresión Diagnóstica:**\nSíndrome de Ovario Poliquístico (fenotipo A: hiperandrogenismo clínico, oligoanovulación, ovarios poliquísticos por ecografía). Infertilidad primaria.\n\n**Plan:**\n1. Iniciar Metformina 500mg BID para mejorar sensibilidad a la insulina y regularizar ciclos. Indicar toma gradual para tolerancia.\n2. Continuar Ácido Fólico 5mg OD.\n3. Asesoramiento sobre cambios en estilo de vida: dieta baja en carbohidratos refinados, ejercicio regular (objetivo IMC < 25).\n4. Discutir opciones de inducción de ovulación: iniciar con Letrozol 2.5mg/día del día 3 al 7 del ciclo, una vez que se presente menstruación o se induzca con progestágenos. Seguimiento folicular ecográfico.\n5. Control en 1 mes para evaluar tolerancia a Metformina y planificar inicio de inducción.',
       },
     ],
+    recipes: [],
     attachments: [],
     createdAt: yesterday,
     updatedAt: yesterday,
   },
 ];
 
-// Function to get a single patient by ID (mock)
 export const getPatientById = (id: string): PatientRecord | undefined => {
   return mockPatients.find(p => p.id === id);
 };
 
-// Function to add a patient (mock)
 export const addPatient = (
   data: { 
     personalDetails: PersonalDetails; 
@@ -126,11 +141,12 @@ export const addPatient = (
   }
 ): PatientRecord => {
   const newPatient: PatientRecord = {
-    id: String(mockPatients.length + 1 + Math.random()), // simple unique ID
+    id: String(mockPatients.length + 1 + Math.random()),
     personalDetails: data.personalDetails,
     datosFacturacion: data.datosFacturacion || { ruc: '', direccionFiscal: '', telefonoFacturacion: '', emailFacturacion: ''},
     backgroundInformation: data.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' }, 
-    medicalEncounters: [], 
+    medicalEncounters: [],
+    recipes: [], // Initialize with empty recipes
     attachments: [], 
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -139,18 +155,18 @@ export const addPatient = (
   return newPatient;
 };
 
-// Function to update a patient (mock)
 export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, 'id' | 'createdAt' >>): PatientRecord | undefined => {
   const patientIndex = mockPatients.findIndex(p => p.id === id);
   if (patientIndex !== -1) {
     const currentPatient = mockPatients[patientIndex];
-    const updatedPatientData = {
+    const updatedPatientData: PatientRecord = { // Ensure all fields of PatientRecord are present
       ...currentPatient,
       ...updates,
       personalDetails: updates.personalDetails || currentPatient.personalDetails,
       datosFacturacion: updates.datosFacturacion !== undefined ? updates.datosFacturacion : currentPatient.datosFacturacion,
       backgroundInformation: updates.backgroundInformation !== undefined ? updates.backgroundInformation : currentPatient.backgroundInformation,
       medicalEncounters: updates.medicalEncounters || currentPatient.medicalEncounters,
+      recipes: updates.recipes || currentPatient.recipes,
       attachments: updates.attachments || currentPatient.attachments,
       updatedAt: new Date().toISOString(),
     };
@@ -163,7 +179,7 @@ export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, '
 export interface NewConsultationData {
   anamnesis: string;
   exploracionFisica: string;
-  estudiosComplementarios: string;
+  estudiosComplementarios?: string;
   impresionDiagnostica: string;
   plan: string;
 }
@@ -189,14 +205,33 @@ export const addMedicalEncounterToPatient = (patientId: string, consultationData
   return mockPatients[patientIndex];
 };
 
+export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, 'id' | 'patientId' | 'date'>): PatientRecord | undefined => {
+  const patientIndex = mockPatients.findIndex(p => p.id === patientId);
+  if (patientIndex === -1) {
+    console.error(`Patient with id ${patientId} not found.`);
+    return undefined;
+  }
 
-// Appointments Mock Data
+  const newRecipe: Recipe = {
+    id: `recipe-${patientId}-${Date.now()}`,
+    patientId: patientId,
+    date: new Date().toISOString(),
+    ...recipeData,
+  };
+
+  mockPatients[patientIndex].recipes.push(newRecipe);
+  mockPatients[patientIndex].updatedAt = new Date().toISOString();
+
+  return mockPatients[patientIndex];
+};
+
+
 export let mockAppointments: Appointment[] = [
   {
     id: 'appt1',
     patientId: '1',
     patientName: 'Maria Gonzalez Perez', 
-    dateTime: setHours(setMinutes(today, 0), 10).toISOString(), // Hoy a las 10:00
+    dateTime: setHours(setMinutes(today, 0), 10).toISOString(),
     durationMinutes: 30,
     status: 'confirmada',
     notes: 'Control de diabetes.',
@@ -204,7 +239,7 @@ export let mockAppointments: Appointment[] = [
   },
   {
     id: 'appt-block-lunch',
-    dateTime: setHours(setMinutes(today, 0), 13).toISOString(), // Hoy a las 13:00
+    dateTime: setHours(setMinutes(today, 0), 13).toISOString(),
     durationMinutes: 60,
     status: 'programada', 
     isBlocker: true,
@@ -214,7 +249,7 @@ export let mockAppointments: Appointment[] = [
     id: 'appt2',
     patientId: '2',
     patientName: 'Carlos Rodriguez Lopez', 
-    dateTime: setHours(setMinutes(today, 30), 11).toISOString(), // Hoy a las 11:30
+    dateTime: setHours(setMinutes(today, 30), 11).toISOString(),
     durationMinutes: 45,
     status: 'programada',
     notes: 'Seguimiento hipotiroidismo.',
@@ -224,7 +259,7 @@ export let mockAppointments: Appointment[] = [
     id: 'appt3',
     patientId: '3',
     patientName: 'Ana Martinez Silva', 
-    dateTime: setHours(setMinutes(tomorrow, 0), 9).toISOString(), // Mañana a las 09:00
+    dateTime: setHours(setMinutes(tomorrow, 0), 9).toISOString(),
     durationMinutes: 60,
     status: 'programada',
     notes: 'Consulta SOP.',
@@ -248,7 +283,6 @@ export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & {
     patientNameResolved = undefined; 
   }
 
-
   const newAppointment: Appointment = {
     id: `appt-${Date.now()}`,
     patientId: data.isBlocker ? undefined : data.patientId,
@@ -264,12 +298,14 @@ export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & {
   return newAppointment;
 };
 
-// Helper function to get patient full name for display
 export const getPatientFullName = (patient: PatientRecord | PersonalDetails | undefined | null): string => {
   if (!patient) return 'Nombre no disponible';
-  if ('personalDetails' in patient) { // It's a PatientRecord
-    return `${patient.personalDetails.nombres} ${patient.personalDetails.apellidos}`;
+  
+  if ('personalDetails' in patient && patient.personalDetails) { 
+    return `${patient.personalDetails.nombres || ''} ${patient.personalDetails.apellidos || ''}`.trim() || 'Nombre no disponible';
   }
-  // It's PersonalDetails (e.g. from form values before full record creation)
-  return `${patient.nombres} ${patient.apellidos}`;
+  if ('nombres' in patient && 'apellidos' in patient) {
+     return `${patient.nombres || ''} ${patient.apellidos || ''}`.trim() || 'Nombre no disponible';
+  }
+  return 'Nombre no disponible';
 };

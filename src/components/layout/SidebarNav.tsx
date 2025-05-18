@@ -8,17 +8,19 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Users, CalendarDays, FileSignature, Receipt, UserCircle } from "lucide-react"; // Stethoscope removido
+import { LayoutDashboard, Users, CalendarDays, Receipt, UserCircle, FileSignature, Stethoscope, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// En un futuro, este array podría filtrarse según el rol del usuario.
-// const userRole = "doctor"; // o "secretary", obtenido del contexto de autenticación
+// Simulación de rol actual
+const SIMULATED_CURRENT_ROLE = "doctor"; // Cambiar a "secretary" para probar la visibilidad
 
 const navItems = [
   { href: "/dashboard", label: "Panel", icon: LayoutDashboard, roles: ["doctor", "secretary"] },
   { href: "/dashboard/patients", label: "Pacientes", icon: Users, roles: ["doctor", "secretary"] },
-  // { href: "/dashboard/consultations", label: "Consultas", icon: Stethoscope, roles: ["doctor"] }, // Eliminado
-  { href: "/dashboard/recipes", label: "Recetas", icon: FileSignature, roles: ["doctor"] },
+  // Nuevos elementos de acción directa para médicos:
+  { href: "/dashboard/consultations/new", label: "Nueva Consulta", icon: Stethoscope, roles: ["doctor"], isAction: true },
+  { href: "/dashboard/recipes/new", label: "Nueva Receta", icon: PlusCircle, roles: ["doctor"], isAction: true },
+  // Secciones principales restantes:
   { href: "/dashboard/schedule", label: "Agenda", icon: CalendarDays, roles: ["doctor", "secretary"] },
   { href: "/dashboard/billing", label: "Facturación", icon: Receipt, roles: ["doctor", "secretary"] },
   { href: "/dashboard/profile", label: "Perfil", icon: UserCircle, roles: ["doctor"] },
@@ -26,27 +28,32 @@ const navItems = [
 
 export function SidebarNav() {
   const pathname = usePathname();
-  // const userRole = getCurrentUserRole(); // Función hipotética para obtener el rol actual
 
   return (
     <SidebarMenu>
       {navItems.map((item) => {
-        // Lógica de visibilidad por rol (ejemplo conceptual)
-        // if (!item.roles.includes(userRole)) {
-        //   return null; 
-        // }
+        if (!item.roles.includes(SIMULATED_CURRENT_ROLE)) {
+          return null; 
+        }
 
-        const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+        const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href) && !item.isAction);
+        
+        // Aplicar un estilo sutilmente diferente para los elementos de acción
+        // Por ahora, solo aseguramos que no se marquen como 'isActive' de la misma manera que las secciones principales.
+        // La diferenciación principal vendrá de su icono y posición.
+        const buttonClasses = cn(
+          (isActive && !item.isAction) ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          item.isAction && "font-normal" // Podríamos hacerlos un poco menos prominentes si no están activos
+        );
+
         return (
           <SidebarMenuItem key={item.href}>
             <Link href={item.href} passHref legacyBehavior>
               <SidebarMenuButton
                 asChild
-                isActive={isActive}
+                isActive={isActive && !item.isAction} // Solo las secciones principales se marcan como activas visualmente
                 tooltip={{ children: item.label, side: "right", align: "center" }}
-                className={cn(
-                  isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                )}
+                className={buttonClasses}
               >
                 <a>
                   <item.icon className="h-5 w-5" />
