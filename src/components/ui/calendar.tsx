@@ -21,9 +21,9 @@ function Calendar({
 }: CalendarProps) {
   const defaultClassNames: Partial<Record<keyof ReturnType<ClassNameFormatter>, string | ((date: Date, modifiers: Modifiers, options?: CalendarProps) => string | undefined)>> = {
     months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-    month: "space-y-4 w-full", // Asegura que el contenedor del mes use todo el ancho
+    month: "space-y-4 w-full",
     caption: "flex justify-center pt-1 relative items-center",
-    caption_label: "text-sm font-medium", // Estilo base del caption label
+    caption_label: "text-sm font-medium",
     nav: "space-x-1 flex items-center",
     nav_button: cn(
       buttonVariants({ variant: "outline" }),
@@ -31,54 +31,59 @@ function Calendar({
     ),
     nav_button_previous: "absolute left-1",
     nav_button_next: "absolute right-1",
-    table: "w-full border-collapse space-y-1", // La tabla debe usar todo el ancho
-    head_row: "flex w-full", // La fila de cabecera usa flex
+    table: "w-full border-collapse space-y-1",
+    head_row: "flex w-full",
     head_cell:
       "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-sm p-0 flex items-center justify-center", // flex-1 para distribuir, centrado
-    row: "flex w-full mt-2", // Las filas de días usan flex
-    cell:
-      "flex-1 min-w-0 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20", // flex-1 para distribuir
+    
+    row: "flex w-full mt-2",
+    cell: cn( // Celda que contiene el botón del día
+      "flex-1 min-w-0 text-sm p-0 relative focus-within:relative focus-within:z-20", // Base structural and focus styles
+      "flex items-center justify-center" // Centra el botón del día dentro de la celda
+    ),
     
     day: (date: Date, modifiers: Modifiers, dayProps: DayProps) => {
       let klasses = cn(
         buttonVariants({ variant: "ghost" }), 
-        "h-full w-full p-0 font-normal text-foreground" // Texto siempre foreground, llena la celda por defecto
+        "h-full w-full p-0 font-normal text-foreground" // Por defecto, el botón llena la celda, texto oscuro.
       );
-      // Aplicar círculo gris en hover para días normales, no seleccionados y no "hoy"
-      if (modifiers.interactive && !modifiers.today && !modifiers.selected && !modifiers.disabled) {
-        klasses = cn(klasses, "hover:bg-muted hover:text-foreground hover:!h-8 hover:!w-8 hover:rounded-full");
-      }
-      return klasses;
-    },
-    
-    day_today: (date: Date, modifiers: Modifiers, dayProps: DayProps) => {
-      let klasses = "text-foreground"; // Asegurar texto foreground
-      if (!modifiers.selected && !modifiers.disabled) {
-        // Hoy, NO seleccionado: Círculo celeste (primary)
+
+      if (modifiers.selected) {
         klasses = cn(
-          klasses, 
-          "bg-primary text-foreground !h-8 !w-8 rounded-full hover:bg-primary/90"
+          klasses,
+          "bg-primary/70 !h-8 !w-8 rounded-full text-foreground" // Celeste degradado para selección, círculo pequeño
+        );
+      } else if (modifiers.today) {
+        // Indicador sutil para "hoy" (no seleccionado): un anillo celeste. No cambia tamaño.
+        klasses = cn(
+          klasses,
+          "ring-1 ring-primary rounded-full" // Mantiene h-full w-full del botón base.
+        );
+      } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter) {
+        // Hover en días normales: círculo gris pequeño
+        klasses = cn(
+          klasses,
+          "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full hover:text-foreground"
         );
       }
-      // Si "hoy" está seleccionado, day_selected aplicará el estilo de círculo celeste más claro.
-      return klasses;
-    },
-
-    day_selected: (date: Date, modifiers: Modifiers, dayProps: DayProps) => {
-      // Seleccionado: Círculo celeste más claro (primary/70), texto foreground.
-      // Este estilo tiene prioridad si "hoy" también está seleccionado.
-      let klasses = "bg-primary/70 text-foreground !h-8 !w-8 rounded-full";
-      if (!modifiers.disabled) {
-        klasses = cn(klasses, "hover:bg-primary/80"); // Un poco más oscuro en hover
+      
+      if (modifiers.disabled) {
+        klasses = cn(klasses, "opacity-50"); // No cambia color de texto, solo opacidad
+      }
+      if (modifiers.outside) {
+         klasses = cn(klasses, "text-muted-foreground opacity-50");
+         if (modifiers.selected) { // Si un día exterior está seleccionado (ej. en un rango)
+            klasses = cn(klasses, "bg-primary/20"); // Fondo aún más degradado
+         }
       }
       return klasses;
     },
+    day_selected: undefined, // Manejado completamente por la función 'day'
+    day_today: undefined,    // Manejado completamente por la función 'day'
     
-    day_outside:
-      "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-    day_disabled: "text-muted-foreground opacity-50",
-    day_range_middle:
-      "aria-selected:bg-accent aria-selected:text-accent-foreground",
+    day_outside: "day-outside aria-selected:bg-transparent", // Evitar que react-day-picker ponga fondos en celdas exteriores seleccionadas
+    day_disabled: "", // Los estilos de deshabilitado se manejan en la función 'day'
+    day_range_middle: "aria-selected:bg-transparent",
     day_hidden: "invisible",
     day_range_end: "day-range-end",
   };
@@ -98,7 +103,7 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("w-full", className)}  // El calendario raíz usa w-full, p-3 eliminado
+      className={cn("w-full", className)}
       classNames={mergedClassNames as Required<Parameters<typeof DayPicker>[0]['classNames']>}
       components={{
         IconLeft: ({ className: iconClassName, ...restIconProps }) => ( 
