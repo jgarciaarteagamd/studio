@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import type { PersonalDetails, BackgroundInformation, PatientRecord } from "@/lib/types"; // Updated types
+import type { PersonalDetails, BackgroundInformation, PatientRecord } from "@/lib/types"; 
 import { CalendarIcon, UserCircle, Phone, ClipboardList, AlertTriangle, Pill } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -18,6 +18,7 @@ import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 
 // Define Zod schema for validation for PersonalDetails and BackgroundInformation
+// BackgroundInformation fields are optional as per type definition
 const patientFormSchema = z.object({
   personalDetails: z.object({
     name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
@@ -25,10 +26,10 @@ const patientFormSchema = z.object({
     contactInfo: z.string().min(5, "La información de contacto parece demasiado corta."),
   }),
   backgroundInformation: z.object({
-    personalHistory: z.string().optional(),
-    allergies: z.string().optional(),
-    habitualMedication: z.string().optional(),
-  }),
+    personalHistory: z.string().optional().nullable(), // Allow null for reset
+    allergies: z.string().optional().nullable(),
+    habitualMedication: z.string().optional().nullable(),
+  }).optional().nullable(), // Entire object is optional
 });
 
 // This type represents the values the form will manage
@@ -39,9 +40,15 @@ interface PatientFormProps {
   onSubmit: (data: PatientFormValues) => void;
   initialData?: Partial<Pick<PatientRecord, 'personalDetails' | 'backgroundInformation'>>;
   submitButtonText?: string;
+  allowEditBackgroundInfo?: boolean; // New prop
 }
 
-export function PatientForm({ onSubmit, initialData, submitButtonText = "Guardar Paciente" }: PatientFormProps) {
+export function PatientForm({ 
+  onSubmit, 
+  initialData, 
+  submitButtonText = "Guardar Paciente",
+  allowEditBackgroundInfo = true // Default to true (Médico)
+}: PatientFormProps) {
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientFormSchema),
     defaultValues: {
@@ -59,10 +66,12 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Guardar
   });
 
   const handleFormSubmit: SubmitHandler<PatientFormValues> = (data) => {
-    // The date is already a Date object from the form, convert to ISO string if needed by the caller
-    // For this form, we pass it as is, according to PatientFormValues.
-    // The calling component will handle the full PatientRecord structure.
-    onSubmit(data);
+    // If background info editing is not allowed, ensure it's not sent or is empty
+    const dataToSubmit = {
+      ...data,
+      backgroundInformation: allowEditBackgroundInfo ? data.backgroundInformation : undefined,
+    };
+    onSubmit(dataToSubmit);
   };
 
   return (
@@ -144,7 +153,8 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Guardar
           </div>
         </section>
         
-        <section className="space-y-6 p-4 border rounded-lg shadow">
+        {/* Conditionally render or disable background information section */}
+        <section className={cn("space-y-6 p-4 border rounded-lg shadow", !allowEditBackgroundInfo && "opacity-50")}>
           <h3 className="text-xl font-semibold flex items-center"><ClipboardList className="mr-2 h-6 w-6 text-primary" /> Antecedentes y Medicación</h3>
           <FormField
             control={form.control}
@@ -157,6 +167,7 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Guardar
                     placeholder="Detalle enfermedades previas, cirugías, hospitalizaciones, hábitos (tabaco, alcohol, etc.), antecedentes familiares importantes..."
                     className="min-h-[100px]"
                     {...field}
+                    disabled={!allowEditBackgroundInfo}
                   />
                 </FormControl>
                 <FormMessage />
@@ -175,6 +186,7 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Guardar
                     placeholder="Liste alergias a medicamentos, alimentos u otras sustancias y el tipo de reacción..."
                     className="min-h-[80px]"
                     {...field}
+                    disabled={!allowEditBackgroundInfo}
                   />
                 </FormControl>
                 <FormMessage />
@@ -193,6 +205,7 @@ export function PatientForm({ onSubmit, initialData, submitButtonText = "Guardar
                     placeholder="Liste los medicamentos que el paciente toma regularmente, incluyendo dosis y frecuencia..."
                     className="min-h-[100px]"
                     {...field}
+                    disabled={!allowEditBackgroundInfo}
                   />
                 </FormControl>
                 <FormMessage />

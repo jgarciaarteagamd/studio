@@ -4,26 +4,38 @@
 import { PatientForm } from "@/components/patients/PatientForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { addPatient } from "@/lib/mock-data"; 
-import type { PatientRecord, PersonalDetails, BackgroundInformation } from "@/lib/types"; // Updated types
+import type { PatientRecord, PersonalDetails, BackgroundInformation } from "@/lib/types"; 
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
 // Type for the data structure handled by PatientForm
 type PatientFormData = {
   personalDetails: PersonalDetails;
-  backgroundInformation: BackgroundInformation;
+  backgroundInformation?: BackgroundInformation | null; // Puede ser null o undefined si no se edita
 };
 
 export default function NewPatientPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  // Simulando el rol de secretaria para la creación:
+  // Solo se permite ingresar datos personales.
+  // BackgroundInformation se pasará como undefined o vacío.
+  const isSecretaryRole = true; // Cambiar esto para simular rol de médico
+
   const handleSubmit = (data: PatientFormData) => {
-    // addPatient now expects an object with personalDetails and backgroundInformation
-    const newPatient = addPatient({
+    const patientDataForCreation: {
+      personalDetails: PersonalDetails;
+      backgroundInformation?: BackgroundInformation;
+    } = {
       personalDetails: data.personalDetails,
-      backgroundInformation: data.backgroundInformation,
-    }); 
+      // Si es secretaria, backgroundInformation no se envía o es un objeto vacío.
+      // PatientForm ya maneja no enviar backgroundInformation si allowEditBackgroundInfo es false.
+      // Aquí, aseguramos que addPatient reciba la estructura correcta.
+      backgroundInformation: data.backgroundInformation || undefined,
+    };
+
+    const newPatient = addPatient(patientDataForCreation); 
     
     console.log("Nuevos datos del paciente (guardado simulado):", newPatient);
     toast({
@@ -34,19 +46,20 @@ export default function NewPatientPage() {
     router.push(`/dashboard/patients/${newPatient.id}`); 
   };
 
-  // Initial values for the form, matching the structure PatientForm expects
+  // Initial values for the form
   const initialValues: Partial<Pick<PatientRecord, 'personalDetails' | 'backgroundInformation'>> = {
     personalDetails: {
       name: '',
       dateOfBirth: '', 
       contactInfo: '',
     },
-    backgroundInformation: {
+    // Para el rol de secretaria, estos campos estarán deshabilitados y no deberían ser llenados.
+    // PatientForm controlará la deshabilitación visual.
+    backgroundInformation: { 
       personalHistory: '',
       allergies: '',
       habitualMedication: '',
     },
-    // medicalEncounters and attachments are not part of this form's initial data
   };
 
   return (
@@ -54,15 +67,22 @@ export default function NewPatientPage() {
       <Card className="max-w-4xl mx-auto shadow-lg">
         <CardHeader>
           <CardTitle className="text-3xl">Crear Nuevo Historial de Paciente</CardTitle>
-          <CardDescription>
-            Complete los detalles personales y antecedentes del paciente a continuación. El historial de consultas se gestionará por separado.
-          </CardDescription>
+          {isSecretaryRole ? (
+            <CardDescription>
+              Complete los detalles personales del paciente. Los antecedentes médicos y consultas se gestionarán por el personal médico.
+            </CardDescription>
+          ) : (
+            <CardDescription>
+              Complete los detalles personales y antecedentes del paciente. El historial de consultas se gestionará por separado.
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           <PatientForm 
             onSubmit={handleSubmit} 
-            initialData={initialValues} // Pass the correctly structured initial data
+            initialData={initialValues} 
             submitButtonText="Crear Historial de Paciente"
+            allowEditBackgroundInfo={!isSecretaryRole} // Secretaria no puede editar antecedentes aquí
           />
         </CardContent>
       </Card>

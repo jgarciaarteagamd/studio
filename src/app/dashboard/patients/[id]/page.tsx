@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPatientById, updatePatient } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, FileEdit, Paperclip, Activity, History, PlusCircle, CalendarDays, FileText as FileTextIcon } from "lucide-react";
+import { ArrowLeft, FileEdit, Paperclip, Activity, History, PlusCircle, CalendarDays, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 // Type for the data structure handled by PatientForm
 type PatientFormData = {
   personalDetails: PersonalDetails;
-  backgroundInformation: BackgroundInformation;
+  backgroundInformation?: BackgroundInformation | null;
 };
 
 export default function PatientDetailPage() {
@@ -33,6 +33,10 @@ export default function PatientDetailPage() {
   const [patient, setPatient] = useState<PatientRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentLocale, setCurrentLocale] = useState('es-ES');
+
+  // Simulación de rol: true para médico, false para secretaria
+  // Esto determinará si se pueden editar antecedentes o añadir consultas.
+  const isDoctorRole = true; 
 
   const patientId = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -56,15 +60,12 @@ export default function PatientDetailPage() {
 
   const handleFormSubmit = useCallback((data: PatientFormData) => {
     if (patient) {
-      // Construct the full PatientRecord for update, preserving encounters and attachments
       const updatedPatientData: Partial<Omit<PatientRecord, 'id' | 'createdAt'>> = {
         personalDetails: data.personalDetails,
-        backgroundInformation: data.backgroundInformation,
-        // medicalEncounters and attachments are not modified by this form
-        // They would be updated by their respective sections if implemented
+        backgroundInformation: isDoctorRole ? data.backgroundInformation : patient.backgroundInformation, // Secretaria no modifica esto
         medicalEncounters: patient.medicalEncounters,
         attachments: patient.attachments,
-        updatedAt: new Date().toISOString(), // Update the main record's updatedAt
+        updatedAt: new Date().toISOString(),
       };
 
       const updatedRecord = updatePatient(patient.id, updatedPatientData);
@@ -74,7 +75,7 @@ export default function PatientDetailPage() {
         description: `El historial de ${patient.personalDetails.name} ha sido actualizado exitosamente.`,
       });
     }
-  }, [patient, toast]);
+  }, [patient, toast, isDoctorRole]);
 
 
   const handleFileUpload = (file: File) => {
@@ -96,25 +97,18 @@ export default function PatientDetailPage() {
     }
   };
   
-  // Placeholder for adding a new encounter - to be implemented later
-  const handleAddNewEncounter = () => {
-    toast({
-      title: "Funcionalidad Pendiente",
-      description: "La adición de nuevas consultas se implementará próximamente.",
-      variant: "default",
-    });
-    // Example of how to add an encounter once a form is implemented:
-    // if (patient) {
-    //   const newEncounter: MedicalEncounter = {
-    //     id: `enc-${Date.now()}`,
-    //     date: new Date().toISOString(),
-    //     details: "Nueva consulta - detalles pendientes de ingreso."
-    //   };
-    //   const updatedEncounters = [...patient.medicalEncounters, newEncounter];
-    //   const updatedRecord = updatePatient(patient.id, { medicalEncounters: updatedEncounters, updatedAt: new Date().toISOString() });
-    //   setPatient(updatedRecord || patient);
-    //   toast({ title: "Nueva Consulta Agregada (Simulado)", description: "Se agregó un borrador de consulta."});
-    // }
+  const handleNavigateToNewConsultation = () => {
+    if (patientId) {
+      // En un futuro, esto podría llevar a /dashboard/consultations/[patientId]/new o similar
+      // Por ahora, un toast informativo.
+      toast({
+        title: "Registrar Nueva Consulta",
+        description: `Para registrar una nueva consulta para ${patient?.personalDetails.name}, diríjase a la sección 'Consultas' del menú. (Funcionalidad en desarrollo).`,
+        variant: "default",
+        duration: 5000,
+      });
+      // router.push(`/dashboard/consultations/${patientId}/new`); // Descomentar cuando la página exista
+    }
   };
 
 
@@ -137,9 +131,9 @@ export default function PatientDetailPage() {
     );
   }
   
-  const patientFormInitialData = {
+  const patientFormInitialData: PatientFormData = {
     personalDetails: patient.personalDetails,
-    backgroundInformation: patient.backgroundInformation,
+    backgroundInformation: patient.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' },
   };
 
   return (
@@ -167,7 +161,9 @@ export default function PatientDetailPage() {
           <TabsTrigger value="encounters"><History className="mr-1 h-4 w-4 sm:mr-2"/> Hist. Consultas</TabsTrigger>
           <TabsTrigger value="details"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Editar Datos</TabsTrigger>
           <TabsTrigger value="attachments"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
-          <TabsTrigger value="reports"><Activity className="mr-1 h-4 w-4 sm:mr-2"/> Informes IA</TabsTrigger>
+          {isDoctorRole && ( // Solo el médico ve informes IA
+            <TabsTrigger value="reports"><Activity className="mr-1 h-4 w-4 sm:mr-2"/> Informes IA</TabsTrigger>
+          )}
         </TabsList>
         
         <TabsContent value="encounters">
@@ -175,16 +171,18 @@ export default function PatientDetailPage() {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Historial de Consultas Médicas</CardTitle>
-                <Button onClick={handleAddNewEncounter} size="sm">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Agregar Consulta
-                </Button>
+                {isDoctorRole && ( // Solo el médico puede añadir consultas desde aquí (o se le indica ir a la sección)
+                  <Button onClick={handleNavigateToNewConsultation} size="sm">
+                    <Stethoscope className="mr-2 h-4 w-4" /> 
+                    Registrar Nueva Consulta
+                  </Button>
+                )}
               </div>
               <CardDescription>Revise las consultas anteriores del paciente. La más reciente primero.</CardDescription>
             </CardHeader>
             <CardContent>
               {patient.medicalEncounters && patient.medicalEncounters.length > 0 ? (
-                <ScrollArea className="h-[600px] pr-4"> {/* Added ScrollArea */}
+                <ScrollArea className="h-[600px] pr-4"> 
                   <div className="space-y-4">
                     {[...patient.medicalEncounters].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(encounter => (
                       <Card key={encounter.id} className="shadow-md">
@@ -197,7 +195,6 @@ export default function PatientDetailPage() {
                         <CardContent>
                           <p className="text-sm whitespace-pre-wrap">{encounter.details}</p>
                         </CardContent>
-                        {/* Add footer for actions like edit/delete encounter if needed later */}
                       </Card>
                     ))}
                   </div>
@@ -213,13 +210,19 @@ export default function PatientDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>Editar Datos del Paciente</CardTitle>
-              <CardDescription>Actualice los datos personales y antecedentes del paciente.</CardDescription>
+              <CardDescription>
+                {isDoctorRole 
+                  ? "Actualice los datos personales y antecedentes del paciente."
+                  : "Actualice los datos personales del paciente. Los antecedentes solo pueden ser modificados por personal médico."
+                }
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <PatientForm 
                 onSubmit={handleFormSubmit} 
                 initialData={patientFormInitialData}
                 submitButtonText="Guardar Cambios"
+                allowEditBackgroundInfo={isDoctorRole} // Secretaria no puede editar antecedentes
               />
             </CardContent>
           </Card>
@@ -229,7 +232,7 @@ export default function PatientDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>Archivos Adjuntos</CardTitle>
-              <CardDescription>Administre archivos vinculados a este paciente. (Asociación a consultas específicas pendiente).</CardDescription>
+              <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
             </CardHeader>
             <CardContent>
               <FileUploadSection 
@@ -240,17 +243,19 @@ export default function PatientDetailPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="reports">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informes con IA</CardTitle>
-              <CardDescription>Genere resúmenes e informes completos para este paciente.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ReportGenerationSection patient={patient} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {isDoctorRole && (
+          <TabsContent value="reports">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informes con IA</CardTitle>
+                <CardDescription>Genere resúmenes e informes completos para este paciente.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ReportGenerationSection patient={patient} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

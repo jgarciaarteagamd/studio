@@ -98,12 +98,12 @@ export const getPatientById = (id: string): PatientRecord | undefined => {
 
 // Function to add a patient (mock)
 export const addPatient = (
-  data: { personalDetails: PersonalDetails; backgroundInformation: BackgroundInformation }
+  data: { personalDetails: PersonalDetails; backgroundInformation?: BackgroundInformation } // backgroundInformation is now optional
 ): PatientRecord => {
   const newPatient: PatientRecord = {
     id: String(mockPatients.length + 1 + Math.random()), // simple unique ID
     personalDetails: data.personalDetails,
-    backgroundInformation: data.backgroundInformation,
+    backgroundInformation: data.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' }, // Provide default if not given
     medicalEncounters: [], 
     attachments: [], 
     createdAt: new Date().toISOString(),
@@ -121,6 +121,8 @@ export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, '
     const updatedPatientData = {
       ...currentPatient,
       ...updates,
+      personalDetails: updates.personalDetails || currentPatient.personalDetails,
+      backgroundInformation: updates.backgroundInformation !== undefined ? updates.backgroundInformation : currentPatient.backgroundInformation,
       medicalEncounters: updates.medicalEncounters || currentPatient.medicalEncounters,
       attachments: updates.attachments || currentPatient.attachments,
       updatedAt: new Date().toISOString(),
@@ -148,7 +150,7 @@ export let mockAppointments: Appointment[] = [
     id: 'appt-block-lunch',
     dateTime: setHours(setMinutes(today, 0), 13).toISOString(), // Hoy a las 13:00
     durationMinutes: 60,
-    status: 'programada', // Or a new status like 'blocked'
+    status: 'programada', 
     isBlocker: true,
     blockerReason: 'Almuerzo del Personal',
   },
@@ -205,8 +207,3 @@ export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & {
   mockAppointments.push(newAppointment);
   return newAppointment;
 };
-
-// Placeholder for future update/delete appointment functions
-// export const updateAppointment = (id: string, updates: Partial<Omit<Appointment, 'id'>>): Appointment | undefined => { ... }
-// export const deleteAppointment = (id: string): boolean => { ... }
-

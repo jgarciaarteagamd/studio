@@ -8,13 +8,14 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Users, CalendarDays } from "lucide-react"; // Added CalendarDays
+import { LayoutDashboard, Users, CalendarDays, Stethoscope } from "lucide-react"; // Added Stethoscope
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Panel", icon: LayoutDashboard },
   { href: "/dashboard/patients", label: "Pacientes", icon: Users },
-  { href: "/dashboard/schedule", label: "Agenda", icon: CalendarDays }, // Added Agenda
+  { href: "/dashboard/consultations", label: "Consultas", icon: Stethoscope }, // New Item
+  { href: "/dashboard/schedule", label: "Agenda", icon: CalendarDays },
 ];
 
 export function SidebarNav() {

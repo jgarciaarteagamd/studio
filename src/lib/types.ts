@@ -16,9 +16,9 @@ export interface PersonalDetails {
 
 export interface BackgroundInformation {
   // Antecedentes personales no patológicos y patológicos relevantes
-  personalHistory: string; 
-  allergies: string; // Alergias conocidas
-  habitualMedication: string; // Medicación que toma regularmente
+  personalHistory?: string; 
+  allergies?: string; // Alergias conocidas
+  habitualMedication?: string; // Medicación que toma regularmente
 }
 
 export interface MedicalEncounter {
@@ -31,7 +31,7 @@ export interface MedicalEncounter {
 export interface PatientRecord {
   id: string;
   personalDetails: PersonalDetails;
-  backgroundInformation: BackgroundInformation;
+  backgroundInformation?: BackgroundInformation; // Secretaria podría no llenarlo al crear
   medicalEncounters: MedicalEncounter[];
   // General attachments, or could be moved/linked to encounters
   attachments: Attachment[]; 
@@ -51,4 +51,3 @@ export interface Appointment {
   isBlocker?: boolean; // True if this is a time block rather than a patient appointment
   blockerReason?: string; // Reason for the block (e.g., "Lunch", "Meeting")
 }
-
