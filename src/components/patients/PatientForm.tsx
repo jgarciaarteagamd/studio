@@ -151,7 +151,7 @@ export function PatientForm({
               <FormItem>
                 <FormLabel className="flex items-center"><FileTextIcon className="mr-2 h-4 w-4 text-primary" /> Documento de Identidad</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ej: 12345678A" {...field} value={field.value || ''} />
+                  <Input placeholder="Ej: 12345678A (Cédula en Ecuador)" {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -222,9 +222,9 @@ export function PatientForm({
               name="personalDetails.telefono1"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Teléfono 1</FormLabel>
+                  <FormLabel>Teléfono móvil (1)</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="Ej: +51 987654321" {...field} value={field.value || ''} />
+                    <Input type="tel" placeholder="Ej: 0987654321" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -235,9 +235,9 @@ export function PatientForm({
               name="personalDetails.telefono2"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Teléfono 2 (Opcional)</FormLabel>
+                  <FormLabel>Teléfono opcional (2)</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="Ej: 01 5551234" {...field} value={field.value || ''} />
+                    <Input type="tel" placeholder="Ej: 025551234" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -260,7 +260,7 @@ export function PatientForm({
         </section>
         
         {/* Datos de Facturación Section */}
-        {(allowEditFacturacionInfo || initialData?.datosFacturacion) && (
+        {(allowEditFacturacionInfo || (initialData?.datosFacturacion && (initialData.datosFacturacion.ruc || initialData.datosFacturacion.direccionFiscal))) && (
             <section className={cn("space-y-6 p-4 border rounded-lg shadow", !allowEditFacturacionInfo && "opacity-60")}>
             <h3 className="text-xl font-semibold flex items-center"><Briefcase className="mr-2 h-6 w-6 text-primary" /> Datos de Facturación</h3>
             <FormField
@@ -270,7 +270,7 @@ export function PatientForm({
                 <FormItem>
                     <FormLabel>Registro Único de Contribuyente (RUC)</FormLabel>
                     <FormControl>
-                    <Input placeholder="Ej: 12345678901" {...field} value={field.value || ''} disabled={!allowEditFacturacionInfo} />
+                    <Input placeholder="Ej: 17XXXXXXXXX001 (Ecuador)" {...field} value={field.value || ''} disabled={!allowEditFacturacionInfo} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -297,7 +297,7 @@ export function PatientForm({
                     <FormItem>
                     <FormLabel>Teléfono de Facturación</FormLabel>
                     <FormControl>
-                        <Input type="tel" placeholder="Ej: +51 999888777" {...field} value={field.value || ''} disabled={!allowEditFacturacionInfo} />
+                        <Input type="tel" placeholder="Ej: 0999888777" {...field} value={field.value || ''} disabled={!allowEditFacturacionInfo} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -317,7 +317,7 @@ export function PatientForm({
                 )}
                 />
             </div>
-            {!allowEditFacturacionInfo && <FormDescription>Solo el personal médico puede editar esta sección.</FormDescription>}
+            {!allowEditFacturacionInfo && initialData?.datosFacturacion && (initialData.datosFacturacion.ruc || initialData.datosFacturacion.direccionFiscal) && <FormDescription>Solo el personal médico puede editar esta sección.</FormDescription>}
             </section>
         )}
         
@@ -387,7 +387,7 @@ export function PatientForm({
              {!allowEditBackgroundInfo && <FormDescription>Solo el personal médico puede editar esta sección.</FormDescription>}
             </section>
         )}
-         {!allowEditBackgroundInfo && initialData?.backgroundInformation && ( // Show view-only if secretary and data exists
+         {!allowEditBackgroundInfo && initialData?.backgroundInformation && (initialData.backgroundInformation.personalHistory || initialData.backgroundInformation.allergies || initialData.backgroundInformation.habitualMedication) && (
           <section className="space-y-4 p-4 border rounded-lg shadow bg-muted/30">
             <h3 className="text-xl font-semibold flex items-center"><ClipboardList className="mr-2 h-6 w-6 text-primary" /> Antecedentes y Medicación (Solo lectura)</h3>
             <div>
@@ -414,3 +414,5 @@ export function PatientForm({
     </Form>
   );
 }
+
+    

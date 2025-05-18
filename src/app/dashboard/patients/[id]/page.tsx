@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPatientById, updatePatient, getPatientFullName } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, FileEdit, Paperclip, Activity, History, PlusCircle, CalendarDays, Stethoscope, User, FileTextIcon, BuildingIcon } from "lucide-react";
+import { ArrowLeft, FileEdit, Paperclip, Activity, History, PlusCircle, CalendarDays, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format, differenceInYears } from "date-fns";
@@ -19,6 +19,7 @@ import { es } from 'date-fns/locale';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 
 // Type for the data structure handled by PatientForm
@@ -47,8 +48,15 @@ export default function PatientDetailPage() {
       if (fetchedPatient) {
         setPatient(fetchedPatient);
         if (fetchedPatient.personalDetails.fechaNacimiento) {
-            const age = differenceInYears(new Date(), new Date(fetchedPatient.personalDetails.fechaNacimiento));
-            setCalculatedAge(`${age} años`);
+            try {
+                const age = differenceInYears(new Date(), new Date(fetchedPatient.personalDetails.fechaNacimiento));
+                setCalculatedAge(`${age} años`);
+            } catch (e) {
+                console.error("Error calculating age from date:", fetchedPatient.personalDetails.fechaNacimiento);
+                setCalculatedAge("Edad no disponible");
+            }
+        } else {
+             setCalculatedAge("Edad no disponible");
         }
       } else {
         toast({
@@ -113,7 +121,7 @@ export default function PatientDetailPage() {
     if (patientId) {
       toast({
         title: "Registrar Nueva Consulta",
-        description: `Para registrar una nueva consulta para ${patient?.personalDetails.nombres}, diríjase a la sección 'Consultas' del menú. (Funcionalidad en desarrollo).`,
+        description: `Para registrar una nueva consulta para ${getPatientFullName(patient!)}, diríjase a la sección 'Consultas' del menú. (Funcionalidad en desarrollo).`,
         variant: "default",
         duration: 5000,
       });
@@ -161,10 +169,12 @@ export default function PatientDetailPage() {
             {patient.personalDetails.documentoIdentidad && (
                 <p className="flex items-center"><FileTextIcon className="mr-2 h-4 w-4 text-primary/70" /> Doc. Identidad: {patient.personalDetails.documentoIdentidad}</p>
             )}
-            <p>Fecha de Nacimiento: {format(new Date(patient.personalDetails.fechaNacimiento), "PPP", { locale: es })} {calculatedAge && `(${calculatedAge})`}</p>
-            {patient.personalDetails.email && (<p>Email: {patient.personalDetails.email}</p>)}
-            {patient.personalDetails.telefono1 && (<p>Teléfono 1: {patient.personalDetails.telefono1}</p>)}
-            {patient.personalDetails.telefono2 && (<p>Teléfono 2: {patient.personalDetails.telefono2}</p>)}
+            {patient.personalDetails.fechaNacimiento && (
+             <p>Fecha de Nacimiento: {format(new Date(patient.personalDetails.fechaNacimiento), "PPP", { locale: es })} {calculatedAge && `(${calculatedAge})`}</p>
+            )}
+            {patient.personalDetails.email && (<p className="flex items-center"><User className="mr-2 h-4 w-4 text-primary/70" /> Email: {patient.personalDetails.email}</p>)}
+            {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil (1): {patient.personalDetails.telefono1}</p>)}
+            {patient.personalDetails.telefono2 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono opcional (2): {patient.personalDetails.telefono2}</p>)}
           </div>
            <Badge variant="secondary" className="w-fit mt-3">
             Última actualización general: {new Date(patient.updatedAt).toLocaleDateString(currentLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -185,12 +195,16 @@ export default function PatientDetailPage() {
       </Card>
 
       <Tabs defaultValue="encounters" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 md:max-w-3xl">
-          <TabsTrigger value="encounters"><History className="mr-1 h-4 w-4 sm:mr-2"/> Hist. Consultas</TabsTrigger>
-          <TabsTrigger value="details"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Editar Datos</TabsTrigger>
-          <TabsTrigger value="attachments"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
+         <TabsList className={cn(
+            "w-full h-auto mb-4 p-1 bg-muted rounded-md",
+            "flex flex-wrap justify-center gap-1", // Móvil: flex wrap
+            "md:grid md:grid-cols-4 md:max-w-3xl md:gap-0" // Desktop: grid
+            )}>
+          <TabsTrigger value="encounters" className="flex-grow md:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Hist. Consultas</TabsTrigger>
+          <TabsTrigger value="details" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Editar Datos</TabsTrigger>
+          <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
           {SIMULATED_ROLE === 'doctor' && ( 
-            <TabsTrigger value="reports"><Activity className="mr-1 h-4 w-4 sm:mr-2"/> Informes IA</TabsTrigger>
+            <TabsTrigger value="reports" className="flex-grow md:flex-grow-0"><Activity className="mr-1 h-4 w-4 sm:mr-2"/> Informes IA</TabsTrigger>
           )}
         </TabsList>
         
@@ -289,3 +303,5 @@ export default function PatientDetailPage() {
     </div>
   );
 }
+
+    
