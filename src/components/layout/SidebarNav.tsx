@@ -8,7 +8,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Users, CalendarDays, Stethoscope, FileSignature, Receipt, UserCircle } from "lucide-react"; // Added Receipt, UserCircle
+import { LayoutDashboard, Users, CalendarDays, FileSignature, Receipt, UserCircle } from "lucide-react"; // Stethoscope removido
 import { cn } from "@/lib/utils";
 
 // En un futuro, este array podría filtrarse según el rol del usuario.
@@ -17,11 +17,11 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/dashboard", label: "Panel", icon: LayoutDashboard, roles: ["doctor", "secretary"] },
   { href: "/dashboard/patients", label: "Pacientes", icon: Users, roles: ["doctor", "secretary"] },
-  { href: "/dashboard/consultations", label: "Consultas", icon: Stethoscope, roles: ["doctor"] }, // Solo para doctores
-  { href: "/dashboard/recipes", label: "Recetas", icon: FileSignature, roles: ["doctor"] }, // Solo para doctores
+  // { href: "/dashboard/consultations", label: "Consultas", icon: Stethoscope, roles: ["doctor"] }, // Eliminado
+  { href: "/dashboard/recipes", label: "Recetas", icon: FileSignature, roles: ["doctor"] },
   { href: "/dashboard/schedule", label: "Agenda", icon: CalendarDays, roles: ["doctor", "secretary"] },
   { href: "/dashboard/billing", label: "Facturación", icon: Receipt, roles: ["doctor", "secretary"] },
-  { href: "/dashboard/profile", label: "Perfil", icon: UserCircle, roles: ["doctor"] }, // Solo para doctores
+  { href: "/dashboard/profile", label: "Perfil", icon: UserCircle, roles: ["doctor"] },
 ];
 
 export function SidebarNav() {

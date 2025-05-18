@@ -118,14 +118,9 @@ export default function PatientDetailPage() {
   };
   
   const handleNavigateToNewConsultation = () => {
-    if (patientId) {
-      toast({
-        title: "Registrar Nueva Consulta",
-        description: `Para registrar una nueva consulta para ${getPatientFullName(patient!)}, diríjase a la sección 'Consultas' del menú. (Funcionalidad en desarrollo).`,
-        variant: "default",
-        duration: 5000,
-      });
-    }
+    router.push('/dashboard/consultations/new');
+    // Aquí podrías considerar pasar el patientId como query param para preselección
+    // router.push(`/dashboard/consultations/new?patientId=${patientId}`);
   };
 
 
