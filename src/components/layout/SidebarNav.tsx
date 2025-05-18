@@ -8,22 +8,32 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Users, CalendarDays, Stethoscope } from "lucide-react"; // Added Stethoscope
+import { LayoutDashboard, Users, CalendarDays, Stethoscope, FileSignature } from "lucide-react"; // Added FileSignature
 import { cn } from "@/lib/utils";
 
+// En un futuro, este array podría filtrarse según el rol del usuario.
+// const userRole = "doctor"; // o "secretary", obtenido del contexto de autenticación
+
 const navItems = [
-  { href: "/dashboard", label: "Panel", icon: LayoutDashboard },
-  { href: "/dashboard/patients", label: "Pacientes", icon: Users },
-  { href: "/dashboard/consultations", label: "Consultas", icon: Stethoscope }, // New Item
-  { href: "/dashboard/schedule", label: "Agenda", icon: CalendarDays },
+  { href: "/dashboard", label: "Panel", icon: LayoutDashboard, roles: ["doctor", "secretary"] },
+  { href: "/dashboard/patients", label: "Pacientes", icon: Users, roles: ["doctor", "secretary"] },
+  { href: "/dashboard/consultations", label: "Consultas", icon: Stethoscope, roles: ["doctor"] }, // Ejemplo: Solo para doctores
+  { href: "/dashboard/recipes", label: "Recetas", icon: FileSignature, roles: ["doctor"] }, // Ejemplo: Solo para doctores
+  { href: "/dashboard/schedule", label: "Agenda", icon: CalendarDays, roles: ["doctor", "secretary"] },
 ];
 
 export function SidebarNav() {
   const pathname = usePathname();
+  // const userRole = getCurrentUserRole(); // Función hipotética para obtener el rol actual
 
   return (
     <SidebarMenu>
       {navItems.map((item) => {
+        // Lógica de visibilidad por rol (ejemplo conceptual)
+        // if (!item.roles.includes(userRole)) {
+        //   return null; 
+        // }
+
         const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
         return (
           <SidebarMenuItem key={item.href}>
