@@ -4,8 +4,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter, DialogTrigger } from "@/components/ui/dialog"; // Renamed DialogDescription to avoid conflict
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -225,7 +225,7 @@ export default function SchedulePage() {
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{isBlockerWatch ? "Bloquear Horario" : "Programar Nueva Cita"}</DialogTitle>
-              <DialogDescription>Complete los detalles para la nueva {isBlockerWatch ? "entrada de bloqueo" : "cita"}.</DialogDescription>
+              <DialogDescriptionComponent>Complete los detalles para la nueva {isBlockerWatch ? "entrada de bloqueo" : "cita"}.</DialogDescriptionComponent>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
@@ -424,9 +424,9 @@ export default function SchedulePage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Calendario de Citas</CardTitle>
-          <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use el botón "+ Programar Cita/Bloqueo" para agendar.</CardDescription>
+          <CardDescriptionComponent>Navegue por los meses y haga clic en un día para ver las citas programadas. Use el botón "+ Programar Cita/Bloqueo" para agendar.</CardDescriptionComponent>
         </CardHeader>
-        <CardContent className="p-4"> {/* Ajustado padding para consistencia */}
+        <CardContent className="p-4">
           <Calendar
             mode="single" 
             selected={selectedCalendarDay || undefined} 
@@ -445,7 +445,7 @@ export default function SchedulePage() {
                 ),
                 cell: cn(
                   "flex-1 min-w-0 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                  "flex items-center justify-center", // Ensure cell centers its content (the day button)
+                  "flex items-center justify-center", 
                   "h-10 sm:h-12 md:h-14" 
                 ),
                 day: (date, modifiers, dayProps) => {
