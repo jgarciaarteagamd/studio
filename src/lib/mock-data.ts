@@ -1,3 +1,4 @@
+
 // src/lib/mock-data.ts
 import type { PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment, Appointment, DatosFacturacion } from './types';
 import { addMinutes, formatISO, parseISO, setHours, setMinutes } from 'date-fns';
@@ -164,7 +165,7 @@ export let mockAppointments: Appointment[] = [
   {
     id: 'appt1',
     patientId: '1',
-    patientName: 'Maria Gonzalez Perez', // Updated full name
+    patientName: 'Maria Gonzalez Perez', 
     dateTime: setHours(setMinutes(today, 0), 10).toISOString(), // Hoy a las 10:00
     durationMinutes: 30,
     status: 'confirmada',
@@ -182,7 +183,7 @@ export let mockAppointments: Appointment[] = [
   {
     id: 'appt2',
     patientId: '2',
-    patientName: 'John Smith Miller', // Updated full name
+    patientName: 'John Smith Miller', 
     dateTime: setHours(setMinutes(today, 30), 11).toISOString(), // Hoy a las 11:30
     durationMinutes: 45,
     status: 'programada',
@@ -192,7 +193,7 @@ export let mockAppointments: Appointment[] = [
   {
     id: 'appt3',
     patientId: '3',
-    patientName: 'Luisa Fernandez Garcia', // Updated full name
+    patientName: 'Luisa Fernandez Garcia', 
     dateTime: setHours(setMinutes(tomorrow, 0), 9).toISOString(), // Mañana a las 09:00
     durationMinutes: 60,
     status: 'programada',
@@ -206,22 +207,23 @@ export const getAppointments = (): Appointment[] => {
 };
 
 export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & { patientName?: string }): Appointment => {
-  let patientName = data.patientName;
+  let patientNameResolved = data.patientName; // Use let for reassignment
   if (data.patientId && !data.isBlocker) {
     const patient = getPatientById(data.patientId);
     if (!patient) {
       throw new Error("Paciente no encontrado para la cita.");
     }
-    patientName = `${patient.personalDetails.nombres} ${patient.personalDetails.apellidos}`;
+    // Use getPatientFullName for consistency if patient object is PatientRecord
+    patientNameResolved = getPatientFullName(patient);
   } else if (data.isBlocker) {
-    patientName = undefined; // No patient name for blockers
+    patientNameResolved = undefined; // No patient name for blockers
   }
 
 
   const newAppointment: Appointment = {
     id: `appt-${Date.now()}`,
     patientId: data.isBlocker ? undefined : data.patientId,
-    patientName: data.isBlocker ? undefined : patientName,
+    patientName: patientNameResolved,
     dateTime: data.dateTime,
     durationMinutes: data.durationMinutes,
     notes: data.isBlocker ? undefined : data.notes,
@@ -238,6 +240,8 @@ export const getPatientFullName = (patient: PatientRecord | PersonalDetails): st
   if ('personalDetails' in patient) { // It's a PatientRecord
     return `${patient.personalDetails.nombres} ${patient.personalDetails.apellidos}`;
   }
-  // It's PersonalDetails
+  // It's PersonalDetails (e.g. from form values before full record creation)
   return `${patient.nombres} ${patient.apellidos}`;
 };
+
+    

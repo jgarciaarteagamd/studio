@@ -1,3 +1,4 @@
+
 // src/components/patients/PatientTable.tsx
 "use client";
 
@@ -56,7 +57,39 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
   }, [filteredPatients, currentPage]);
 
   const handleGenerateReport = (patientId: string) => {
-    router.push(`/dashboard/patients/${patientId}#reports`); 
+    // Navegar a la pestaña de Informes IA dentro de la página de detalles del paciente
+    const patientDetailPage = `/dashboard/patients/${patientId}`;
+    // Aquí asumimos que la ReportGenerationSection está en una pestaña con valor "reports"
+    router.push(`${patientDetailPage}#reports-tab`); 
+    // O si queremos que el Tab se active programáticamente:
+    // router.push({ pathname: patientDetailPage, query: { tab: 'reports' } });
+    // Y luego en PatientDetailPage, leer el query param para activar el tab.
+    // Por simplicidad, el hash es más directo si el Tab ya existe con ese id/value.
+    // Como el TabsTrigger tiene value="reports", podemos usar el hash.
+    // Sin embargo, para que un hash active un tab, el TabsContent necesita un id y
+    // el TabsTrigger un href al id del TabsContent, o JS que maneje el hash.
+    // Por ahora, la manera más simple es ir a la página, y el usuario hará click en la pestaña.
+    // Actualización: El TabsTrigger en PatientDetailPage usa value="reports", no un ID de hash.
+    // Para la navegación directa a la pestaña Informes IA, necesitamos ir a la página del paciente
+    // y el usuario seleccionará la pestaña. Para una mejor UX, se necesitaría una lógica
+    // más compleja para activar el tab programáticamente o usar un query param.
+    // Por ahora, simplemente navegar a la página del paciente es suficiente, y
+    // el usuario puede hacer clic en la pestaña "Informes IA".
+    // Una forma más directa es enfocar el tab:
+    router.push(`/dashboard/patients/${patientId}`);
+    // Pequeño delay para asegurar que la página ha cargado antes de intentar enfocar.
+    setTimeout(() => {
+      // Intentar seleccionar la pestaña 'reports' si existe.
+      // Esto es una simplificación y puede necesitar ajustes dependiendo de la estructura exacta del DOM.
+      const reportTabTrigger = document.querySelector('button[data-state][value="reports"]') as HTMLElement;
+      if (reportTabTrigger) {
+        reportTabTrigger.click();
+      } else {
+        // Si no se puede hacer clic, al menos hemos navegado a la página del paciente.
+        // console.warn("No se pudo encontrar el activador de la pestaña de informes para hacer clic programático.");
+      }
+    }, 100);
+    
   };
   
   const handleDeletePatient = (patientId: string) => {
@@ -204,3 +237,5 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
     </div>
   );
 }
+
+    
