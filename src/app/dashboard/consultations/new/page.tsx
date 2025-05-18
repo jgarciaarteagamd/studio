@@ -199,7 +199,7 @@ export default function NewConsultationPage() {
                   </CardHeader>
                   <CardContent>
                     {selectedPatient.medicalEncounters && selectedPatient.medicalEncounters.length > 0 ? (
-                      <ScrollArea className="h-[300px] pr-3">
+                      <ScrollArea className="pr-3"> {/* Eliminada clase h-[300px] */}
                         <ul className="space-y-3">
                           {[...selectedPatient.medicalEncounters].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0,5).map(enc => ( // Mostrar últimas 5
                             <li key={enc.id} className="text-xs border-b pb-2 mb-2">
