@@ -37,7 +37,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-3xl">Bienvenido a e-medlog</CardTitle>
+          <CardTitle className="text-3xl">Bienvenido a medlog cloud</CardTitle>
           <CardDescription>Tu centro de gestión de pacientes e historiales médicos.</CardDescription>
         </CardHeader>
         <CardContent>

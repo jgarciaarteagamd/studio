@@ -20,7 +20,7 @@ export function AppHeader() {
       </div>
       <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold md:text-base">
         <ActivitySquare className="h-6 w-6 text-primary" />
-        <h1 className="text-xl font-bold text-foreground">e-medlog</h1>
+        <h1 className="text-xl font-bold text-foreground">medlog cloud</h1>
       </Link>
       <div className="ml-auto flex items-center gap-4">
         <Button variant="outline" size="sm" onClick={handleConnectDrive}>
