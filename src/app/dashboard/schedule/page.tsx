@@ -4,8 +4,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter, DialogTrigger } from "@/components/ui/dialog"; // Renamed DialogDescription to avoid conflict
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription as ShadCNFormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -244,9 +244,9 @@ export default function SchedulePage() {
                         <FormLabel>
                           Marcar como bloqueo de horario
                         </FormLabel>
-                        <FormDescription>
+                        <ShadCNFormDescription>
                           Seleccione esto si no es una cita de paciente (ej. almuerzo, reunión).
-                        </FormDescription>
+                        </ShadCNFormDescription>
                       </div>
                     </FormItem>
                   )}
@@ -424,7 +424,7 @@ export default function SchedulePage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Calendario de Citas</CardTitle>
-          <CardDescriptionComponent>Navegue por los meses y haga clic en un día para ver las citas programadas. Use el botón "+ Programar Cita/Bloqueo" para agendar.</CardDescriptionComponent>
+          <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use el botón "+ Programar Cita/Bloqueo" para agendar.</CardDescription>
         </CardHeader>
         <CardContent className="p-4">
           <Calendar
@@ -558,4 +558,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
