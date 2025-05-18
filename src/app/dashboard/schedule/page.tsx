@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button"; // Import buttonVariants
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription as ShadCNFormDescription } from "@/components/ui/form";
@@ -21,7 +21,7 @@ import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Tra
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
 import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+// import { buttonVariants } from "@/components/ui/button"; // Already imported at the top
 import { DayAppointmentsSidebar } from "@/components/schedule/DayAppointmentsSidebar";
 
 const appointmentFormSchema = z.object({
@@ -423,27 +423,24 @@ export default function SchedulePage() {
                 caption_label: "text-lg font-medium",
                 head_cell: cn(
                   "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-sm p-0 text-center",
-                  "h-10 sm:h-12 md:h-14" // Heights from schedule page
+                  "h-10 sm:h-12 md:h-14" 
                 ),
                 cell: cn(
                   "flex-1 min-w-0 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                  "flex items-center justify-center", // Center content in cell
-                  "h-10 sm:h-12 md:h-14" // Heights from schedule page
+                  "flex items-center justify-center", 
+                  "h-10 sm:h-12 md:h-14" 
                 ),
                 day: (date, modifiers, dayProps) => {
                   let klasses = cn(
-                    buttonVariants({ variant: "ghost" }),
-                    "h-full w-full p-0 font-normal text-foreground" // Default: button fills cell, dark text
+                    buttonVariants({ variant: "ghost" }), // Base button style
+                    "h-full w-full p-0 font-normal text-foreground" // Ensure text is visible
                   );
                   
                   if (modifiers.selected) {
-                     // Selected day: smaller light blue circle, dark text
                     klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-foreground hover:bg-primary/60");
                   } else if (modifiers.today) {
-                     // Today (not selected): subtle primary ring, dark text, button fills cell
                     klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
                   } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter) {
-                     // Hover on normal day: smaller muted circle, dark text
                     klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full text-foreground");
                   }
 
