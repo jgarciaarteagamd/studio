@@ -93,9 +93,9 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
         <CardHeader>
           <CardTitle>Archivos Adjuntos</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent> {/* Este CardContent no tiene overflow-x-auto */}
           {attachments.length > 0 ? (
-            <div className="rounded-md border w-full"> {/* Added w-full here */}
+            <div className="rounded-md border w-full overflow-hidden"> {/* Añadido overflow-hidden aquí */}
             <Table> 
               <TableHeader>
                 <TableRow>
