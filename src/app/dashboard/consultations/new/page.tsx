@@ -9,15 +9,15 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Importar Label estándar
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'; // FormLabel de react-hook-form
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { mockPatients, getPatientById, addMedicalEncounterToPatient, getPatientFullName, type NewConsultationData } from '@/lib/mock-data';
 import type { PatientRecord, MedicalEncounter } from '@/lib/types';
-import { User, FileText, History, PlusCircle, Search, ListChecks, Activity, Microscope, Stethoscope as StethoscopeIcon, Brain } from 'lucide-react';
+import { User, FileText, History, PlusCircle, Search, ListChecks, Activity, Microscope, Stethoscope as StethoscopeIcon, Brain, Printer, Download } from 'lucide-react';
 import { format, differenceInYears } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Link from 'next/link';
@@ -43,17 +43,17 @@ export default function NewConsultationPage() {
 
   useEffect(() => {
     setCurrentLocale(navigator.language || 'es-ES');
-    setAllPatients(mockPatients); // Cargar todos los pacientes inicialmente
+    setAllPatients(mockPatients); 
   }, []);
 
   const filteredPatients = useMemo(() => {
-    if (!searchTerm) return []; // No mostrar nada hasta que se busque
+    if (!searchTerm) return []; 
     return allPatients.filter(patient => {
       const fullName = `${patient.personalDetails.nombres} ${patient.personalDetails.apellidos}`.toLowerCase();
       const doc = patient.personalDetails.documentoIdentidad?.toLowerCase() || '';
       const term = searchTerm.toLowerCase();
       return fullName.includes(term) || doc.includes(term);
-    }).slice(0, 5); // Limitar a 5 resultados para no saturar la UI
+    }).slice(0, 5); 
   }, [searchTerm, allPatients]);
 
   const form = useForm<ConsultationFormValues>({
@@ -69,12 +69,11 @@ export default function NewConsultationPage() {
 
   const handleSelectPatient = (patient: PatientRecord) => {
     setIsLoadingPatient(true);
-    // Simular carga de datos del paciente
     setTimeout(() => {
       setSelectedPatient(patient);
-      setSearchTerm(''); // Limpiar búsqueda
+      setSearchTerm(''); 
       setIsLoadingPatient(false);
-      form.reset(); // Limpiar formulario de consulta anterior
+      form.reset(); 
     }, 300);
   };
 
@@ -91,10 +90,8 @@ export default function NewConsultationPage() {
         title: "Consulta Guardada",
         description: `Nueva consulta para ${getPatientFullName(updatedPatient)} guardada exitosamente.`,
       });
-      setSelectedPatient(updatedPatient); // Actualizar el paciente seleccionado con la nueva consulta
+      setSelectedPatient(updatedPatient); 
       form.reset();
-      // Opcionalmente, redirigir a la página de detalles del paciente:
-      // router.push(`/dashboard/patients/${selectedPatient.id}`);
     } else {
       toast({
         title: "Error al Guardar",
@@ -113,13 +110,49 @@ export default function NewConsultationPage() {
     }
   };
 
+  const handleGenerateConsultationPdf = () => {
+    if (!selectedPatient) {
+      toast({ title: "Paciente no seleccionado", description: "Por favor, seleccione un paciente primero.", variant: "destructive" });
+      return;
+    }
+    const formData = form.getValues();
+    if (!formData.anamnesis && !formData.exploracionFisica && !formData.impresionDiagnostica && !formData.plan) {
+        toast({ title: "Formulario Vacío", description: "Por favor, complete al menos algunos campos de la consulta para generar el PDF.", variant: "default" });
+        return;
+    }
+
+    let pdfContent = `== CONSULTA MÉDICA ==\n\n`;
+    pdfContent += `Paciente: ${getPatientFullName(selectedPatient)}\n`;
+    pdfContent += `Fecha: ${format(new Date(), "PPP", { locale: es })}\n\n`;
+    pdfContent += `Anamnesis:\n${formData.anamnesis || 'No registrado.'}\n\n`;
+    pdfContent += `Exploración Física:\n${formData.exploracionFisica || 'No registrado.'}\n\n`;
+    pdfContent += `Estudios Complementarios:\n${formData.estudiosComplementarios || 'No registrado.'}\n\n`;
+    pdfContent += `Impresión Diagnóstica:\n${formData.impresionDiagnostica || 'No registrado.'}\n\n`;
+    pdfContent += `Plan:\n${formData.plan || 'No registrado.'}\n\n`;
+    pdfContent += `\n\nFirma del Médico:\n_________________________`;
+    
+    alert("Generación de PDF de Consulta (simulada):\n\n" + pdfContent);
+    console.log("Datos para PDF de Consulta:", {patient: selectedPatient, consultation: formData});
+  };
+
+  const handleDownloadSpecificConsultationPdf = (encounter: MedicalEncounter) => {
+    if (!selectedPatient) return;
+    let pdfContent = `== CONSULTA MÉDICA ==\n\n`;
+    pdfContent += `Paciente: ${getPatientFullName(selectedPatient)}\n`;
+    pdfContent += `Fecha de Consulta: ${format(new Date(encounter.date), "PPP", { locale: es })}\n\n`;
+    pdfContent += `Detalles de la Consulta:\n${encounter.details}\n\n`; // details ya está formateado
+    pdfContent += `\n\nFirma del Médico:\n_________________________`;
+    alert("Descarga de Consulta Específica (simulada):\n\n" + pdfContent);
+  };
+
+
   return (
     <div className="space-y-6">
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-3xl flex items-center">
             <PlusCircle className="mr-3 h-8 w-8 text-primary" />
-            Registrar Nueva Consulta Médica
+            Registrar Nueva Consulta
           </CardTitle>
           <CardDescription>
             Busque y seleccione un paciente para añadir una nueva entrada a su historial de consultas.
@@ -128,7 +161,7 @@ export default function NewConsultationPage() {
         <CardContent>
           {!selectedPatient ? (
             <>
-              <Label htmlFor="patientSearch">Buscar Paciente</Label> {/* Cambiado a Label estándar */}
+              <Label htmlFor="patientSearch" className="mb-2 block">Buscar Paciente</Label>
               <div className="flex items-center space-x-2 mb-4">
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <Input
@@ -168,7 +201,6 @@ export default function NewConsultationPage() {
             </>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Columna de Resumen del Paciente y su Historial */}
               <div className="lg:col-span-1 space-y-4">
                 <Card>
                   <CardHeader>
@@ -199,12 +231,17 @@ export default function NewConsultationPage() {
                   </CardHeader>
                   <CardContent>
                     {selectedPatient.medicalEncounters && selectedPatient.medicalEncounters.length > 0 ? (
-                      <ScrollArea className="pr-3"> {/* Eliminada clase h-[300px] */}
+                      <ScrollArea className="pr-3">
                         <ul className="space-y-3">
-                          {[...selectedPatient.medicalEncounters].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0,5).map(enc => ( // Mostrar últimas 5
+                          {[...selectedPatient.medicalEncounters].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0,5).map(enc => ( 
                             <li key={enc.id} className="text-xs border-b pb-2 mb-2">
-                              <p className="font-semibold">{format(new Date(enc.date), "PPP, p", { locale: es })}</p>
-                              <p className="text-muted-foreground truncate whitespace-normal line-clamp-3">{enc.details.split('\n\n')[0]}</p> {/* Muestra la primera sección (Anamnesis) */}
+                               <div className="flex justify-between items-center">
+                                <p className="font-semibold">{format(new Date(enc.date), "PPP, p", { locale: es })}</p>
+                                <Button variant="outline" size="icon" className="h-7 w-7" title="Descargar Consulta (Simulado)" onClick={() => handleDownloadSpecificConsultationPdf(enc)}>
+                                    <Download className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              <p className="text-muted-foreground truncate whitespace-normal line-clamp-3 mt-1">{enc.details.split('\n\n')[0]}</p> 
                             </li>
                           ))}
                         </ul>
@@ -216,7 +253,6 @@ export default function NewConsultationPage() {
                 </Card>
               </div>
 
-              {/* Columna del Formulario de Nueva Consulta */}
               <div className="lg:col-span-2">
                 <Card>
                   <CardHeader>
@@ -294,9 +330,12 @@ export default function NewConsultationPage() {
                             </FormItem>
                           )}
                         />
-                        <CardFooter className="px-0 pt-6">
+                        <CardFooter className="px-0 pt-6 flex flex-col sm:flex-row gap-4 justify-between">
                           <Button type="submit" disabled={form.formState.isSubmitting} className="w-full sm:w-auto">
                             {form.formState.isSubmitting ? "Guardando..." : "Guardar Consulta"}
+                          </Button>
+                           <Button type="button" variant="outline" onClick={handleGenerateConsultationPdf} className="w-full sm:w-auto">
+                            <Printer className="mr-2 h-4 w-4" /> Generar PDF (Simulado)
                           </Button>
                         </CardFooter>
                       </form>
