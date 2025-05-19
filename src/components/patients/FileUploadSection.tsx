@@ -63,7 +63,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="w-full"> {/* Added w-full here */}
         <CardHeader>
           <CardTitle>Subir Nuevo Adjunto</CardTitle>
           <CardDescription>Seleccione un archivo (PDF, imagen, etc.) para vincularlo al historial de este paciente. Los archivos se guardarán en su Google Drive.</CardDescription>
@@ -87,7 +87,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
         )}
       </Card>
 
-      <Card> {/* REMOVED className="w-full" from here */}
+      <Card> {/* This card (for listing files) intentionally does NOT have w-full */}
         <CardHeader>
           <CardTitle>Archivos Adjuntos</CardTitle>
         </CardHeader>
