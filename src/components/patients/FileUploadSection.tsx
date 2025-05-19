@@ -1,3 +1,4 @@
+
 // src/components/patients/FileUploadSection.tsx
 "use client";
 
@@ -9,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Attachment } from "@/lib/types";
 import { UploadCloud, FileText, ImageIcon, Trash2, Download } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FileUploadSectionProps {
   attachments: Attachment[];
@@ -62,8 +64,8 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
 
 
   return (
-    <div className="space-y-6 w-full"> {/* Added w-full to the root div */}
-      <Card className="w-full"> {/* This card for uploading is already w-full */}
+    <div className="space-y-6 w-full">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Subir Nuevo Adjunto</CardTitle>
           <CardDescription>Seleccione un archivo (PDF, imagen, etc.) para vincularlo al historial de este paciente. Los archivos se guardarán en su Google Drive.</CardDescription>
@@ -87,13 +89,13 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
         )}
       </Card>
 
-      <Card className="w-full"> {/* Added w-full to the card listing attachments */}
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Archivos Adjuntos</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto"> {/* Added overflow-x-auto here */}
           {attachments.length > 0 ? (
-            <div className="rounded-md border w-full"> {/* Added w-full to the div wrapping the table */}
+            <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
