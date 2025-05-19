@@ -1,4 +1,5 @@
 
+
 // src/app/dashboard/patients/[id]/page.tsx
 "use client";
 
@@ -57,7 +58,6 @@ export default function PatientDetailPage() {
   const handleFormSubmit = useCallback((data: Partial<PatientFormValues>) => {
     if (patient) {
       const updatedPatientData: Partial<Omit<PatientRecord, 'id' | 'createdAt'>> = {
-        // ...patient, // No es necesario esparcir todo el paciente aquí si solo actualizamos partes específicas
         personalDetails: data.personalDetails !== undefined ? data.personalDetails : patient.personalDetails,
         datosFacturacion: data.datosFacturacion !== undefined ? data.datosFacturacion : patient.datosFacturacion,
         backgroundInformation: data.backgroundInformation !== undefined ? data.backgroundInformation : patient.backgroundInformation,
@@ -94,7 +94,7 @@ export default function PatientDetailPage() {
       };
       const updatedAttachments = [...patient.attachments, newAttachment];
       const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
-      if (updatedRecord) setPatient(updatedRecord); // Update patient state to re-render list
+      if (updatedRecord) setPatient(updatedRecord); 
       toast({
         title: "Archivo Adjuntado",
         description: `${file.name} ha sido adjuntado.`,
@@ -212,9 +212,9 @@ export default function PatientDetailPage() {
                 submitButtonText="Guardar Cambios"
                 showPersonalDetailsSection={true}
                 showDatosFacturacionSection={true}
-                allowEditFacturacionInfo={true} // Asumiendo que el médico puede editar esto
-                showBackgroundInformationSection={false} // No se muestra aquí
-                allowEditBackgroundInfo={false} // No se edita aquí
+                allowEditFacturacionInfo={true} 
+                showBackgroundInformationSection={false} 
+                allowEditBackgroundInfo={false} 
               />
             </CardContent>
           </Card>
@@ -232,8 +232,8 @@ export default function PatientDetailPage() {
                    onSubmit={handleFormSubmit} 
                    initialData={patientFormInitialData}
                    submitButtonText="Guardar Antecedentes"
-                   showPersonalDetailsSection={false} // No se muestra aquí
-                   showDatosFacturacionSection={false} // No se muestra aquí
+                   showPersonalDetailsSection={false} 
+                   showDatosFacturacionSection={false} 
                    showBackgroundInformationSection={true} 
                    allowEditBackgroundInfo={true} 
                  />
@@ -308,7 +308,7 @@ export default function PatientDetailPage() {
                   <CardTitle>Archivos Adjuntos</CardTitle>
                   <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
                 </CardHeader>
-                <CardContent className="overflow-hidden"> {/* Added overflow-hidden */}
+                <CardContent> {/* Removed overflow-hidden here */}
                   <FileUploadSection
                     attachments={patient.attachments}
                     onFileUpload={handleFileUpload}
@@ -322,3 +322,4 @@ export default function PatientDetailPage() {
     </div>
   );
 }
+

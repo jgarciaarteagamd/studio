@@ -89,14 +89,14 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
         )}
       </Card>
 
-      <Card className="w-full">
+      <Card className="w-full"> {/* This card should take full width of its parent */}
         <CardHeader>
           <CardTitle>Archivos Adjuntos</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto"> {/* Added overflow-x-auto here */}
+        <CardContent> {/* This CardContent should not have explicit overflow styles */}
           {attachments.length > 0 ? (
-            <div className="rounded-md border">
-            <Table>
+            <div className="rounded-md border"> {/* This div should not have w-full; Table handles its own width */}
+            <Table> {/* Table component internally has a div with w-full and overflow-auto */}
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px]">Tipo</TableHead>
@@ -136,3 +136,4 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     </div>
   );
 }
+
