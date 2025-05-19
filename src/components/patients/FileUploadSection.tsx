@@ -95,7 +95,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
         </CardHeader>
         <CardContent>
           {attachments.length > 0 ? (
-            <div className="rounded-md border"> {/* Se elimina w-full de este div */}
+            <div className="rounded-md border"> {/* No w-full here, allow Table to control its inner div */}
               <Table> 
                 <TableHeader>
                   <TableRow>

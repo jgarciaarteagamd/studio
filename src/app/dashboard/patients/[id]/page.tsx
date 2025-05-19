@@ -64,7 +64,7 @@ export default function PatientDetailPage() {
 
       const updatedRecord = updatePatient(patient.id, updatedPatientData);
       if (updatedRecord) {
-        setPatient(updatedRecord); 
+        setPatient({...updatedRecord}); 
         setPatientAge(calculateAge(updatedRecord.personalDetails.fechaNacimiento));
          toast({
           title: "Historial Actualizado",
@@ -93,7 +93,6 @@ export default function PatientDetailPage() {
       const updatedAttachments = [...patient.attachments, newAttachment];
       const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
       if (updatedRecord) {
-        // Forzar la actualización del estado del paciente para que la UI se refresque
         setPatient({...updatedRecord}); 
       }
       toast({
@@ -309,7 +308,7 @@ export default function PatientDetailPage() {
                   <CardTitle>Archivos Adjuntos</CardTitle>
                   <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
                 </CardHeader>
-                <CardContent className="overflow-hidden"> {/* Ensures FileUploadSection respects parent's width constraints */}
+                <CardContent className="overflow-hidden">
                   <FileUploadSection
                     attachments={patient.attachments}
                     onFileUpload={handleFileUpload}
