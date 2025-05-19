@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, FileText, ImageIcon, Trash2, Download, FileArchive } from "lucide-react";
+import { UploadCloud, Trash2, FileText, ImageIcon, FileArchive } from "lucide-react"; // FileText, ImageIcon, FileArchive son para getFileIcon, pero se pueden quitar si getFileIcon se quita
 import { cn } from "@/lib/utils";
 
 interface FileUploadSectionProps {
@@ -46,15 +46,9 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
       alert("Por favor, seleccione un archivo primero.");
     }
   };
-
-  const getFileIcon = (type: Attachment['type']) => {
-    if (type === 'pdf') return <FileText className="h-5 w-5 text-red-500" />;
-    if (type === 'image') return <ImageIcon className="h-5 w-5 text-blue-500" />;
-    return <FileArchive className="h-5 w-5 text-gray-500" />; // Icono genérico para 'other'
-  };
   
   const handleOpenFile = (driveLink: string) => {
-    alert(`Abriendo archivo (simulado): ${driveLink}. En una aplicación real, esto abriría el archivo de Google Drive.`);
+    alert(`Abriendo/Descargando archivo (simulado): ${driveLink}. En una aplicación real, esto abriría o descargaría el archivo de Google Drive.`);
   };
 
   const handleSelectAttachment = (attachmentId: string) => {
@@ -66,7 +60,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
   };
 
   const handleSelectAll = () => {
-    if (selectedAttachmentIds.length === attachments.length) {
+    if (selectedAttachmentIds.length === attachments.length && attachments.length > 0) {
       setSelectedAttachmentIds([]);
     } else {
       setSelectedAttachmentIds(attachments.map(att => att.id));
@@ -146,7 +140,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             </div>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent> {/* No necesita overflow-x-auto aquí */}
           {attachments.length > 0 ? (
             <ul className="space-y-3">
               {attachments.map((attachment) => (
@@ -162,9 +156,9 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
                     checked={selectedAttachmentIds.includes(attachment.id)}
                     onCheckedChange={() => handleSelectAttachment(attachment.id)}
                     aria-labelledby={`attachment-name-${attachment.id}`}
+                    className="flex-shrink-0"
                   />
-                  <div className="flex-shrink-0">{getFileIcon(attachment.type)}</div>
-                  <div className="flex-grow min-w-0">
+                  <div className="flex-grow min-w-0"> {/* Contenedor para el nombre y la fecha */}
                     <button 
                       id={`attachment-name-${attachment.id}`}
                       onClick={() => handleOpenFile(attachment.driveLink)} 
@@ -173,19 +167,11 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
                     >
                       {attachment.name}
                     </button>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       Subido: {new Date(attachment.uploadedAt).toLocaleDateString(currentLocale)}
                     </p>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="h-8 w-8 flex-shrink-0"
-                    onClick={() => handleOpenFile(attachment.driveLink)} 
-                    title="Abrir/Descargar Archivo (simulado)"
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
+                  {/* Icono de tipo de archivo y botón de descarga individual eliminados */}
                 </li>
               ))}
             </ul>
