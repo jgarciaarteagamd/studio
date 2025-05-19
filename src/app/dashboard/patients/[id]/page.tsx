@@ -57,7 +57,7 @@ export default function PatientDetailPage() {
   const handleFormSubmit = useCallback((data: Partial<PatientFormValues>) => {
     if (patient) {
       const updatedPatientData: Partial<Omit<PatientRecord, 'id' | 'createdAt'>> = {
-        ...patient,
+        // ...patient, // No es necesario esparcir todo el paciente aquí si solo actualizamos partes específicas
         personalDetails: data.personalDetails !== undefined ? data.personalDetails : patient.personalDetails,
         datosFacturacion: data.datosFacturacion !== undefined ? data.datosFacturacion : patient.datosFacturacion,
         backgroundInformation: data.backgroundInformation !== undefined ? data.backgroundInformation : patient.backgroundInformation,
@@ -187,12 +187,12 @@ export default function PatientDetailPage() {
             "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
             SIMULATED_ROLE === 'doctor' ? "md:grid-cols-4" : "md:grid-cols-2" 
             )}>
-          <TabsTrigger value="personalData" className="flex-grow sm:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos del Paciente</TabsTrigger>
+          <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos del Paciente</TabsTrigger>
           {SIMULATED_ROLE === 'doctor' && (
             <>
-              <TabsTrigger value="backgroundInfo" className="flex-grow sm:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2"/> Antecedentes</TabsTrigger>
-              <TabsTrigger value="encounters" className="flex-grow sm:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Historial</TabsTrigger>
-              <TabsTrigger value="attachments" className="flex-grow sm:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
+              <TabsTrigger value="backgroundInfo" className="flex-grow md:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2"/> Antecedentes</TabsTrigger>
+              <TabsTrigger value="encounters" className="flex-grow md:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Historial</TabsTrigger>
+              <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
             </>
           )}
         </TabsList>
@@ -212,9 +212,9 @@ export default function PatientDetailPage() {
                 submitButtonText="Guardar Cambios"
                 showPersonalDetailsSection={true}
                 showDatosFacturacionSection={true}
-                allowEditFacturacionInfo={true} 
-                showBackgroundInformationSection={false}
-                allowEditBackgroundInfo={false} 
+                allowEditFacturacionInfo={true} // Asumiendo que el médico puede editar esto
+                showBackgroundInformationSection={false} // No se muestra aquí
+                allowEditBackgroundInfo={false} // No se edita aquí
               />
             </CardContent>
           </Card>
@@ -232,8 +232,8 @@ export default function PatientDetailPage() {
                    onSubmit={handleFormSubmit} 
                    initialData={patientFormInitialData}
                    submitButtonText="Guardar Antecedentes"
-                   showPersonalDetailsSection={false}
-                   showDatosFacturacionSection={false}
+                   showPersonalDetailsSection={false} // No se muestra aquí
+                   showDatosFacturacionSection={false} // No se muestra aquí
                    showBackgroundInformationSection={true} 
                    allowEditBackgroundInfo={true} 
                  />
@@ -308,7 +308,7 @@ export default function PatientDetailPage() {
                   <CardTitle>Archivos Adjuntos</CardTitle>
                   <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="overflow-hidden"> {/* Added overflow-hidden */}
                   <FileUploadSection
                     attachments={patient.attachments}
                     onFileUpload={handleFileUpload}
