@@ -361,7 +361,7 @@ export default function NewRecipePage() {
                         <div>
                           <FormLabel className="flex items-center text-lg mb-2"><Pill className="mr-2 h-5 w-5 text-primary" />Medicación</FormLabel>
                           {fields.map((field, index) => (
-                            <Card key={field.id} className="w-full mb-4 p-4 relative shadow-sm border pr-12 pb-6">
+                            <Card key={field.id} className="w-full mb-4 p-4 relative shadow-sm border">
                               <FormField
                                 control={form.control}
                                 name={`medications.${index}.drugName`}
@@ -463,3 +463,4 @@ export default function NewRecipePage() {
     </div>
   );
 }
+
