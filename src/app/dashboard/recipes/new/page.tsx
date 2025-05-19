@@ -1,3 +1,4 @@
+
 // src/app/dashboard/recipes/new/page.tsx
 "use client";
 
@@ -16,7 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { mockPatients, getPatientById, addRecipeToPatient, getPatientFullName, type PatientRecord, type Recipe, type MedicationItem } from '@/lib/mock-data';
-import { User, FileText, History, PlusCircle, Search, ListChecks, Pill, ShieldAlert, ClipboardEdit, Trash2, Printer } from 'lucide-react';
+import { User, FileText, History, PlusCircle, Search, ListChecks, Pill, ShieldAlert, ClipboardEdit, Trash2, Printer, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, differenceInYears } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Link from 'next/link';
@@ -37,6 +38,8 @@ const recipeFormSchema = z.object({
 
 type RecipeFormValues = z.infer<typeof recipeFormSchema>;
 
+const ITEMS_PER_RECIPE_HISTORY_PAGE = 3;
+
 export default function NewRecipePage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -45,6 +48,7 @@ export default function NewRecipePage() {
   const [selectedPatient, setSelectedPatient] = useState<PatientRecord | null>(null);
   const [isLoadingPatient, setIsLoadingPatient] = useState(false);
   const [currentLocale, setCurrentLocale] = useState('es-ES');
+  const [currentRecipeHistoryPage, setCurrentRecipeHistoryPage] = useState(1);
 
   useEffect(() => {
     setCurrentLocale(navigator.language || 'es-ES');
@@ -82,6 +86,7 @@ export default function NewRecipePage() {
       setSelectedPatient(patient);
       setSearchTerm('');
       setIsLoadingPatient(false);
+      setCurrentRecipeHistoryPage(1); // Reset pagination for new patient
       form.reset({ 
         medications: [{ drugName: '', presentation: '', indications: '' }],
         preventiveMeasures: '',
@@ -98,7 +103,7 @@ export default function NewRecipePage() {
     }
 
     const recipeDataToSave = {
-      medications: data.medications.map(med => ({...med, id: `med-${Date.now()}-${Math.random()}`})), // Ensure meds have unique IDs if not provided
+      medications: data.medications.map(med => ({...med, id: `med-${Date.now()}-${Math.random()}`})),
       preventiveMeasures: data.preventiveMeasures,
       diagnoses: data.diagnoses,
       observations: data.observations,
@@ -111,7 +116,8 @@ export default function NewRecipePage() {
         title: "Receta Guardada",
         description: `Nueva receta para ${getPatientFullName(updatedPatient)} guardada exitosamente.`,
       });
-      setSelectedPatient(updatedPatient);
+      setSelectedPatient(updatedPatient); // Actualizar paciente para reflejar nueva receta en historial
+      setCurrentRecipeHistoryPage(1); // Volver a la primera página del historial
       form.reset({ 
         medications: [{ drugName: '', presentation: '', indications: '' }],
         preventiveMeasures: '',
@@ -137,7 +143,6 @@ export default function NewRecipePage() {
   };
   
   const handleGeneratePdf = () => {
-    // Placeholder: In a real app, this would generate a PDF.
     if (!selectedPatient || form.getValues('medications').length === 0) {
       toast({ title: "Información Incompleta", description: "Seleccione un paciente y agregue al menos un medicamento.", variant: "destructive" });
       return;
@@ -163,6 +168,49 @@ export default function NewRecipePage() {
     console.log("Datos para PDF:", {patient: selectedPatient, recipe: formData});
   };
 
+  const handleDownloadSpecificRecipe = (recipe: Recipe) => {
+    if (!selectedPatient) return;
+    let pdfContent = `== RECETA MÉDICA ==\n\n`;
+    pdfContent += `Paciente: ${getPatientFullName(selectedPatient)}\n`;
+    pdfContent += `Fecha: ${format(new Date(recipe.date), "PPP", { locale: es })}\n\n`;
+    if (recipe.diagnoses) {
+      pdfContent += `Diagnóstico(s):\n${recipe.diagnoses}\n\n`;
+    }
+    pdfContent += `Medicación:\n`;
+    recipe.medications.forEach((med, index) => {
+      pdfContent += `${index + 1}. ${med.drugName} (${med.presentation})\n   Indicaciones: ${med.indications}\n`;
+    });
+    pdfContent += `\nMedidas de Prevención y Cuidados:\n${recipe.preventiveMeasures}\n\n`;
+    if (recipe.observations) {
+      pdfContent += `Observaciones Adicionales:\n${recipe.observations}\n\n`;
+    }
+    pdfContent += `\n\nFirma del Médico:\n_________________________`;
+    alert("Descarga de Receta Específica (simulada):\n\n" + pdfContent);
+  };
+
+  const sortedRecipeHistory = useMemo(() => {
+    if (!selectedPatient || !selectedPatient.recipes) return [];
+    return [...selectedPatient.recipes].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [selectedPatient]);
+
+  const totalRecipeHistoryPages = Math.ceil(sortedRecipeHistory.length / ITEMS_PER_RECIPE_HISTORY_PAGE);
+
+  const paginatedRecipeHistory = useMemo(() => {
+    const startIndex = (currentRecipeHistoryPage - 1) * ITEMS_PER_RECIPE_HISTORY_PAGE;
+    return sortedRecipeHistory.slice(startIndex, startIndex + ITEMS_PER_RECIPE_HISTORY_PAGE);
+  }, [sortedRecipeHistory, currentRecipeHistoryPage]);
+
+  const handleNextRecipePage = () => {
+    if (currentRecipeHistoryPage < totalRecipeHistoryPages) {
+      setCurrentRecipeHistoryPage(currentRecipeHistoryPage + 1);
+    }
+  };
+
+  const handlePreviousRecipePage = () => {
+    if (currentRecipeHistoryPage > 1) {
+      setCurrentRecipeHistoryPage(currentRecipeHistoryPage - 1);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -170,7 +218,7 @@ export default function NewRecipePage() {
         <CardHeader>
           <CardTitle className="text-3xl flex items-center">
             <PlusCircle className="mr-3 h-8 w-8 text-primary" />
-            Crear Nueva Receta Médica
+            Crear Nueva Receta
           </CardTitle>
           <CardDescription>
             Busque y seleccione un paciente para crear una nueva receta.
@@ -179,7 +227,7 @@ export default function NewRecipePage() {
         <CardContent>
           {!selectedPatient ? (
             <>
-              <Label htmlFor="patientSearchRecipe">Buscar Paciente</Label>
+              <Label htmlFor="patientSearchRecipe" className="mb-1 block">Buscar Paciente</Label>
               <div className="flex items-center space-x-2 mb-4">
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <Input
@@ -242,23 +290,55 @@ export default function NewRecipePage() {
                   <CardHeader>
                     <CardTitle className="flex items-center text-lg">
                       <History className="mr-2 h-5 w-5 text-primary" />
-                      Historial de Recetas (Últimas 5)
+                      Historial de Recetas
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {selectedPatient.recipes && selectedPatient.recipes.length > 0 ? (
-                      <ScrollArea className="pr-3">
-                        <ul className="space-y-3">
-                          {[...selectedPatient.recipes].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0,5).map(recipe => (
-                            <li key={recipe.id} className="text-xs border-b pb-2 mb-2">
-                              <p className="font-semibold">{format(new Date(recipe.date), "PPP", { locale: es })}</p>
-                              <p className="text-muted-foreground truncate whitespace-normal line-clamp-2">
-                                {recipe.medications.map(m => m.drugName).join(', ') || 'Receta sin medicamentos especificados'}
-                              </p>
-                            </li>
-                          ))}
-                        </ul>
-                      </ScrollArea>
+                    {paginatedRecipeHistory.length > 0 ? (
+                      <>
+                        <ScrollArea className="pr-3">
+                          <ul className="space-y-3">
+                            {paginatedRecipeHistory.map(recipe => (
+                              <li key={recipe.id} className="text-xs border-b pb-2 mb-2">
+                                <div className="flex justify-between items-center">
+                                  <p className="font-semibold">{format(new Date(recipe.date), "PPP", { locale: es })}</p>
+                                  <Button variant="outline" size="icon" className="h-7 w-7" title="Descargar Receta (Simulado)" onClick={() => handleDownloadSpecificRecipe(recipe)}>
+                                      <Download className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                                <p className="text-muted-foreground truncate whitespace-normal line-clamp-2 mt-1">
+                                  {recipe.medications.map(m => m.drugName).join(', ') || 'Receta sin medicamentos especificados'}
+                                </p>
+                              </li>
+                            ))}
+                          </ul>
+                        </ScrollArea>
+                        {totalRecipeHistoryPages > 1 && (
+                          <div className="flex items-center justify-between pt-4 mt-2 border-t">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handlePreviousRecipePage}
+                              disabled={currentRecipeHistoryPage === 1}
+                            >
+                              <ChevronLeft className="mr-1 h-4 w-4" />
+                              Anterior
+                            </Button>
+                            <span className="text-xs text-muted-foreground">
+                              Página {currentRecipeHistoryPage} de {totalRecipeHistoryPages}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleNextRecipePage}
+                              disabled={currentRecipeHistoryPage === totalRecipeHistoryPages}
+                            >
+                              Siguiente
+                              <ChevronRight className="ml-1 h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <p className="text-sm text-muted-foreground">No hay recetas previas.</p>
                     )}
@@ -281,7 +361,7 @@ export default function NewRecipePage() {
                         <div>
                           <FormLabel className="flex items-center text-lg mb-2"><Pill className="mr-2 h-5 w-5 text-primary" />Medicación</FormLabel>
                           {fields.map((field, index) => (
-                            <Card key={field.id} className="mb-4 p-4 space-y-3 relative shadow-sm border">
+                            <Card key={field.id} className="mb-4 p-4 space-y-3 relative shadow-sm border pr-12 pb-6"> {/* Aumentado pr y pb */}
                               <FormField
                                 control={form.control}
                                 name={`medications.${index}.drugName`}
@@ -316,7 +396,7 @@ export default function NewRecipePage() {
                                 )}
                               />
                               {fields.length > 1 && (
-                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="absolute top-2 right-2 text-destructive hover:bg-destructive/10">
+                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="absolute top-3 right-3 text-destructive hover:bg-destructive/10 h-7 w-7">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               )}
@@ -383,3 +463,4 @@ export default function NewRecipePage() {
     </div>
   );
 }
+
