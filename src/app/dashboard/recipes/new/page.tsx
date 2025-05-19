@@ -361,12 +361,12 @@ export default function NewRecipePage() {
                         <div>
                           <FormLabel className="flex items-center text-lg mb-2"><Pill className="mr-2 h-5 w-5 text-primary" />Medicación</FormLabel>
                           {fields.map((field, index) => (
-                            <Card key={field.id} className="w-full mb-4 p-4 space-y-3 relative shadow-sm border pr-12 pb-6">
+                            <Card key={field.id} className="w-full mb-4 p-4 relative shadow-sm border pr-12 pb-6">
                               <FormField
                                 control={form.control}
                                 name={`medications.${index}.drugName`}
                                 render={({ field }) => (
-                                  <FormItem>
+                                  <FormItem className="w-full">
                                     <FormLabel>Nombre del Fármaco</FormLabel>
                                     <FormControl><Input placeholder="Ej: Amoxicilina 500mg" {...field} className="w-full" /></FormControl>
                                     <FormMessage />
@@ -377,7 +377,7 @@ export default function NewRecipePage() {
                                 control={form.control}
                                 name={`medications.${index}.presentation`}
                                 render={({ field }) => (
-                                  <FormItem>
+                                  <FormItem className="w-full mt-3">
                                     <FormLabel>Presentación</FormLabel>
                                     <FormControl><Input placeholder="Ej: Comprimidos, Jarabe 125mg/5ml" {...field} className="w-full" /></FormControl>
                                     <FormMessage />
@@ -388,7 +388,7 @@ export default function NewRecipePage() {
                                 control={form.control}
                                 name={`medications.${index}.indications`}
                                 render={({ field }) => (
-                                  <FormItem>
+                                  <FormItem className="w-full mt-3">
                                     <FormLabel>Indicaciones (Dosis, frecuencia, duración)</FormLabel>
                                     <FormControl><Textarea placeholder="Ej: Tomar 1 comprimido cada 8 horas por 7 días." rows={2} {...field} className="w-full" /></FormControl>
                                     <FormMessage />
