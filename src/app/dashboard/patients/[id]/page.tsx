@@ -8,13 +8,13 @@ import { PatientForm, type PatientFormValues } from "@/components/patients/Patie
 import { FileUploadSection } from "@/components/patients/FileUploadSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getPatientById, updatePatient, getPatientFullName } from "@/lib/mock-data";
+import { getPatientById, updatePatient, getPatientFullName, calculateAge } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { format, differenceInYears } from "date-fns";
+import { format } from "date-fns";
 import { es } from 'date-fns/locale';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,7 @@ export default function PatientDetailPage() {
   const [patient, setPatient] = useState<PatientRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentLocale, setCurrentLocale] = useState('es-ES');
-  const [calculatedAge, setCalculatedAge] = useState<string | null>(null);
+  const [patientAge, setPatientAge] = useState<string | null>(null);
 
   const SIMULATED_ROLE = 'doctor'; // Cambiar a 'secretary' para probar
 
@@ -41,17 +41,7 @@ export default function PatientDetailPage() {
       const fetchedPatient = getPatientById(patientId as string);
       if (fetchedPatient) {
         setPatient(fetchedPatient);
-        if (fetchedPatient.personalDetails.fechaNacimiento) {
-            try {
-                const age = differenceInYears(new Date(), new Date(fetchedPatient.personalDetails.fechaNacimiento));
-                setCalculatedAge(`${age} años`);
-            } catch (e) {
-                console.error("Error calculating age from date:", fetchedPatient.personalDetails.fechaNacimiento);
-                setCalculatedAge("Edad no disponible");
-            }
-        } else {
-             setCalculatedAge("Edad no disponible");
-        }
+        setPatientAge(calculateAge(fetchedPatient.personalDetails.fechaNacimiento));
       } else {
         toast({
           title: "Error",
@@ -64,12 +54,11 @@ export default function PatientDetailPage() {
     }
   }, [patientId, router, toast]);
 
-  const handleFormSubmit = useCallback((data: Partial<PatientFormValues>) => { // Data can be partial
+  const handleFormSubmit = useCallback((data: Partial<PatientFormValues>) => {
     if (patient) {
-      // Merge data with existing patient data carefully
       const updatedPatientData: Partial<Omit<PatientRecord, 'id' | 'createdAt'>> = {
-        ...patient, // Start with current patient data
-        personalDetails: data.personalDetails || patient.personalDetails,
+        ...patient,
+        personalDetails: data.personalDetails !== undefined ? data.personalDetails : patient.personalDetails,
         datosFacturacion: data.datosFacturacion !== undefined ? data.datosFacturacion : patient.datosFacturacion,
         backgroundInformation: data.backgroundInformation !== undefined ? data.backgroundInformation : patient.backgroundInformation,
         updatedAt: new Date().toISOString(),
@@ -77,11 +66,8 @@ export default function PatientDetailPage() {
 
       const updatedRecord = updatePatient(patient.id, updatedPatientData);
       if (updatedRecord) {
-        setPatient(updatedRecord); // This should re-render with new data
-        if (updatedRecord.personalDetails.fechaNacimiento) {
-            const age = differenceInYears(new Date(), new Date(updatedRecord.personalDetails.fechaNacimiento));
-            setCalculatedAge(`${age} años`);
-        }
+        setPatient(updatedRecord); 
+        setPatientAge(calculateAge(updatedRecord.personalDetails.fechaNacimiento));
          toast({
           title: "Historial Actualizado",
           description: `El historial de ${getPatientFullName(updatedRecord)} ha sido actualizado exitosamente.`,
@@ -108,7 +94,7 @@ export default function PatientDetailPage() {
       };
       const updatedAttachments = [...patient.attachments, newAttachment];
       const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
-      if (updatedRecord) setPatient(updatedRecord);
+      if (updatedRecord) setPatient(updatedRecord); // Update patient state to re-render list
       toast({
         title: "Archivo Adjuntado",
         description: `${file.name} ha sido adjuntado.`,
@@ -171,7 +157,7 @@ export default function PatientDetailPage() {
                 <p className="flex items-center"><FileTextIcon className="mr-2 h-4 w-4 text-primary/70" /> Doc. Identidad: {patient.personalDetails.documentoIdentidad}</p>
             )}
             {patient.personalDetails.fechaNacimiento && (
-             <p>Fecha de Nacimiento: {format(new Date(patient.personalDetails.fechaNacimiento), "PPP", { locale: es })} {calculatedAge && `(${calculatedAge})`}</p>
+             <p>Fecha de Nacimiento: {format(new Date(patient.personalDetails.fechaNacimiento), "PPP", { locale: es })} {patientAge && `(${patientAge})`}</p>
             )}
             {patient.personalDetails.email && (<p className="flex items-center"><User className="mr-2 h-4 w-4 text-primary/70" /> Email: {patient.personalDetails.email}</p>)}
             {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil: {patient.personalDetails.telefono1}</p>)}
@@ -224,11 +210,11 @@ export default function PatientDetailPage() {
                 onSubmit={handleFormSubmit}
                 initialData={patientFormInitialData}
                 submitButtonText="Guardar Cambios"
-                allowEditBackgroundInfo={false} // Background info is in its own tab
-                allowEditFacturacionInfo={true} 
                 showPersonalDetailsSection={true}
                 showDatosFacturacionSection={true}
-                showBackgroundInformationSection={false} // Hide background here
+                allowEditFacturacionInfo={true} 
+                showBackgroundInformationSection={false}
+                allowEditBackgroundInfo={false} 
               />
             </CardContent>
           </Card>
@@ -243,14 +229,13 @@ export default function PatientDetailPage() {
                </CardHeader>
                <CardContent>
                  <PatientForm
-                   onSubmit={handleFormSubmit} // Same handler, will submit only backgroundInfo fields
+                   onSubmit={handleFormSubmit} 
                    initialData={patientFormInitialData}
                    submitButtonText="Guardar Antecedentes"
-                   allowEditBackgroundInfo={true} // This form instance allows editing background
-                   allowEditFacturacionInfo={false} // Not relevant here
-                   showPersonalDetailsSection={false} // Hide personal details
-                   showDatosFacturacionSection={false} // Hide billing
-                   showBackgroundInformationSection={true} // Show only background info
+                   showPersonalDetailsSection={false}
+                   showDatosFacturacionSection={false}
+                   showBackgroundInformationSection={true} 
+                   allowEditBackgroundInfo={true} 
                  />
                </CardContent>
              </Card>
@@ -318,7 +303,7 @@ export default function PatientDetailPage() {
             </TabsContent>
 
             <TabsContent value="attachments">
-              <Card>
+              <Card className="w-full">
                 <CardHeader>
                   <CardTitle>Archivos Adjuntos</CardTitle>
                   <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
