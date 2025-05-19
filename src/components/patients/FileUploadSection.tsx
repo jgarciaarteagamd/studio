@@ -95,7 +95,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
         </CardHeader>
         <CardContent>
           {attachments.length > 0 ? (
-            <div className="rounded-md border w-full"> {/* Eliminado overflow-hidden de aquí */}
+            <div className="rounded-md border"> {/* Se elimina w-full de este div */}
               <Table> 
                 <TableHeader>
                   <TableRow>
