@@ -1,3 +1,4 @@
+
 // src/app/dashboard/patients/[id]/page.tsx
 "use client";
 
@@ -5,13 +6,13 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PatientForm, type PatientFormValues } from "@/components/patients/PatientForm";
 import { FileUploadSection } from "@/components/patients/FileUploadSection";
-import { ReportGenerationSection } from "@/components/patients/ReportGenerationSection";
+// ReportGenerationSection is removed
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPatientById, updatePatient, getPatientFullName } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, FileEdit, Paperclip, Activity, History, PlusCircle, CalendarDays, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall } from "lucide-react";
+import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays } from "lucide-react"; // Removed Activity
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format, differenceInYears } from "date-fns";
@@ -21,9 +22,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-
-// Type for the data structure handled by PatientForm
-// PatientFormValues is imported from PatientForm
 
 export default function PatientDetailPage() {
   const params = useParams();
@@ -35,7 +33,6 @@ export default function PatientDetailPage() {
   const [calculatedAge, setCalculatedAge] = useState<string | null>(null);
 
   // Simulación de rol: true para médico, false para secretaria
-  // Esto determinará si se pueden editar antecedentes o añadir consultas.
   const SIMULATED_ROLE = 'doctor'; // Cambiar a 'secretary' para probar
 
 
@@ -74,7 +71,8 @@ export default function PatientDetailPage() {
     if (patient) {
       const updatedPatientData: Partial<Omit<PatientRecord, 'id' | 'createdAt'>> = {
         personalDetails: data.personalDetails,
-        datosFacturacion: SIMULATED_ROLE === 'doctor' ? data.datosFacturacion : patient.datosFacturacion,
+        // Secretaria puede editar datos de facturación en esta vista si llega aquí (normalmente médico)
+        datosFacturacion: data.datosFacturacion,
         backgroundInformation: SIMULATED_ROLE === 'doctor' ? data.backgroundInformation : patient.backgroundInformation,
         medicalEncounters: patient.medicalEncounters,
         attachments: patient.attachments,
@@ -83,13 +81,13 @@ export default function PatientDetailPage() {
 
       const updatedRecord = updatePatient(patient.id, updatedPatientData);
       if (updatedRecord) {
-        setPatient(updatedRecord); // Actualizar estado local con el paciente completamente actualizado
-         if (updatedRecord.personalDetails.fechaNacimiento) {
+        setPatient(updatedRecord);
+        if (updatedRecord.personalDetails.fechaNacimiento) {
             const age = differenceInYears(new Date(), new Date(updatedRecord.personalDetails.fechaNacimiento));
             setCalculatedAge(`${age} años`);
         }
       }
-      
+
       toast({
         title: "Historial Actualizado",
         description: `El historial de ${getPatientFullName(updatedRecord || patient)} ha sido actualizado exitosamente.`,
@@ -104,7 +102,7 @@ export default function PatientDetailPage() {
         id: `attach-${Date.now()}`,
         name: file.name,
         type: file.type.startsWith('image/') ? 'image' : (file.type === 'application/pdf' ? 'pdf' : 'other'),
-        driveLink: '#', 
+        driveLink: '#',
         uploadedAt: new Date().toISOString(),
       };
       const updatedAttachments = [...patient.attachments, newAttachment];
@@ -116,11 +114,18 @@ export default function PatientDetailPage() {
       });
     }
   };
-  
+
   const handleNavigateToNewConsultation = () => {
     router.push('/dashboard/consultations/new');
-    // Aquí podrías considerar pasar el patientId como query param para preselección
-    // router.push(`/dashboard/consultations/new?patientId=${patientId}`);
+  };
+
+  const handleDownloadConsultationPdf = (encounter: MedicalEncounter, patientName: string) => {
+    let pdfContent = `== CONSULTA MÉDICA ==\n\n`;
+    pdfContent += `Paciente: ${patientName}\n`;
+    pdfContent += `Fecha de Consulta: ${format(new Date(encounter.date), "PPP", { locale: es })}\n\n`;
+    pdfContent += `Detalles de la Consulta:\n${encounter.details}\n\n`;
+    pdfContent += `\n\nFirma del Médico:\n_________________________`;
+    alert("Descarga de Consulta Específica (simulada):\n\n" + pdfContent);
   };
 
 
@@ -142,7 +147,7 @@ export default function PatientDetailPage() {
       </div>
     );
   }
-  
+
   const patientFormInitialData: PatientFormValues = {
     personalDetails: patient.personalDetails,
     datosFacturacion: patient.datosFacturacion || { ruc: '', direccionFiscal: '', telefonoFacturacion: '', emailFacturacion: '' },
@@ -189,111 +194,119 @@ export default function PatientDetailPage() {
         )}
       </Card>
 
-      <Tabs defaultValue="encounters" className="w-full">
+      <Tabs defaultValue="details" className="w-full">
          <TabsList className={cn(
             "w-full h-auto mb-4 p-1 bg-muted rounded-md",
-            "flex flex-wrap justify-center gap-1", // Móvil: flex wrap
-            "md:grid md:grid-cols-4 md:max-w-3xl md:gap-0" // Desktop: grid
+            "flex flex-wrap justify-start gap-1"
             )}>
-          <TabsTrigger value="encounters" className="flex-grow md:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Hist. Consultas</TabsTrigger>
-          <TabsTrigger value="details" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Editar Datos</TabsTrigger>
-          <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
-          {SIMULATED_ROLE === 'doctor' && ( 
-            <TabsTrigger value="reports" className="flex-grow md:flex-grow-0"><Activity className="mr-1 h-4 w-4 sm:mr-2"/> Informes IA</TabsTrigger>
+          <TabsTrigger value="details" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos del Paciente</TabsTrigger>
+          {SIMULATED_ROLE === 'doctor' && (
+            <>
+              <TabsTrigger value="encounters" className="flex-grow md:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Historial</TabsTrigger>
+              <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
+            </>
           )}
         </TabsList>
-        
-        <TabsContent value="encounters">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Historial de Consultas Médicas</CardTitle>
-                {SIMULATED_ROLE === 'doctor' && ( 
-                  <Button onClick={handleNavigateToNewConsultation} size="sm">
-                    <Stethoscope className="mr-2 h-4 w-4" /> 
-                    Registrar Nueva Consulta
-                  </Button>
-                )}
-              </div>
-              <CardDescription>Revise las consultas anteriores del paciente. La más reciente primero.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {patient.medicalEncounters && patient.medicalEncounters.length > 0 ? (
-                <ScrollArea className="h-[600px] pr-4"> 
-                  <div className="space-y-4">
-                    {[...patient.medicalEncounters].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(encounter => (
-                      <Card key={encounter.id} className="shadow-md">
-                        <CardHeader>
-                          <CardTitle className="text-lg flex items-center">
-                            <CalendarDays className="mr-2 h-5 w-5 text-primary" />
-                            Consulta del: {format(new Date(encounter.date), "PPP", { locale: es })}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm whitespace-pre-wrap">{encounter.details}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              ) : (
-                <p className="text-muted-foreground text-center py-6">No hay consultas registradas para este paciente.</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="details">
           <Card>
             <CardHeader>
-              <CardTitle>Editar Datos del Paciente</CardTitle>
+              <CardTitle>Información del Paciente</CardTitle>
               <CardDescription>
-                {SIMULATED_ROLE === 'doctor' 
+                {SIMULATED_ROLE === 'doctor'
                   ? "Actualice los datos personales, de contacto, facturación y antecedentes del paciente."
-                  : "Actualice los datos personales y de contacto. Otros datos solo pueden ser modificados por personal médico."
+                  : "Actualice los datos personales, de contacto y facturación del paciente."
                 }
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PatientForm 
-                onSubmit={handleFormSubmit} 
+              <PatientForm
+                onSubmit={handleFormSubmit}
                 initialData={patientFormInitialData}
                 submitButtonText="Guardar Cambios"
                 allowEditBackgroundInfo={SIMULATED_ROLE === 'doctor'}
-                allowEditFacturacionInfo={SIMULATED_ROLE === 'doctor'}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="attachments">
-          <Card>
-            <CardHeader>
-              <CardTitle>Archivos Adjuntos</CardTitle>
-              <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FileUploadSection 
-                attachments={patient.attachments} 
-                onFileUpload={handleFileUpload} 
+                allowEditFacturacionInfo={true} // Médico y Secretaria pueden editar facturación aquí
               />
             </CardContent>
           </Card>
         </TabsContent>
 
         {SIMULATED_ROLE === 'doctor' && (
-          <TabsContent value="reports">
-            <Card>
-              <CardHeader>
-                <CardTitle>Informes con IA</CardTitle>
-                <CardDescription>Genere resúmenes e informes completos para este paciente.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ReportGenerationSection patient={patient} />
-              </CardContent>
-            </Card>
-          </TabsContent>
+          <>
+            <TabsContent value="encounters">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Historial</CardTitle>
+                    <Button onClick={handleNavigateToNewConsultation} size="sm">
+                      <Stethoscope className="mr-2 h-4 w-4" />
+                      Registrar Nueva Consulta
+                    </Button>
+                  </div>
+                  <CardDescription>Revise las consultas anteriores del paciente. La más reciente primero.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {patient.medicalEncounters && patient.medicalEncounters.length > 0 ? (
+                    <ScrollArea className="h-[600px] pr-4">
+                      <div className="space-y-6">
+                        {[...patient.medicalEncounters]
+                          .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                          .map((encounter, index) => (
+                          <Card key={encounter.id} className="shadow-md">
+                            <CardHeader className="pb-3">
+                              <div className="flex justify-between items-center">
+                                <CardTitle className="text-lg flex items-center">
+                                  <CalendarDays className="mr-2 h-5 w-5 text-primary" />
+                                  Consulta del: {format(new Date(encounter.date), "PPP", { locale: es })}
+                                </CardTitle>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => handleDownloadConsultationPdf(encounter, getPatientFullName(patient))}
+                                    title="Descargar Consulta (Simulado)"
+                                >
+                                    <Download className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              {index === 0 ? (
+                                <p className="text-sm whitespace-pre-wrap">{encounter.details}</p>
+                              ) : (
+                                <p className="text-sm whitespace-pre-wrap truncate line-clamp-3 hover:line-clamp-none transition-all duration-300 ease-in-out">
+                                  {encounter.details.split('\n\n')[0]}
+                                </p>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-6">No hay consultas registradas para este paciente.</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="attachments">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Archivos Adjuntos</CardTitle>
+                  <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FileUploadSection
+                    attachments={patient.attachments}
+                    onFileUpload={handleFileUpload}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </>
         )}
+        {/* Funcionalidad de Informes IA eliminada de esta página */}
       </Tabs>
     </div>
   );

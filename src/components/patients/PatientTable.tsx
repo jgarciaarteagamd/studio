@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { PatientRecord } from "@/lib/types";
-import { MoreHorizontal, FileEdit, FileText, Trash2, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { MoreHorizontal, FileEdit, Trash2, ChevronLeft, ChevronRight, Users } from "lucide-react"; // Removed FileText
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { format } from 'date-fns'; // format is used in getLastConsultationDate
 import { es } from 'date-fns/locale';
-import { getPatientFullName } from "@/lib/mock-data";
+import { getPatientFullName, calculateAge, getLastConsultationDate } from "@/lib/mock-data";
 
 
 interface PatientTableProps {
@@ -37,7 +37,7 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
     setCurrentLocale(navigator.language || 'es-ES');
     setPatients(initialPatients); // Sincronizar con prop si cambia
   }, [initialPatients]);
-  
+
   // Filtrado de pacientes
   const filteredPatients = useMemo(() => {
     if (!searchTerm) return patients;
@@ -56,42 +56,6 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
     return filteredPatients.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredPatients, currentPage]);
 
-  const handleGenerateReport = (patientId: string) => {
-    // Navegar a la pestaña de Informes IA dentro de la página de detalles del paciente
-    const patientDetailPage = `/dashboard/patients/${patientId}`;
-    // Aquí asumimos que la ReportGenerationSection está en una pestaña con valor "reports"
-    router.push(`${patientDetailPage}#reports-tab`); 
-    // O si queremos que el Tab se active programáticamente:
-    // router.push({ pathname: patientDetailPage, query: { tab: 'reports' } });
-    // Y luego en PatientDetailPage, leer el query param para activar el tab.
-    // Por simplicidad, el hash es más directo si el Tab ya existe con ese id/value.
-    // Como el TabsTrigger tiene value="reports", podemos usar el hash.
-    // Sin embargo, para que un hash active un tab, el TabsContent necesita un id y
-    // el TabsTrigger un href al id del TabsContent, o JS que maneje el hash.
-    // Por ahora, la manera más simple es ir a la página, y el usuario hará click en la pestaña.
-    // Actualización: El TabsTrigger en PatientDetailPage usa value="reports", no un ID de hash.
-    // Para la navegación directa a la pestaña Informes IA, necesitamos ir a la página del paciente
-    // y el usuario seleccionará la pestaña. Para una mejor UX, se necesitaría una lógica
-    // más compleja para activar el tab programáticamente o usar un query param.
-    // Por ahora, simplemente navegar a la página del paciente es suficiente, y
-    // el usuario puede hacer clic en la pestaña "Informes IA".
-    // Una forma más directa es enfocar el tab:
-    router.push(`/dashboard/patients/${patientId}`);
-    // Pequeño delay para asegurar que la página ha cargado antes de intentar enfocar.
-    setTimeout(() => {
-      // Intentar seleccionar la pestaña 'reports' si existe.
-      // Esto es una simplificación y puede necesitar ajustes dependiendo de la estructura exacta del DOM.
-      const reportTabTrigger = document.querySelector('button[data-state][value="reports"]') as HTMLElement;
-      if (reportTabTrigger) {
-        reportTabTrigger.click();
-      } else {
-        // Si no se puede hacer clic, al menos hemos navegado a la página del paciente.
-        // console.warn("No se pudo encontrar el activador de la pestaña de informes para hacer clic programático.");
-      }
-    }, 100);
-    
-  };
-  
   const handleDeletePatient = (patientId: string) => {
     if (confirm("¿Está seguro de que desea eliminar este historial de paciente? Esta acción no se puede deshacer.")) {
       alert(`Eliminar paciente ${patientId} (simulado - no se elimina de mock data permanentemente)`);
@@ -148,10 +112,8 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre Completo</TableHead>
-                <TableHead className="hidden sm:table-cell">Documento</TableHead>
-                <TableHead className="hidden md:table-cell">Fecha de Nacimiento</TableHead>
-                <TableHead className="hidden lg:table-cell">Contacto Principal</TableHead>
-                <TableHead>Última Actualización</TableHead>
+                <TableHead>Edad</TableHead>
+                <TableHead>Última Consulta</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -163,12 +125,8 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
                       {getPatientFullName(patient)}
                     </Link>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">{patient.personalDetails.documentoIdentidad || 'N/A'}</TableCell>
-                  <TableCell className="hidden md:table-cell">{format(new Date(patient.personalDetails.fechaNacimiento), "P", { locale: es })}</TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground truncate max-w-xs">
-                    {patient.personalDetails.email || patient.personalDetails.telefono1 || 'N/A'}
-                  </TableCell>
-                  <TableCell>{format(new Date(patient.updatedAt), "P", { locale: es })}</TableCell>
+                  <TableCell>{calculateAge(patient.personalDetails.fechaNacimiento)}</TableCell>
+                  <TableCell>{getLastConsultationDate(patient)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -185,13 +143,10 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
                         </DropdownMenuItem>
                         {SIMULATED_TABLE_ROLE === 'doctor' && (
                           <>
-                            <DropdownMenuItem onClick={() => handleGenerateReport(patient.id)}>
-                              <FileText className="mr-2 h-4 w-4" />
-                              Generar Informe IA
-                            </DropdownMenuItem>
+                            {/* "Generar Informe IA" se eliminó de esta vista */}
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => handleDeletePatient(patient.id)} 
+                            <DropdownMenuItem
+                              onClick={() => handleDeletePatient(patient.id)}
                               className="text-destructive focus:text-destructive focus:bg-destructive/10"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
@@ -237,5 +192,3 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
     </div>
   );
 }
-
-    

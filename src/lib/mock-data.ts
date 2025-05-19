@@ -1,7 +1,9 @@
 
 // src/lib/mock-data.ts
 import type { PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment, Appointment, DatosFacturacion, Recipe, MedicationItem } from './types';
-import { formatISO, parseISO, setHours, setMinutes } from 'date-fns';
+import { formatISO, parseISO, setHours, setMinutes, format, differenceInYears } from 'date-fns';
+import { es } from 'date-fns/locale';
+
 
 const today = new Date();
 const todayISO = today.toISOString();
@@ -135,20 +137,20 @@ export const getPatientById = (id: string): PatientRecord | undefined => {
 };
 
 export const addPatient = (
-  data: { 
-    personalDetails: PersonalDetails; 
+  data: {
+    personalDetails: PersonalDetails;
     datosFacturacion?: DatosFacturacion;
-    backgroundInformation?: BackgroundInformation 
+    backgroundInformation?: BackgroundInformation
   }
 ): PatientRecord => {
   const newPatient: PatientRecord = {
     id: String(mockPatients.length + 1 + Math.random()),
     personalDetails: data.personalDetails,
     datosFacturacion: data.datosFacturacion || { ruc: '', direccionFiscal: '', telefonoFacturacion: '', emailFacturacion: ''},
-    backgroundInformation: data.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' }, 
+    backgroundInformation: data.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' },
     medicalEncounters: [],
     recipes: [], // Initialize with empty recipes
-    attachments: [], 
+    attachments: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -160,7 +162,7 @@ export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, '
   const patientIndex = mockPatients.findIndex(p => p.id === id);
   if (patientIndex !== -1) {
     const currentPatient = mockPatients[patientIndex];
-    const updatedPatientData: PatientRecord = { // Ensure all fields of PatientRecord are present
+    const updatedPatientData: PatientRecord = {
       ...currentPatient,
       ...updates,
       personalDetails: updates.personalDetails || currentPatient.personalDetails,
@@ -172,7 +174,7 @@ export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, '
       updatedAt: new Date().toISOString(),
     };
     mockPatients[patientIndex] = updatedPatientData;
-    return mockPatients[patientIndex];
+    return {...mockPatients[patientIndex]}; // Return a new object reference
   }
   return undefined;
 };
@@ -199,16 +201,16 @@ export const addMedicalEncounterToPatient = (patientId: string, consultationData
     date: new Date().toISOString(),
     details: details,
   };
-  
+
   const currentPatient = mockPatients[patientIndex];
-  const updatedPatient = {
+  const updatedPatientData = {
     ...currentPatient,
     medicalEncounters: [...currentPatient.medicalEncounters, newEncounter],
     updatedAt: new Date().toISOString(),
   };
-  mockPatients[patientIndex] = updatedPatient;
-  
-  return { ...updatedPatient }; // Return a new object reference
+  mockPatients[patientIndex] = updatedPatientData;
+
+  return { ...updatedPatientData }; // Return a new object reference
 };
 
 export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, 'id' | 'patientId' | 'date'>): PatientRecord | undefined => {
@@ -226,15 +228,15 @@ export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, '
   };
 
   const currentPatient = mockPatients[patientIndex];
-  const updatedPatient = {
+  const updatedPatientData = {
     ...currentPatient,
     recipes: [...currentPatient.recipes, newRecipe],
     updatedAt: new Date().toISOString(),
   };
 
-  mockPatients[patientIndex] = updatedPatient;
+  mockPatients[patientIndex] = updatedPatientData;
 
-  return { ...updatedPatient }; // Return a new object reference
+  return { ...updatedPatientData }; // Return a new object reference
 };
 
 
@@ -242,7 +244,7 @@ export let mockAppointments: Appointment[] = [
   {
     id: 'appt1',
     patientId: '1',
-    patientName: 'Maria Gonzalez Perez', 
+    patientName: 'Maria Gonzalez Perez',
     dateTime: setHours(setMinutes(today, 0), 10).toISOString(),
     durationMinutes: 30,
     status: 'confirmada',
@@ -253,14 +255,14 @@ export let mockAppointments: Appointment[] = [
     id: 'appt-block-lunch',
     dateTime: setHours(setMinutes(today, 0), 13).toISOString(),
     durationMinutes: 60,
-    status: 'programada', 
+    status: 'programada',
     isBlocker: true,
     blockerReason: 'Almuerzo del Personal',
   },
   {
     id: 'appt2',
     patientId: '2',
-    patientName: 'Carlos Rodriguez Lopez', 
+    patientName: 'Carlos Rodriguez Lopez',
     dateTime: setHours(setMinutes(today, 30), 11).toISOString(),
     durationMinutes: 45,
     status: 'programada',
@@ -270,7 +272,7 @@ export let mockAppointments: Appointment[] = [
   {
     id: 'appt3',
     patientId: '3',
-    patientName: 'Ana Martinez Silva', 
+    patientName: 'Ana Martinez Silva',
     dateTime: setHours(setMinutes(tomorrow, 0), 9).toISOString(),
     durationMinutes: 60,
     status: 'programada',
@@ -292,7 +294,7 @@ export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & {
     }
     patientNameResolved = getPatientFullName(patient);
   } else if (data.isBlocker) {
-    patientNameResolved = undefined; 
+    patientNameResolved = undefined;
   }
 
   const newAppointment: Appointment = {
@@ -312,9 +314,9 @@ export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & {
 
 export const getPatientFullName = (patient: PatientRecord | PersonalDetails | undefined | null): string => {
   if (!patient) return 'Nombre no disponible';
-  
+
   // Check if it's a PatientRecord
-  if ('personalDetails' in patient && patient.personalDetails) { 
+  if ('personalDetails' in patient && patient.personalDetails) {
     return `${patient.personalDetails.nombres || ''} ${patient.personalDetails.apellidos || ''}`.trim() || 'Nombre no disponible';
   }
   // Check if it's PersonalDetails directly
@@ -322,4 +324,22 @@ export const getPatientFullName = (patient: PatientRecord | PersonalDetails | un
      return `${patient.nombres || ''} ${patient.apellidos || ''}`.trim() || 'Nombre no disponible';
   }
   return 'Nombre no disponible';
+};
+
+
+export const calculateAge = (birthDate: string | undefined): string => {
+  if (!birthDate) return "N/A";
+  try {
+    return `${differenceInYears(new Date(), new Date(birthDate))} años`;
+  } catch {
+    return "N/A";
+  }
+};
+
+export const getLastConsultationDate = (patient: PatientRecord): string => {
+  if (!patient.medicalEncounters || patient.medicalEncounters.length === 0) {
+    return "N/A";
+  }
+  const sortedEncounters = [...patient.medicalEncounters].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return format(new Date(sortedEncounters[0].date), "P", { locale: es });
 };

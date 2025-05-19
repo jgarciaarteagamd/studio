@@ -1,10 +1,11 @@
+
 // src/app/dashboard/patients/new/page.tsx
 "use client";
 
 import { PatientForm, type PatientFormValues } from "@/components/patients/PatientForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { addPatient, getPatientFullName } from "@/lib/mock-data"; 
-import type { PatientRecord, PersonalDetails, BackgroundInformation, DatosFacturacion } from "@/lib/types"; 
+import { addPatient, getPatientFullName } from "@/lib/mock-data";
+import type { PatientRecord, PersonalDetails, BackgroundInformation, DatosFacturacion } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,26 +17,26 @@ export default function NewPatientPage() {
   const SIMULATED_ROLE = 'secretary'; // Cambiar a 'doctor' para probar
 
   const handleSubmit = (data: PatientFormValues) => {
-    // Secretaria solo puede enviar datos personales y de contacto.
-    // DatosFacturacion y BackgroundInformation se envían como undefined o vacíos.
+    // Secretaria puede enviar datos personales, de contacto y facturación (opcional).
+    // BackgroundInformation solo si es médico.
     const patientDataForCreation: {
       personalDetails: PersonalDetails;
       datosFacturacion?: DatosFacturacion;
       backgroundInformation?: BackgroundInformation;
     } = {
       personalDetails: data.personalDetails,
-      datosFacturacion: SIMULATED_ROLE === 'doctor' ? data.datosFacturacion : undefined,
+      datosFacturacion: data.datosFacturacion, // Permitir siempre, los campos internos son opcionales
       backgroundInformation: SIMULATED_ROLE === 'doctor' ? data.backgroundInformation : undefined,
     };
 
-    const newPatient = addPatient(patientDataForCreation); 
-    
+    const newPatient = addPatient(patientDataForCreation);
+
     toast({
-      title: "Historial del Paciente Creado",
+      title: "Paciente Agregado",
       description: `El historial de ${getPatientFullName(newPatient)} ha sido creado exitosamente.`,
-      variant: "default", 
+      variant: "default",
     });
-    router.push(`/dashboard/patients/${newPatient.id}`); 
+    router.push(`/dashboard/patients/${newPatient.id}`);
   };
 
   const initialValues: PatientFormValues = {
@@ -48,13 +49,13 @@ export default function NewPatientPage() {
       telefono2: '',
       email: '',
     },
-    datosFacturacion: { 
+    datosFacturacion: {
       ruc: '',
       direccionFiscal: '',
       telefonoFacturacion: '',
       emailFacturacion: '',
     },
-    backgroundInformation: { 
+    backgroundInformation: {
       personalHistory: '',
       allergies: '',
       habitualMedication: '',
@@ -65,10 +66,10 @@ export default function NewPatientPage() {
     <div className="space-y-6">
       <Card className="max-w-4xl mx-auto shadow-lg">
         <CardHeader>
-          <CardTitle className="text-3xl">Crear Nuevo Historial de Paciente</CardTitle>
+          <CardTitle className="text-3xl">Agregar Nuevo Paciente</CardTitle>
           {SIMULATED_ROLE === 'secretary' ? (
             <CardDescription>
-              Complete los datos personales y de contacto del paciente. Los datos de facturación, antecedentes médicos y consultas se gestionarán por personal médico.
+              Complete los datos personales, de contacto y facturación (opcional) del paciente. Los antecedentes médicos se gestionarán por personal médico.
             </CardDescription>
           ) : ( // Doctor
             <CardDescription>
@@ -77,12 +78,12 @@ export default function NewPatientPage() {
           )}
         </CardHeader>
         <CardContent>
-          <PatientForm 
-            onSubmit={handleSubmit} 
+          <PatientForm
+            onSubmit={handleSubmit}
             initialData={initialValues as any} // Cast to any to satisfy PatientForm's initialData prop type
-            submitButtonText="Crear Historial de Paciente"
+            submitButtonText="Agregar Paciente"
             allowEditBackgroundInfo={SIMULATED_ROLE === 'doctor'}
-            allowEditFacturacionInfo={SIMULATED_ROLE === 'doctor'}
+            allowEditFacturacionInfo={true} // Permitir a la secretaria ingresar datos de facturación al crear
           />
         </CardContent>
       </Card>
