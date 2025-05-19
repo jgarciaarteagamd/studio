@@ -1,3 +1,4 @@
+
 // src/lib/mock-data.ts
 import type { PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment, Appointment, DatosFacturacion, Recipe, MedicationItem } from './types';
 import { formatISO, parseISO, setHours, setMinutes } from 'date-fns';
@@ -198,11 +199,16 @@ export const addMedicalEncounterToPatient = (patientId: string, consultationData
     date: new Date().toISOString(),
     details: details,
   };
-
-  mockPatients[patientIndex].medicalEncounters.push(newEncounter);
-  mockPatients[patientIndex].updatedAt = new Date().toISOString();
   
-  return mockPatients[patientIndex];
+  const currentPatient = mockPatients[patientIndex];
+  const updatedPatient = {
+    ...currentPatient,
+    medicalEncounters: [...currentPatient.medicalEncounters, newEncounter],
+    updatedAt: new Date().toISOString(),
+  };
+  mockPatients[patientIndex] = updatedPatient;
+  
+  return { ...updatedPatient }; // Return a new object reference
 };
 
 export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, 'id' | 'patientId' | 'date'>): PatientRecord | undefined => {
@@ -219,10 +225,16 @@ export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, '
     ...recipeData,
   };
 
-  mockPatients[patientIndex].recipes.push(newRecipe);
-  mockPatients[patientIndex].updatedAt = new Date().toISOString();
+  const currentPatient = mockPatients[patientIndex];
+  const updatedPatient = {
+    ...currentPatient,
+    recipes: [...currentPatient.recipes, newRecipe],
+    updatedAt: new Date().toISOString(),
+  };
 
-  return mockPatients[patientIndex];
+  mockPatients[patientIndex] = updatedPatient;
+
+  return { ...updatedPatient }; // Return a new object reference
 };
 
 
@@ -301,9 +313,11 @@ export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & {
 export const getPatientFullName = (patient: PatientRecord | PersonalDetails | undefined | null): string => {
   if (!patient) return 'Nombre no disponible';
   
+  // Check if it's a PatientRecord
   if ('personalDetails' in patient && patient.personalDetails) { 
     return `${patient.personalDetails.nombres || ''} ${patient.personalDetails.apellidos || ''}`.trim() || 'Nombre no disponible';
   }
+  // Check if it's PersonalDetails directly
   if ('nombres' in patient && 'apellidos' in patient) {
      return `${patient.nombres || ''} ${patient.apellidos || ''}`.trim() || 'Nombre no disponible';
   }

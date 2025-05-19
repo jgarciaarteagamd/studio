@@ -148,7 +148,7 @@ export default function NewRecipePage() {
       return;
     }
     const formData = form.getValues();
-    let pdfContent = `== RECETA MÉDICA ==\n\n`;
+    let pdfContent = `== RECETA ==\n\n`;
     pdfContent += `Paciente: ${getPatientFullName(selectedPatient)}\n`;
     pdfContent += `Fecha: ${format(new Date(), "PPP", { locale: es })}\n\n`;
     if (formData.diagnoses) {
@@ -170,7 +170,7 @@ export default function NewRecipePage() {
 
   const handleDownloadSpecificRecipe = (recipe: Recipe) => {
     if (!selectedPatient) return;
-    let pdfContent = `== RECETA MÉDICA ==\n\n`;
+    let pdfContent = `== RECETA ==\n\n`;
     pdfContent += `Paciente: ${getPatientFullName(selectedPatient)}\n`;
     pdfContent += `Fecha: ${format(new Date(recipe.date), "PPP", { locale: es })}\n\n`;
     if (recipe.diagnoses) {
@@ -227,7 +227,7 @@ export default function NewRecipePage() {
         <CardContent>
           {!selectedPatient ? (
             <>
-              <Label htmlFor="patientSearchRecipe" className="mb-1 block">Buscar Paciente</Label>
+              <Label htmlFor="patientSearchRecipe" className="mb-2 block">Buscar Paciente</Label>
               <div className="flex items-center space-x-2 mb-4">
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <Input
@@ -361,14 +361,14 @@ export default function NewRecipePage() {
                         <div>
                           <FormLabel className="flex items-center text-lg mb-2"><Pill className="mr-2 h-5 w-5 text-primary" />Medicación</FormLabel>
                           {fields.map((field, index) => (
-                            <Card key={field.id} className="mb-4 p-4 space-y-3 relative shadow-sm border pr-12 pb-6"> {/* Aumentado pr y pb */}
+                            <Card key={field.id} className="mb-4 p-4 space-y-3 relative shadow-sm border pr-12 pb-6">
                               <FormField
                                 control={form.control}
                                 name={`medications.${index}.drugName`}
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>Nombre del Fármaco</FormLabel>
-                                    <FormControl><Input placeholder="Ej: Amoxicilina 500mg" {...field} /></FormControl>
+                                    <FormControl><Input placeholder="Ej: Amoxicilina 500mg" {...field} className="w-full" /></FormControl>
                                     <FormMessage />
                                   </FormItem>
                                 )}
@@ -379,7 +379,7 @@ export default function NewRecipePage() {
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>Presentación</FormLabel>
-                                    <FormControl><Input placeholder="Ej: Comprimidos, Jarabe 125mg/5ml" {...field} /></FormControl>
+                                    <FormControl><Input placeholder="Ej: Comprimidos, Jarabe 125mg/5ml" {...field} className="w-full" /></FormControl>
                                     <FormMessage />
                                   </FormItem>
                                 )}
@@ -390,7 +390,7 @@ export default function NewRecipePage() {
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>Indicaciones (Dosis, frecuencia, duración)</FormLabel>
-                                    <FormControl><Textarea placeholder="Ej: Tomar 1 comprimido cada 8 horas por 7 días." rows={2} {...field} /></FormControl>
+                                    <FormControl><Textarea placeholder="Ej: Tomar 1 comprimido cada 8 horas por 7 días." rows={2} {...field} className="w-full" /></FormControl>
                                     <FormMessage />
                                   </FormItem>
                                 )}
@@ -402,7 +402,7 @@ export default function NewRecipePage() {
                               )}
                             </Card>
                           ))}
-                          <Button type="button" variant="outline" size="sm" onClick={() => append({ drugName: '', presentation: '', indications: '' })} className="mt-2">
+                          <Button type="button" variant="outline" size="sm" onClick={() => append({ drugName: '', presentation: '', indications: '' })} className="mt-2 w-full">
                             <PlusCircle className="mr-2 h-4 w-4" /> Agregar Otro Medicamento
                           </Button>
                         </div>
@@ -413,7 +413,7 @@ export default function NewRecipePage() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel className="flex items-center"><ShieldAlert className="mr-2 h-4 w-4 text-primary" />Medidas de Prevención y Cuidados</FormLabel>
-                              <FormControl><Textarea placeholder="Ej: Reposo, dieta blanda, control de temperatura..." rows={3} {...field} /></FormControl>
+                              <FormControl><Textarea placeholder="Ej: Reposo, dieta blanda, control de temperatura..." rows={3} {...field} className="w-full" /></FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -427,7 +427,7 @@ export default function NewRecipePage() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Diagnóstico(s) (Opcional para PDF)</FormLabel>
-                              <FormControl><Textarea placeholder="Ej: Faringoamigdalitis Aguda, Infección Urinaria..." rows={2} {...field} /></FormControl>
+                              <FormControl><Textarea placeholder="Ej: Faringoamigdalitis Aguda, Infección Urinaria..." rows={2} {...field} className="w-full" /></FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -438,7 +438,7 @@ export default function NewRecipePage() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Observaciones Adicionales (Opcional para PDF)</FormLabel>
-                              <FormControl><Textarea placeholder="Ej: Paciente refiere alergia a AINES. Próximo control en 7 días." rows={2} {...field} /></FormControl>
+                              <FormControl><Textarea placeholder="Ej: Paciente refiere alergia a AINES. Próximo control en 7 días." rows={2} {...field} className="w-full" /></FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -463,4 +463,3 @@ export default function NewRecipePage() {
     </div>
   );
 }
-
