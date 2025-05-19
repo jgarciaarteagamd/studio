@@ -87,7 +87,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
         )}
       </Card>
 
-      <Card>
+      <Card className="w-full"> {/* Added w-full here */}
         <CardHeader>
           <CardTitle>Archivos Adjuntos</CardTitle>
         </CardHeader>
