@@ -7,21 +7,22 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, FileText, ImageIcon, Trash2, Download } from "lucide-react";
+import { UploadCloud, FileText, ImageIcon, Trash2, Download, FileArchive } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FileUploadSectionProps {
   attachments: Attachment[];
   onFileUpload: (file: File) => void;
-  // onFileDelete: (attachmentId: string) => void; // Future implementation
+  // onFileDelete: (attachmentIds: string[]) => void; // Futura implementación para eliminación real
 }
 
 export function FileUploadSection({ attachments, onFileUpload }: FileUploadSectionProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentLocale, setCurrentLocale] = useState('es-ES');
+  const [selectedAttachmentIds, setSelectedAttachmentIds] = useState<string[]>([]);
 
   useEffect(() => {
     setCurrentLocale(navigator.language || 'es-ES');
@@ -40,6 +41,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
       if (fileInputRef.current) {
         fileInputRef.current.value = ""; // Reset file input
       }
+      setSelectedAttachmentIds([]); // Deseleccionar todo después de subir un nuevo archivo
     } else {
       alert("Por favor, seleccione un archivo primero.");
     }
@@ -48,20 +50,42 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
   const getFileIcon = (type: Attachment['type']) => {
     if (type === 'pdf') return <FileText className="h-5 w-5 text-red-500" />;
     if (type === 'image') return <ImageIcon className="h-5 w-5 text-blue-500" />;
-    return <FileText className="h-5 w-5 text-gray-500" />;
+    return <FileArchive className="h-5 w-5 text-gray-500" />; // Icono genérico para 'other'
   };
   
   const handleOpenFile = (driveLink: string) => {
     alert(`Abriendo archivo (simulado): ${driveLink}. En una aplicación real, esto abriría el archivo de Google Drive.`);
   };
 
-  const handleDeleteFile = (attachmentId: string) => {
-    if(confirm("¿Está seguro de que desea eliminar este archivo adjunto? Esta acción podría ser irreversible dependiendo de la configuración de Google Drive.")) {
-      alert(`Eliminando archivo adjunto ${attachmentId} (no implementado)`);
-      // Call onFileDelete(attachmentId) here when implemented
+  const handleSelectAttachment = (attachmentId: string) => {
+    setSelectedAttachmentIds(prevSelected =>
+      prevSelected.includes(attachmentId)
+        ? prevSelected.filter(id => id !== attachmentId)
+        : [...prevSelected, attachmentId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedAttachmentIds.length === attachments.length) {
+      setSelectedAttachmentIds([]);
+    } else {
+      setSelectedAttachmentIds(attachments.map(att => att.id));
     }
   };
 
+  const handleDeleteSelected = () => {
+    if (selectedAttachmentIds.length === 0) {
+      alert("No hay archivos seleccionados para eliminar.");
+      return;
+    }
+    if (confirm(`¿Está seguro de que desea eliminar ${selectedAttachmentIds.length} archivo(s) adjunto(s)? Esta acción podría ser irreversible.`)) {
+      alert(`Eliminando archivos adjuntos con IDs: ${selectedAttachmentIds.join(', ')} (simulado).`);
+      // Aquí iría la lógica para llamar a onFileDelete(selectedAttachmentIds)
+      // y actualizar la lista de adjuntos.
+      // Por ahora, solo deseleccionamos:
+      setSelectedAttachmentIds([]);
+    }
+  };
 
   return (
     <div className="space-y-6 w-full">
@@ -91,43 +115,80 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
 
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Archivos Adjuntos</CardTitle>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <CardTitle>Archivos Adjuntos</CardTitle>
+            {attachments.length > 0 && (
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteSelected} 
+                disabled={selectedAttachmentIds.length === 0}
+                size="sm"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Eliminar Seleccionados ({selectedAttachmentIds.length})
+              </Button>
+            )}
+          </div>
+          {attachments.length > 0 && (
+             <div className="flex items-center space-x-2 pt-2 border-t mt-2">
+                <Checkbox
+                    id="selectAllAttachments"
+                    checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
+                    onCheckedChange={handleSelectAll}
+                    aria-label="Seleccionar todos los adjuntos"
+                />
+                <label
+                    htmlFor="selectAllAttachments"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                    Seleccionar Todos ({attachments.length})
+                </label>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {attachments.length > 0 ? (
-            <div className="rounded-md border"> {/* No w-full here, allow Table to control its inner div */}
-              <Table> 
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px]">Tipo</TableHead>
-                    <TableHead>Nombre del Archivo</TableHead>
-                    <TableHead className="hidden sm:table-cell">Subido</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {attachments.map((attachment) => (
-                    <TableRow key={attachment.id}>
-                      <TableCell>{getFileIcon(attachment.type)}</TableCell>
-                      <TableCell className="font-medium truncate max-w-xs">
-                        <button onClick={() => handleOpenFile(attachment.driveLink)} className="hover:underline text-primary">
-                          {attachment.name}
-                        </button>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">{new Date(attachment.uploadedAt).toLocaleDateString(currentLocale)}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                         <Button variant="outline" size="icon" onClick={() => handleOpenFile(attachment.driveLink)} title="Abrir/Descargar Archivo (simulado)">
-                           <Download className="h-4 w-4" />
-                         </Button>
-                         <Button variant="destructive" size="icon" onClick={() => handleDeleteFile(attachment.id)} title="Eliminar Archivo (simulado)">
-                           <Trash2 className="h-4 w-4" />
-                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <ul className="space-y-3">
+              {attachments.map((attachment) => (
+                <li 
+                  key={attachment.id} 
+                  className={cn(
+                    "flex items-center gap-3 p-3 border rounded-md transition-colors",
+                    selectedAttachmentIds.includes(attachment.id) ? "bg-primary/10 border-primary" : "hover:bg-muted/50"
+                  )}
+                >
+                  <Checkbox
+                    id={`attachment-${attachment.id}`}
+                    checked={selectedAttachmentIds.includes(attachment.id)}
+                    onCheckedChange={() => handleSelectAttachment(attachment.id)}
+                    aria-labelledby={`attachment-name-${attachment.id}`}
+                  />
+                  <div className="flex-shrink-0">{getFileIcon(attachment.type)}</div>
+                  <div className="flex-grow min-w-0">
+                    <button 
+                      id={`attachment-name-${attachment.id}`}
+                      onClick={() => handleOpenFile(attachment.driveLink)} 
+                      className="font-medium text-primary hover:underline truncate text-left block w-full"
+                      title={attachment.name}
+                    >
+                      {attachment.name}
+                    </button>
+                    <p className="text-xs text-muted-foreground">
+                      Subido: {new Date(attachment.uploadedAt).toLocaleDateString(currentLocale)}
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-8 w-8 flex-shrink-0"
+                    onClick={() => handleOpenFile(attachment.driveLink)} 
+                    title="Abrir/Descargar Archivo (simulado)"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
           ) : (
             <p className="text-muted-foreground text-center py-4">Aún no hay archivos adjuntos a este historial.</p>
           )}
