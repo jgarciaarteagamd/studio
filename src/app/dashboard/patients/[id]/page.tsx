@@ -6,13 +6,12 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PatientForm, type PatientFormValues } from "@/components/patients/PatientForm";
 import { FileUploadSection } from "@/components/patients/FileUploadSection";
-// ReportGenerationSection is removed
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPatientById, updatePatient, getPatientFullName } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays } from "lucide-react"; // Removed Activity
+import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format, differenceInYears } from "date-fns";
@@ -32,9 +31,7 @@ export default function PatientDetailPage() {
   const [currentLocale, setCurrentLocale] = useState('es-ES');
   const [calculatedAge, setCalculatedAge] = useState<string | null>(null);
 
-  // Simulación de rol: true para médico, false para secretaria
   const SIMULATED_ROLE = 'doctor'; // Cambiar a 'secretary' para probar
-
 
   const patientId = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -67,33 +64,37 @@ export default function PatientDetailPage() {
     }
   }, [patientId, router, toast]);
 
-  const handleFormSubmit = useCallback((data: PatientFormValues) => {
+  const handleFormSubmit = useCallback((data: Partial<PatientFormValues>) => { // Data can be partial
     if (patient) {
+      // Merge data with existing patient data carefully
       const updatedPatientData: Partial<Omit<PatientRecord, 'id' | 'createdAt'>> = {
-        personalDetails: data.personalDetails,
-        // Secretaria puede editar datos de facturación en esta vista si llega aquí (normalmente médico)
-        datosFacturacion: data.datosFacturacion,
-        backgroundInformation: SIMULATED_ROLE === 'doctor' ? data.backgroundInformation : patient.backgroundInformation,
-        medicalEncounters: patient.medicalEncounters,
-        attachments: patient.attachments,
+        ...patient, // Start with current patient data
+        personalDetails: data.personalDetails || patient.personalDetails,
+        datosFacturacion: data.datosFacturacion !== undefined ? data.datosFacturacion : patient.datosFacturacion,
+        backgroundInformation: data.backgroundInformation !== undefined ? data.backgroundInformation : patient.backgroundInformation,
         updatedAt: new Date().toISOString(),
       };
 
       const updatedRecord = updatePatient(patient.id, updatedPatientData);
       if (updatedRecord) {
-        setPatient(updatedRecord);
+        setPatient(updatedRecord); // This should re-render with new data
         if (updatedRecord.personalDetails.fechaNacimiento) {
             const age = differenceInYears(new Date(), new Date(updatedRecord.personalDetails.fechaNacimiento));
             setCalculatedAge(`${age} años`);
         }
+         toast({
+          title: "Historial Actualizado",
+          description: `El historial de ${getPatientFullName(updatedRecord)} ha sido actualizado exitosamente.`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "No se pudo actualizar el historial.",
+          variant: "destructive",
+        });
       }
-
-      toast({
-        title: "Historial Actualizado",
-        description: `El historial de ${getPatientFullName(updatedRecord || patient)} ha sido actualizado exitosamente.`,
-      });
     }
-  }, [patient, toast, SIMULATED_ROLE]);
+  }, [patient, toast]);
 
 
   const handleFileUpload = (file: File) => {
@@ -194,29 +195,28 @@ export default function PatientDetailPage() {
         )}
       </Card>
 
-      <Tabs defaultValue="details" className="w-full">
+      <Tabs defaultValue="personalData" className="w-full max-w-5xl mx-auto">
          <TabsList className={cn(
             "w-full h-auto mb-4 p-1 bg-muted rounded-md",
-            "flex flex-wrap justify-start gap-1"
+            "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
+            SIMULATED_ROLE === 'doctor' ? "md:grid-cols-4" : "md:grid-cols-2" 
             )}>
-          <TabsTrigger value="details" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos del Paciente</TabsTrigger>
+          <TabsTrigger value="personalData" className="flex-grow sm:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos del Paciente</TabsTrigger>
           {SIMULATED_ROLE === 'doctor' && (
             <>
-              <TabsTrigger value="encounters" className="flex-grow md:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Historial</TabsTrigger>
-              <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
+              <TabsTrigger value="backgroundInfo" className="flex-grow sm:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2"/> Antecedentes</TabsTrigger>
+              <TabsTrigger value="encounters" className="flex-grow sm:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Historial</TabsTrigger>
+              <TabsTrigger value="attachments" className="flex-grow sm:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
             </>
           )}
         </TabsList>
 
-        <TabsContent value="details">
+        <TabsContent value="personalData">
           <Card>
             <CardHeader>
-              <CardTitle>Información del Paciente</CardTitle>
+              <CardTitle>Información Personal y de Facturación</CardTitle>
               <CardDescription>
-                {SIMULATED_ROLE === 'doctor'
-                  ? "Actualice los datos personales, de contacto, facturación y antecedentes del paciente."
-                  : "Actualice los datos personales, de contacto y facturación del paciente."
-                }
+                Actualice los datos personales, de contacto y facturación del paciente.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -224,12 +224,39 @@ export default function PatientDetailPage() {
                 onSubmit={handleFormSubmit}
                 initialData={patientFormInitialData}
                 submitButtonText="Guardar Cambios"
-                allowEditBackgroundInfo={SIMULATED_ROLE === 'doctor'}
-                allowEditFacturacionInfo={true} // Médico y Secretaria pueden editar facturación aquí
+                allowEditBackgroundInfo={false} // Background info is in its own tab
+                allowEditFacturacionInfo={true} 
+                showPersonalDetailsSection={true}
+                showDatosFacturacionSection={true}
+                showBackgroundInformationSection={false} // Hide background here
               />
             </CardContent>
           </Card>
         </TabsContent>
+        
+        {SIMULATED_ROLE === 'doctor' && (
+           <TabsContent value="backgroundInfo">
+             <Card>
+               <CardHeader>
+                 <CardTitle>Antecedentes y Medicación Habitual</CardTitle>
+                 <CardDescription>Actualice los antecedentes personales, alergias y medicación habitual del paciente.</CardDescription>
+               </CardHeader>
+               <CardContent>
+                 <PatientForm
+                   onSubmit={handleFormSubmit} // Same handler, will submit only backgroundInfo fields
+                   initialData={patientFormInitialData}
+                   submitButtonText="Guardar Antecedentes"
+                   allowEditBackgroundInfo={true} // This form instance allows editing background
+                   allowEditFacturacionInfo={false} // Not relevant here
+                   showPersonalDetailsSection={false} // Hide personal details
+                   showDatosFacturacionSection={false} // Hide billing
+                   showBackgroundInformationSection={true} // Show only background info
+                 />
+               </CardContent>
+             </Card>
+           </TabsContent>
+        )}
+
 
         {SIMULATED_ROLE === 'doctor' && (
           <>
@@ -306,7 +333,6 @@ export default function PatientDetailPage() {
             </TabsContent>
           </>
         )}
-        {/* Funcionalidad de Informes IA eliminada de esta página */}
       </Tabs>
     </div>
   );

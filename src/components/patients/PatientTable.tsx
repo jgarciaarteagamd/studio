@@ -8,12 +8,11 @@ import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+// DropdownMenu components are no longer needed if actions column is removed
+// import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { PatientRecord } from "@/lib/types";
-import { MoreHorizontal, FileEdit, Trash2, ChevronLeft, ChevronRight, Users } from "lucide-react"; // Removed FileText
+import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns'; // format is used in getLastConsultationDate
-import { es } from 'date-fns/locale';
 import { getPatientFullName, calculateAge, getLastConsultationDate } from "@/lib/mock-data";
 
 
@@ -22,23 +21,18 @@ interface PatientTableProps {
 }
 
 const ITEMS_PER_PAGE = 10;
-// Simulación de rol para esta tabla
-const SIMULATED_TABLE_ROLE = 'doctor'; // Cambiar a 'secretary' para probar
 
 export function PatientTable({ patients: initialPatients }: PatientTableProps) {
   const router = useRouter();
-  const [currentLocale, setCurrentLocale] = useState('es-ES');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [patients, setPatients] = useState<PatientRecord[]>(initialPatients);
 
 
   useEffect(() => {
-    setCurrentLocale(navigator.language || 'es-ES');
-    setPatients(initialPatients); // Sincronizar con prop si cambia
+    setPatients(initialPatients); 
   }, [initialPatients]);
 
-  // Filtrado de pacientes
   const filteredPatients = useMemo(() => {
     if (!searchTerm) return patients;
     return patients.filter(patient => {
@@ -49,23 +43,11 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
     });
   }, [searchTerm, patients]);
 
-  // Paginación
   const totalPages = Math.ceil(filteredPatients.length / ITEMS_PER_PAGE);
   const paginatedPatients = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredPatients.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredPatients, currentPage]);
-
-  const handleDeletePatient = (patientId: string) => {
-    if (confirm("¿Está seguro de que desea eliminar este historial de paciente? Esta acción no se puede deshacer.")) {
-      alert(`Eliminar paciente ${patientId} (simulado - no se elimina de mock data permanentemente)`);
-      // En una aplicación real, aquí se llamaría a una API para eliminar
-      // Por ahora, podemos filtrar el estado local para simular la eliminación en la UI:
-      // setPatients(prev => prev.filter(p => p.id !== patientId));
-      // Esto causaría problemas si la prop `initialPatients` no se actualiza,
-      // así que para este mock es mejor solo mostrar el alert.
-    }
-  };
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -99,7 +81,7 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
         value={searchTerm}
         onChange={(e) => {
           setSearchTerm(e.target.value);
-          setCurrentPage(1); // Reset a la primera página con cada búsqueda
+          setCurrentPage(1); 
         }}
         className="max-w-sm"
       />
@@ -114,49 +96,20 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
                 <TableHead>Nombre Completo</TableHead>
                 <TableHead>Edad</TableHead>
                 <TableHead>Última Consulta</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+                {/* Actions column removed */}
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedPatients.map((patient) => (
-                <TableRow key={patient.id}>
+                <TableRow key={patient.id} onClick={() => router.push(`/dashboard/patients/${patient.id}`)} className="cursor-pointer hover:bg-muted/50">
                   <TableCell className="font-medium">
-                    <Link href={`/dashboard/patients/${patient.id}`} className="hover:underline text-primary">
+                    <Link href={`/dashboard/patients/${patient.id}`} className="hover:underline text-primary" onClick={(e) => e.stopPropagation()}>
                       {getPatientFullName(patient)}
                     </Link>
                   </TableCell>
                   <TableCell>{calculateAge(patient.personalDetails.fechaNacimiento)}</TableCell>
                   <TableCell>{getLastConsultationDate(patient)}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Abrir menú</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => router.push(`/dashboard/patients/${patient.id}`)}>
-                          <FileEdit className="mr-2 h-4 w-4" />
-                          Ver/Editar Historial
-                        </DropdownMenuItem>
-                        {SIMULATED_TABLE_ROLE === 'doctor' && (
-                          <>
-                            {/* "Generar Informe IA" se eliminó de esta vista */}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleDeletePatient(patient.id)}
-                              className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Eliminar
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+                  {/* Actions cell removed */}
                 </TableRow>
               ))}
             </TableBody>
