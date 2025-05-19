@@ -1,5 +1,3 @@
-
-
 // src/app/dashboard/patients/[id]/page.tsx
 "use client";
 
@@ -94,7 +92,10 @@ export default function PatientDetailPage() {
       };
       const updatedAttachments = [...patient.attachments, newAttachment];
       const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
-      if (updatedRecord) setPatient(updatedRecord); 
+      if (updatedRecord) {
+        // Forzar la actualización del estado del paciente para que la UI se refresque
+        setPatient({...updatedRecord}); 
+      }
       toast({
         title: "Archivo Adjuntado",
         description: `${file.name} ha sido adjuntado.`,
@@ -157,7 +158,7 @@ export default function PatientDetailPage() {
                 <p className="flex items-center"><FileTextIcon className="mr-2 h-4 w-4 text-primary/70" /> Doc. Identidad: {patient.personalDetails.documentoIdentidad}</p>
             )}
             {patient.personalDetails.fechaNacimiento && (
-             <p>Fecha de Nacimiento: {format(new Date(patient.personalDetails.fechaNacimiento), "PPP", { locale: es })} {patientAge && `(${patientAge})`}</p>
+             <p className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary/70" /> Fecha de Nacimiento: {format(new Date(patient.personalDetails.fechaNacimiento), "PPP", { locale: es })} {patientAge && `(${patientAge})`}</p>
             )}
             {patient.personalDetails.email && (<p className="flex items-center"><User className="mr-2 h-4 w-4 text-primary/70" /> Email: {patient.personalDetails.email}</p>)}
             {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil: {patient.personalDetails.telefono1}</p>)}
@@ -308,7 +309,7 @@ export default function PatientDetailPage() {
                   <CardTitle>Archivos Adjuntos</CardTitle>
                   <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
                 </CardHeader>
-                <CardContent> {/* Removed overflow-hidden here */}
+                <CardContent className="overflow-hidden"> {/* Ensures FileUploadSection respects parent's width constraints */}
                   <FileUploadSection
                     attachments={patient.attachments}
                     onFileUpload={handleFileUpload}
@@ -322,4 +323,3 @@ export default function PatientDetailPage() {
     </div>
   );
 }
-
