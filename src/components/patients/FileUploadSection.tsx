@@ -93,40 +93,40 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
         <CardHeader>
           <CardTitle>Archivos Adjuntos</CardTitle>
         </CardHeader>
-        <CardContent> {/* Este CardContent no tiene overflow-x-auto */}
+        <CardContent>
           {attachments.length > 0 ? (
-            <div className="rounded-md border w-full overflow-hidden"> {/* Añadido overflow-hidden aquí */}
-            <Table> 
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">Tipo</TableHead>
-                  <TableHead>Nombre del Archivo</TableHead>
-                  <TableHead className="hidden sm:table-cell">Subido</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {attachments.map((attachment) => (
-                  <TableRow key={attachment.id}>
-                    <TableCell>{getFileIcon(attachment.type)}</TableCell>
-                    <TableCell className="font-medium truncate max-w-xs">
-                      <button onClick={() => handleOpenFile(attachment.driveLink)} className="hover:underline text-primary">
-                        {attachment.name}
-                      </button>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">{new Date(attachment.uploadedAt).toLocaleDateString(currentLocale)}</TableCell>
-                    <TableCell className="text-right space-x-2">
-                       <Button variant="outline" size="icon" onClick={() => handleOpenFile(attachment.driveLink)} title="Abrir/Descargar Archivo (simulado)">
-                         <Download className="h-4 w-4" />
-                       </Button>
-                       <Button variant="destructive" size="icon" onClick={() => handleDeleteFile(attachment.id)} title="Eliminar Archivo (simulado)">
-                         <Trash2 className="h-4 w-4" />
-                       </Button>
-                    </TableCell>
+            <div className="rounded-md border w-full"> {/* Eliminado overflow-hidden de aquí */}
+              <Table> 
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">Tipo</TableHead>
+                    <TableHead>Nombre del Archivo</TableHead>
+                    <TableHead className="hidden sm:table-cell">Subido</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {attachments.map((attachment) => (
+                    <TableRow key={attachment.id}>
+                      <TableCell>{getFileIcon(attachment.type)}</TableCell>
+                      <TableCell className="font-medium truncate max-w-xs">
+                        <button onClick={() => handleOpenFile(attachment.driveLink)} className="hover:underline text-primary">
+                          {attachment.name}
+                        </button>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">{new Date(attachment.uploadedAt).toLocaleDateString(currentLocale)}</TableCell>
+                      <TableCell className="text-right space-x-2">
+                         <Button variant="outline" size="icon" onClick={() => handleOpenFile(attachment.driveLink)} title="Abrir/Descargar Archivo (simulado)">
+                           <Download className="h-4 w-4" />
+                         </Button>
+                         <Button variant="destructive" size="icon" onClick={() => handleDeleteFile(attachment.id)} title="Eliminar Archivo (simulado)">
+                           <Trash2 className="h-4 w-4" />
+                         </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           ) : (
             <p className="text-muted-foreground text-center py-4">Aún no hay archivos adjuntos a este historial.</p>
