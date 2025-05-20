@@ -28,6 +28,13 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     setCurrentLocale(navigator.language || 'es-ES');
   }, []);
 
+  useEffect(() => {
+    // Deseleccionar todo si la lista de adjuntos cambia (ej. después de una eliminación simulada)
+    // o si la propia prop attachments cambia.
+    setSelectedAttachmentIds([]);
+  }, [attachments]);
+
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       setSelectedFile(event.target.files[0]);
@@ -108,7 +115,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
       </Card>
 
       <Card className="w-full">
-        <CardHeader>
+        <CardHeader className="flex flex-col p-6 gap-6"> {/* Modified: Using gap for spacing */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <CardTitle>Archivos Adjuntos</CardTitle>
             {attachments.length > 0 && (
@@ -124,7 +131,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2 mt-6"> {/* Ajuste: mt-6 y sin border-t */}
+             <div className="flex items-center space-x-2"> {/* Removed mt-* as CardHeader gap handles it */}
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
@@ -185,4 +192,3 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     </div>
   );
 }
-
