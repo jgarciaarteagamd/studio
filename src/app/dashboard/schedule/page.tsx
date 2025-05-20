@@ -202,7 +202,7 @@ export default function SchedulePage() {
 
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto w-full">
       <div className="space-y-6 w-full">
       
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -403,10 +403,10 @@ export default function SchedulePage() {
           </DialogContent>
         </Dialog>
         
-        <Card className="shadow-lg max-w-2xl mx-auto w-full">
+        <Card className="shadow-lg max-w-xl mx-auto w-full">
           <CardHeader>
             <CardTitle>Calendario de Citas</CardTitle>
-            <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
+            <CardDescriptionComponent>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescriptionComponent>
           </CardHeader>
           <CardContent className="p-4">
              <Calendar
@@ -495,7 +495,7 @@ export default function SchedulePage() {
                             </p>
                             <p className="text-md flex items-center mt-1 break-words">
                               {appointment.isBlocker ? (
-                                <span className="text-gray-700 font-medium ">{appointment.blockerReason || "Horario Bloqueado"}</span>
+                                <span className="text-gray-700 font-medium break-words">{appointment.blockerReason || "Horario Bloqueado"}</span>
                               ) : (
                                 <>
                                   <User className="mr-2 h-4 w-4 text-muted-foreground" />
