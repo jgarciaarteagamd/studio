@@ -403,7 +403,7 @@ export default function SchedulePage() {
           </DialogContent>
         </Dialog>
         
-        <Card className="shadow-lg max-w-xl mx-auto w-full overflow-hidden">
+        <Card className="shadow-lg w-full overflow-hidden">
           <CardHeader>
             <CardTitle>Calendario de Citas</CardTitle>
             <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
@@ -422,31 +422,31 @@ export default function SchedulePage() {
               classNames={{
                   caption_label: "text-lg font-medium",
                   head_cell: cn(
-                    "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-sm p-0 text-center",
-                    "h-10 sm:h-12 md:h-14" 
+                    "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-sm p-0 text-center", // Base from calendar.tsx (text-[0.8rem] -> text-sm)
+                    "h-10 sm:h-12 md:h-14" // Responsive height
                   ),
                   cell: cn(
-                    "flex-1 min-w-0 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                    "flex items-center justify-center", 
-                    "h-10 sm:h-12 md:h-14" 
+                    "flex-1 min-w-0 text-center text-sm p-0 relative flex items-center justify-center", // Base from calendar.tsx (removed h-9)
+                    "h-10 sm:h-12 md:h-14" // Responsive height
                   ),
                   day: (date, modifiers) => {
                     let klasses = cn(
                       buttonVariants({ variant: "ghost" }),
-                      "h-full w-full p-0 font-normal text-foreground",
-                      "flex items-center justify-center" 
+                      "h-full w-full p-0 font-normal",
+                      "text-foreground" // Ensure text is always foreground color
                     );
                   
                     if (modifiers.selected) {
-                      klasses = cn(klasses, "bg-primary/70 text-foreground !h-8 !w-8 rounded-full"); 
-                    } else if (modifiers.today && !modifiers.selected) {
-                      klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
+                      klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full hover:bg-primary/80", "text-foreground"); 
+                    } else if (modifiers.today) {
+                      klasses = cn(klasses, "ring-1 ring-primary rounded-full", "text-foreground");
                     } else if (modifiers.interactive && !modifiers.disabled && !modifiers.selected && !modifiers.today) {
-                      klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full text-foreground");
+                      // Hover for normal days
+                      klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full", "text-foreground");
                     }
                     
                     if (modifiers.disabled) {
-                      klasses = cn(klasses, "opacity-50 text-foreground");
+                      klasses = cn(klasses, "opacity-50"); // text-foreground already applied
                     }
                     if (modifiers.outside) {
                        klasses = cn(klasses, "text-muted-foreground opacity-50");
@@ -544,5 +544,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
-    
