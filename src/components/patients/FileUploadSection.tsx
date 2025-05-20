@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, Trash2, FileText, FileImage, FileArchive } from "lucide-react";
+import { UploadCloud, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FileUploadSectionProps {
@@ -124,7 +124,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2 pt-4 border-t mt-8"> {/* Aumentado mt-6 a mt-8 y pt-2 a pt-4 */}
+             <div className="flex items-center space-x-2 pt-8 border-t mt-10"> {/* Aumentado pt y mt */}
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
@@ -182,3 +182,4 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     </div>
   );
 }
+
