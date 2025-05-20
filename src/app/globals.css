@@ -118,11 +118,11 @@ body {
 .day-with-appointments::after {
   content: '';
   position: absolute;
-  bottom: 4px; /* Adjusted to be closer to the bottom of the cell */
+  bottom: 2px; /* Moved further down */
   left: 50%;
   transform: translateX(-50%);
-  width: 5px; /* Slightly smaller dot */
-  height: 5px; /* Slightly smaller dot */
+  width: 4px; /* Smaller dot */
+  height: 4px; /* Smaller dot */
   border-radius: 50%;
   background-color: hsl(var(--primary)); /* Use primary theme color */
 }

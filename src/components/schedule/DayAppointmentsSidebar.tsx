@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Appointment } from "@/lib/types";
 import { format, parseISO } from "date-fns";
 import { es } from 'date-fns/locale';
-import { CalendarDays, Clock, User, Info, X, Lock } from "lucide-react"; // Added Lock
+import { CalendarDays, Clock, User, Info, X, Lock } from "lucide-react"; 
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -28,8 +28,8 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-md w-full">
-        <SheetHeader className="mb-4">
-          <SheetTitle className="flex items-center text-xl">
+        <SheetHeader className="pb-6"> {/* Increased bottom padding */}
+          <SheetTitle className="flex items-center text-lg mt-2"> {/* Smaller text, added top margin */}
             <CalendarDays className="mr-2 h-5 w-5 text-primary" />
             Agenda para el {formattedDate}
           </SheetTitle>
@@ -38,7 +38,7 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
           </SheetDescription>
         </SheetHeader>
         
-        <ScrollArea className="h-[calc(100vh-12rem)] pr-4">
+        <ScrollArea className="h-[calc(100vh-12rem)] pr-4"> {/* Consider adjusting 12rem if header/footer height changes significantly */}
           {appointmentsForDay.length > 0 ? (
             <ul className="space-y-4">
               {appointmentsForDay.map((appointment) => (
@@ -54,12 +54,12 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
                         <span className="text-muted-foreground text-xs ml-2">({appointment.durationMinutes} min)</span>
                       </p>
                       {appointment.isBlocker ? (
-                        <p className="text-sm text-gray-700 font-medium mt-1">{appointment.blockerReason || "Horario Bloqueado"}</p>
+                        <p className="text-sm text-gray-700 font-medium mt-1 break-words">{appointment.blockerReason || "Horario Bloqueado"}</p>
                       ) : (
                         appointment.patientName && (
                           <p className="text-sm flex items-center mt-1">
                             <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                            <Link href={`/dashboard/patients/${appointment.patientId}`} className="hover:underline" onClick={() => onOpenChange(false)}>
+                            <Link href={`/dashboard/patients/${appointment.patientId}`} className="hover:underline break-words" onClick={() => onOpenChange(false)}>
                               {appointment.patientName}
                             </Link>
                           </p>
@@ -69,7 +69,7 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
                     {/* Status badge could be shown here for non-blockers if desired */}
                   </div>
                   {appointment.notes && !appointment.isBlocker && (
-                    <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-dashed">
+                    <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-dashed break-words">
                       <strong>Notas:</strong> {appointment.notes}
                     </p>
                   )}
@@ -83,7 +83,7 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
             </div>
           )}
         </ScrollArea>
-        <div className="mt-auto pt-4 border-t">
+        <div className="mt-auto pt-2 border-t"> {/* Reduced top padding */}
             <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
                 <X className="mr-2 h-4 w-4" /> Cerrar Panel
             </Button>
@@ -92,4 +92,3 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
     </Sheet>
   );
 }
-
