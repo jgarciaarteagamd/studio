@@ -130,7 +130,6 @@ export default function SchedulePage() {
         description: data.isBlocker ? "El periodo ha sido bloqueado exitosamente." : "La nueva cita ha sido programada exitosamente.",
       });
       setIsFormOpen(false);
-      // No reseteamos selectedCalendarDay aquí para que el sidebar se mantenga si estaba abierto
     } catch (error) {
       console.error("Error agendando/bloqueando:", error);
       toast({
@@ -212,12 +211,12 @@ export default function SchedulePage() {
               Ver y programar citas o bloqueos de horario.
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button size="lg" onClick={() => openFormDialog(false)}>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button size="lg" onClick={() => openFormDialog(false)} className="w-full sm:w-auto">
               <PlusCircle className="mr-2 h-5 w-5" />
               Programar Cita
             </Button>
-            <Button size="lg" variant="outline" onClick={() => openFormDialog(true)}>
+            <Button size="lg" variant="outline" onClick={() => openFormDialog(true)} className="w-full sm:w-auto">
               <ShieldOff className="mr-2 h-5 w-5" />
               Bloquear Horario
             </Button>
@@ -403,7 +402,7 @@ export default function SchedulePage() {
           </DialogContent>
         </Dialog>
         
-        <Card className="shadow-lg w-full overflow-hidden">
+        <Card className="shadow-lg w-full overflow-hidden max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
           <CardHeader>
             <CardTitle>Calendario de Citas</CardTitle>
             <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
@@ -422,31 +421,30 @@ export default function SchedulePage() {
               classNames={{
                   caption_label: "text-lg font-medium",
                   head_cell: cn(
-                    "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-sm p-0 text-center", // Base from calendar.tsx (text-[0.8rem] -> text-sm)
-                    "h-10 sm:h-12 md:h-14" // Responsive height
+                    "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-xs sm:text-sm p-0 text-center", 
+                    "h-8 sm:h-10 md:h-12" 
                   ),
                   cell: cn(
-                    "flex-1 min-w-0 text-center text-sm p-0 relative flex items-center justify-center", // Base from calendar.tsx (removed h-9)
-                    "h-10 sm:h-12 md:h-14" // Responsive height
+                    "flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", 
+                    "h-8 sm:h-10 md:h-12"
                   ),
                   day: (date, modifiers) => {
                     let klasses = cn(
                       buttonVariants({ variant: "ghost" }),
-                      "h-full w-full p-0 font-normal",
-                      "text-foreground" // Ensure text is always foreground color
+                      "h-full w-full p-0 font-normal text-foreground",
+                      "text-xs sm:text-sm" // Asegurar que el texto del día también sea responsive
                     );
                   
                     if (modifiers.selected) {
-                      klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full hover:bg-primary/80", "text-foreground"); 
+                      klasses = cn(klasses, "bg-primary/70 text-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full hover:bg-primary/80"); 
                     } else if (modifiers.today) {
-                      klasses = cn(klasses, "ring-1 ring-primary rounded-full", "text-foreground");
+                      klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
                     } else if (modifiers.interactive && !modifiers.disabled && !modifiers.selected && !modifiers.today) {
-                      // Hover for normal days
-                      klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full", "text-foreground");
+                      klasses = cn(klasses, "hover:bg-muted hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:hover:!w-7 hover:rounded-full text-foreground");
                     }
                     
                     if (modifiers.disabled) {
-                      klasses = cn(klasses, "opacity-50"); // text-foreground already applied
+                      klasses = cn(klasses, "opacity-50 text-foreground");
                     }
                     if (modifiers.outside) {
                        klasses = cn(klasses, "text-muted-foreground opacity-50");
@@ -544,3 +542,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
