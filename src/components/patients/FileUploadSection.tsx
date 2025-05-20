@@ -29,8 +29,6 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
   }, []);
 
   useEffect(() => {
-    // Deseleccionar todo si la lista de adjuntos cambia (ej. después de una eliminación simulada)
-    // o si la propia prop attachments cambia.
     setSelectedAttachmentIds([]);
   }, [attachments]);
 
@@ -48,7 +46,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
       if (fileInputRef.current) {
         fileInputRef.current.value = ""; // Reset file input
       }
-      setSelectedAttachmentIds([]); // Deseleccionar todo después de subir un nuevo archivo
+      setSelectedAttachmentIds([]);
     } else {
       alert("Por favor, seleccione un archivo primero.");
     }
@@ -81,9 +79,6 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     }
     if (confirm(`¿Está seguro de que desea eliminar ${selectedAttachmentIds.length} archivo(s) adjunto(s)? Esta acción podría ser irreversible.`)) {
       alert(`Eliminando archivos adjuntos con IDs: ${selectedAttachmentIds.join(', ')} (simulado).`);
-      // Aquí iría la lógica para llamar a onFileDelete(selectedAttachmentIds)
-      // y actualizar la lista de adjuntos.
-      // Por ahora, solo deseleccionamos:
       setSelectedAttachmentIds([]);
     }
   };
@@ -115,8 +110,8 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
       </Card>
 
       <Card className="w-full">
-        <CardHeader className="flex flex-col p-6 gap-6"> {/* Modified: Using gap for spacing */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <CardHeader className="flex flex-col p-6 gap-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> {/* Increased gap from gap-2 */}
             <CardTitle>Archivos Adjuntos</CardTitle>
             {attachments.length > 0 && (
               <Button 
@@ -131,7 +126,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2"> {/* Removed mt-* as CardHeader gap handles it */}
+             <div className="flex items-center space-x-2">
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
