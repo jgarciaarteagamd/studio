@@ -1,3 +1,4 @@
+
 // src/app/dashboard/schedule/page.tsx
 "use client";
 
@@ -6,7 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -201,7 +202,7 @@ export default function SchedulePage() {
 
 
   return (
-    <div className="space-y-6"> {/* Eliminado max-w-5xl mx-auto de aquí */}
+    <div className="space-y-6 max-w-5xl mx-auto"> {/* Reaplicando max-w-5xl mx-auto */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Agenda de Citas</h1>
@@ -229,32 +230,7 @@ export default function SchedulePage() {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
-               <FormField
-                control={form.control}
-                name="isBlocker"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4 shadow-sm bg-background transition-colors hover:bg-muted/50 cursor-pointer"
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        aria-label="Marcar como bloqueo de horario"
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel className="cursor-pointer">
-                        Marcar como bloqueo de horario
-                      </FormLabel>
-                       <FormDescription>
-                        Seleccione esto si no es una cita de paciente (ej. almuerzo, reunión).
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
+              
               {!isBlockerWatch && (
                 <FormField
                   control={form.control}
@@ -425,7 +401,7 @@ export default function SchedulePage() {
         </DialogContent>
       </Dialog>
       
-      <Card className="shadow-lg max-w-3xl mx-auto"> {/* El calendario tiene su propio max-width aquí */}
+      <Card className="shadow-lg max-w-3xl mx-auto w-full"> {/* Asegurando w-full aquí también */}
         <CardHeader>
           <CardTitle>Calendario de Citas</CardTitle>
           <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
@@ -440,7 +416,7 @@ export default function SchedulePage() {
             modifiers={calendarModifiers}
             modifiersClassNames={calendarModifiersClassNames}
             locale={es}
-            className="rounded-md border shadow-md w-full"
+            className="rounded-md border shadow-md w-full" // Calendar tiene w-full
             classNames={{
                 caption_label: "text-lg font-medium",
                 head_cell: cn(
@@ -565,3 +541,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
