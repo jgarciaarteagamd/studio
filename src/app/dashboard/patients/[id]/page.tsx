@@ -1,3 +1,4 @@
+
 // src/app/dashboard/patients/[id]/page.tsx
 "use client";
 
@@ -157,7 +158,7 @@ export default function PatientDetailPage() {
                 <p className="flex items-center"><FileTextIcon className="mr-2 h-4 w-4 text-primary/70" /> Doc. Identidad: {patient.personalDetails.documentoIdentidad}</p>
             )}
             {patient.personalDetails.fechaNacimiento && (
-             <p className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary/70" /> Fecha de Nacimiento: {format(new Date(patient.personalDetails.fechaNacimiento), "PPP", { locale: es })} {patientAge && `(${patientAge})`}</p>
+             <p className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary/70" /> Edad: {patientAge}</p>
             )}
             {patient.personalDetails.email && (<p className="flex items-center"><User className="mr-2 h-4 w-4 text-primary/70" /> Email: {patient.personalDetails.email}</p>)}
             {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil: {patient.personalDetails.telefono1}</p>)}
@@ -212,8 +213,8 @@ export default function PatientDetailPage() {
                 submitButtonText="Guardar Cambios"
                 showPersonalDetailsSection={true}
                 showDatosFacturacionSection={true}
-                allowEditFacturacionInfo={true} 
-                showBackgroundInformationSection={false} 
+                allowEditFacturacionInfo={true} // Médico o secretaria puede editar datos de facturación aquí
+                showBackgroundInformationSection={false} // Antecedentes se editan en su propia pestaña
                 allowEditBackgroundInfo={false} 
               />
             </CardContent>
@@ -235,7 +236,7 @@ export default function PatientDetailPage() {
                    showPersonalDetailsSection={false} 
                    showDatosFacturacionSection={false} 
                    showBackgroundInformationSection={true} 
-                   allowEditBackgroundInfo={true} 
+                   allowEditBackgroundInfo={true} // Solo médico puede editar antecedentes aquí
                  />
                </CardContent>
              </Card>

@@ -16,9 +16,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { mockPatients, getPatientById, addRecipeToPatient, getPatientFullName, type PatientRecord, type Recipe, type MedicationItem } from '@/lib/mock-data';
+import { mockPatients, getPatientById, addRecipeToPatient, getPatientFullName, type PatientRecord, type Recipe, type MedicationItem, calculateAge } from '@/lib/mock-data';
 import { User, FileText, History, PlusCircle, Search, ListChecks, Pill, ShieldAlert, ClipboardEdit, Trash2, Printer, Download, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, differenceInYears } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Link from 'next/link';
 
@@ -130,15 +130,6 @@ export default function NewRecipePage() {
         description: "No se pudo guardar la receta.",
         variant: "destructive",
       });
-    }
-  };
-
-  const calculateAge = (birthDate: string | undefined): string => {
-    if (!birthDate) return "N/A";
-    try {
-        return `${differenceInYears(new Date(), new Date(birthDate))} años`;
-    } catch {
-        return "N/A";
     }
   };
   
@@ -280,7 +271,7 @@ export default function NewRecipePage() {
                   </CardHeader>
                   <CardContent className="text-sm space-y-1">
                     <p><strong>Documento:</strong> {selectedPatient.personalDetails.documentoIdentidad || 'N/A'}</p>
-                    <p><strong>Nacimiento:</strong> {format(new Date(selectedPatient.personalDetails.fechaNacimiento), "PPP", { locale: es })} ({calculateAge(selectedPatient.personalDetails.fechaNacimiento)})</p>
+                    <p><strong>Edad:</strong> {calculateAge(selectedPatient.personalDetails.fechaNacimiento)}</p>
                      <Button variant="link" asChild className="p-0 h-auto text-sm">
                         <Link href={`/dashboard/patients/${selectedPatient.id}`}>Ver historial completo del paciente</Link>
                     </Button>

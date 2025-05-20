@@ -16,10 +16,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { mockPatients, getPatientById, addMedicalEncounterToPatient, getPatientFullName, type NewConsultationData } from '@/lib/mock-data';
+import { mockPatients, getPatientById, addMedicalEncounterToPatient, getPatientFullName, type NewConsultationData, calculateAge } from '@/lib/mock-data';
 import type { PatientRecord, MedicalEncounter } from '@/lib/types';
 import { User, FileText, History, PlusCircle, Search, ListChecks, Activity, Microscope, Stethoscope as StethoscopeIcon, Brain, Printer, Download, ClipboardList, FileEdit } from 'lucide-react';
-import { format, differenceInYears } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Link from 'next/link';
 
@@ -103,14 +103,6 @@ export default function NewConsultationPage() {
     }
   };
   
-  const calculateAge = (birthDate: string | undefined): string => {
-    if (!birthDate) return "N/A";
-    try {
-        return `${differenceInYears(new Date(), new Date(birthDate))} años`;
-    } catch {
-        return "N/A";
-    }
-  };
 
   const handleGenerateConsultationPdf = () => {
     if (!selectedPatient) {
@@ -223,7 +215,7 @@ export default function NewConsultationPage() {
                   </CardHeader>
                   <CardContent className="text-sm space-y-1">
                     <p><strong>Documento:</strong> {selectedPatient.personalDetails.documentoIdentidad || 'N/A'}</p>
-                    <p><strong>Nacimiento:</strong> {format(new Date(selectedPatient.personalDetails.fechaNacimiento), "PPP", { locale: es })} ({calculateAge(selectedPatient.personalDetails.fechaNacimiento)})</p>
+                    <p><strong>Edad:</strong> {calculateAge(selectedPatient.personalDetails.fechaNacimiento)}</p>
                     <p><strong>Móvil:</strong> {selectedPatient.personalDetails.telefono1 || 'N/A'}</p>
                     <p><strong>Email:</strong> {selectedPatient.personalDetails.email || 'N/A'}</p>
                     <Button variant="link" asChild className="p-0 h-auto text-sm">
