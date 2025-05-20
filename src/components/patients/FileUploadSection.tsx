@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, Trash2, FileText, FileImage, FileArchive, Download } from "lucide-react";
+import { UploadCloud, Trash2, FileText, FileImage, FileArchive, Download, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FileUploadSectionProps {
@@ -124,7 +124,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2 pt-8 border-t mt-8"> {/* mt-10 cambiado a mt-8 */}
+             <div className="flex items-center space-x-2 mt-6"> {/* Ajuste: mt-6 y sin border-t */}
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
@@ -175,10 +175,14 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
               ))}
             </ul>
           ) : (
-            <p className="text-muted-foreground text-center py-4">Aún no hay archivos adjuntos a este historial.</p>
+             <div className="flex flex-col items-center justify-center py-10 text-center">
+                <AlertCircle className="h-12 w-12 text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">Aún no hay archivos adjuntos a este historial.</p>
+             </div>
           )}
         </CardContent>
       </Card>
     </div>
   );
 }
+
