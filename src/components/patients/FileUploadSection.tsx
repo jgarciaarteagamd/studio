@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, Trash2, FileText, ImageIcon, FileArchive } from "lucide-react"; // FileText, ImageIcon, FileArchive son para getFileIcon, pero se pueden quitar si getFileIcon se quita
+import { UploadCloud, Trash2 } from "lucide-react"; 
 import { cn } from "@/lib/utils";
 
 interface FileUploadSectionProps {
@@ -124,7 +124,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2 pt-2 border-t mt-2">
+             <div className="flex items-center space-x-2 pt-2 border-t mt-4"> {/* Aumentado el mt-2 a mt-4 */}
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
@@ -140,7 +140,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             </div>
           )}
         </CardHeader>
-        <CardContent> {/* No necesita overflow-x-auto aquí */}
+        <CardContent> 
           {attachments.length > 0 ? (
             <ul className="space-y-3">
               {attachments.map((attachment) => (
@@ -158,7 +158,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
                     aria-labelledby={`attachment-name-${attachment.id}`}
                     className="flex-shrink-0"
                   />
-                  <div className="flex-grow min-w-0"> {/* Contenedor para el nombre y la fecha */}
+                  <div className="flex-grow min-w-0"> 
                     <button 
                       id={`attachment-name-${attachment.id}`}
                       onClick={() => handleOpenFile(attachment.driveLink)} 
@@ -171,7 +171,6 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
                       Subido: {new Date(attachment.uploadedAt).toLocaleDateString(currentLocale)}
                     </p>
                   </div>
-                  {/* Icono de tipo de archivo y botón de descarga individual eliminados */}
                 </li>
               ))}
             </ul>
@@ -183,3 +182,4 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     </div>
   );
 }
+

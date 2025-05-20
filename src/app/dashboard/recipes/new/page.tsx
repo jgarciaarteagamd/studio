@@ -151,7 +151,7 @@ export default function NewRecipePage() {
     });
     pdfContent += `\nMedidas de Prevención y Cuidados:\n${formData.preventiveMeasures}\n\n`;
     if (formData.observations) {
-      pdfContent += `Observaciones Adicionales:\n${formData.observations}\n\n`;
+      pdfContent += `Observaciones:\n${formData.observations}\n\n`;
     }
     pdfContent += `\n\nFirma del Médico:\n_________________________`;
     
@@ -173,7 +173,7 @@ export default function NewRecipePage() {
     });
     pdfContent += `\nMedidas de Prevención y Cuidados:\n${recipe.preventiveMeasures}\n\n`;
     if (recipe.observations) {
-      pdfContent += `Observaciones Adicionales:\n${recipe.observations}\n\n`;
+      pdfContent += `Observaciones:\n${recipe.observations}\n\n`;
     }
     pdfContent += `\n\nFirma del Médico:\n_________________________`;
     alert("Descarga de Receta Específica (simulada):\n\n" + pdfContent);
@@ -244,7 +244,7 @@ export default function NewRecipePage() {
                           <p className="font-medium">{getPatientFullName(p)}</p>
                           <p className="text-xs text-muted-foreground">
                             Doc: {p.personalDetails.documentoIdentidad || 'N/A'} - 
-                            Nac: {format(new Date(p.personalDetails.fechaNacimiento), "P", { locale: es })}
+                            Edad: {calculateAge(p.personalDetails.fechaNacimiento)}
                           </p>
                         </div>
                       </Button>
@@ -428,7 +428,7 @@ export default function NewRecipePage() {
                           name="observations"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Observaciones Adicionales (Opcional para PDF)</FormLabel>
+                              <FormLabel>Observaciones (Opcional para PDF)</FormLabel>
                               <FormControl><Textarea placeholder="Ej: Paciente refiere alergia a AINES. Próximo control en 7 días." rows={2} {...field} className="w-full" /></FormControl>
                               <FormMessage />
                             </FormItem>
