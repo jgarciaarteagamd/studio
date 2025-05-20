@@ -128,6 +128,7 @@ export default function SchedulePage() {
         description: data.isBlocker ? "El periodo ha sido bloqueado exitosamente." : "La nueva cita ha sido programada exitosamente.",
       });
       setIsFormOpen(false);
+      setSelectedCalendarDay(null); // Reset selected day to refresh calendar markers potentially
     } catch (error) {
       console.error("Error agendando/bloqueando:", error);
       toast({
@@ -227,6 +228,19 @@ export default function SchedulePage() {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
+              <FormField
+                control={form.control}
+                name="isBlocker"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
+                     <FormControl>
+                       {/* Switch or Checkbox can be used here if preferred over buttons defining the mode */}
+                     </FormControl>
+                     {/* This FormDescription might be redundant if buttons define mode */}
+                  </FormItem>
+                )}
+              />
+
 
               {!isBlockerWatch && (
                 <FormField
@@ -425,26 +439,29 @@ export default function SchedulePage() {
                   "flex items-center justify-center", 
                   "h-10 sm:h-12 md:h-14" 
                 ),
-                day: (date, modifiers) => {
+                day: (date, modifiers, dayProps) => {
                   let klasses = cn(
                     buttonVariants({ variant: "ghost" }),
-                    "h-full w-full p-0 font-normal text-foreground"
+                    "h-full w-full p-0 font-normal text-foreground", // Ensure text-foreground is always applied for numbers
+                    "flex items-center justify-center" // Center number
                   );
+                
+                  // Precedencia: Seleccionado > Hoy > Hover Normal
                   if (modifiers.selected) {
-                    klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-primary-foreground hover:bg-primary/60");
+                    klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-foreground"); // Celeste degradado, texto oscuro
                   } else if (modifiers.today) {
-                    klasses = cn(klasses, "ring-1 ring-primary rounded-full");
-                  } else if (modifiers.interactive && !modifiers.disabled) {
-                     klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full");
+                    klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground"); // Anillo celeste, texto oscuro
+                  } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter) {
+                    klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full text-foreground"); // Gris en hover, texto oscuro
                   }
-
+                  
                   if (modifiers.disabled) {
                     klasses = cn(klasses, "opacity-50");
                   }
                   if (modifiers.outside) {
-                     klasses = cn(klasses, "text-muted-foreground opacity-50");
-                     if (modifiers.selected) {
-                        klasses = cn(klasses, "bg-primary/20 text-primary-foreground"); 
+                    klasses = cn(klasses, "text-muted-foreground opacity-50");
+                     if (modifiers.selected) { // Si un día exterior está seleccionado
+                        klasses = cn(klasses, "bg-primary/20 text-foreground"); // Fondo aún más degradado, texto oscuro
                      }
                   }
                   return klasses;
