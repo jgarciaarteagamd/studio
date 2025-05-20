@@ -202,7 +202,7 @@ export default function SchedulePage() {
 
 
   return (
-    <div className="max-w-5xl mx-auto w-full">
+    <div className="max-w-5xl mx-auto">
       <div className="space-y-6 w-full">
       
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -406,7 +406,7 @@ export default function SchedulePage() {
         <Card className="shadow-lg max-w-xl mx-auto w-full">
           <CardHeader>
             <CardTitle>Calendario de Citas</CardTitle>
-            <CardDescriptionComponent>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescriptionComponent>
+            <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
              <Calendar
@@ -433,8 +433,7 @@ export default function SchedulePage() {
                   day: (date, modifiers, dayProps) => {
                       let klasses = cn(
                         buttonVariants({ variant: "ghost" }),
-                        "h-full w-full p-0 font-normal", 
-                        "text-foreground" // Asegura que el texto del número sea siempre oscuro
+                        "h-full w-full p-0 font-normal text-foreground"
                       );
                     
                       if (modifiers.selected) {
