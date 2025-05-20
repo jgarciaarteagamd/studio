@@ -84,7 +84,7 @@ export default function SchedulePage() {
   const isBlockerWatch = form.watch("isBlocker");
 
   const openFormDialog = (blockerMode: boolean) => {
-    const defaultDate = selectedCalendarDay && !isPast(selectedCalendarDay) ? selectedCalendarDay : new Date();
+    const defaultDate = selectedCalendarDay && !isPast(selectedCalendarDay) || (selectedCalendarDay && isToday(selectedCalendarDay)) ? selectedCalendarDay : new Date();
     form.reset({ 
       patientId: "",
       date: defaultDate,
@@ -130,7 +130,7 @@ export default function SchedulePage() {
         description: data.isBlocker ? "El periodo ha sido bloqueado exitosamente." : "La nueva cita ha sido programada exitosamente.",
       });
       setIsFormOpen(false);
-      setSelectedCalendarDay(null); 
+      // No reseteamos selectedCalendarDay aquí para que el sidebar se mantenga si estaba abierto
     } catch (error) {
       console.error("Error agendando/bloqueando:", error);
       toast({
@@ -410,6 +410,7 @@ export default function SchedulePage() {
           </CardHeader>
           <CardContent className="p-4">
              <Calendar
+              className="rounded-md border shadow-md w-full"
               mode="single"
               selected={selectedCalendarDay || undefined}
               onSelect={handleCalendarDayClick}
@@ -418,7 +419,6 @@ export default function SchedulePage() {
               modifiers={calendarModifiers}
               modifiersClassNames={calendarModifiersClassNames}
               locale={es}
-              className="rounded-md border shadow-md w-full" 
               classNames={{
                   caption_label: "text-lg font-medium",
                   head_cell: cn(
@@ -434,7 +434,7 @@ export default function SchedulePage() {
                       let klasses = cn(
                         buttonVariants({ variant: "ghost" }),
                         "h-full w-full p-0 font-normal", 
-                        "text-foreground"
+                        "text-foreground" // Asegura que el texto del número sea siempre oscuro
                       );
                     
                       if (modifiers.selected) {
@@ -473,7 +473,7 @@ export default function SchedulePage() {
         ) : sortedGroupKeys.length > 0 ? (
           <div className="space-y-8 w-full">
             {sortedGroupKeys.map(dateKey => (
-              <Card key={dateKey} className="shadow-md">
+              <Card key={dateKey} className="shadow-md overflow-hidden">
                 <CardHeader>
                   <CardTitle className="text-xl">
                     {format(parseISO(dateKey), "PPPP", { locale: es })}
@@ -495,11 +495,11 @@ export default function SchedulePage() {
                             </p>
                             <p className="text-md flex items-center mt-1">
                               {appointment.isBlocker ? (
-                                <span className="text-gray-700 font-medium">{appointment.blockerReason || "Horario Bloqueado"}</span>
+                                <span className="text-gray-700 font-medium break-words">{appointment.blockerReason || "Horario Bloqueado"}</span>
                               ) : (
                                 <>
                                   <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                                  {appointment.patientName}
+                                  <span className="break-words">{appointment.patientName}</span>
                                 </>
                               )}
                             </p>
@@ -518,7 +518,7 @@ export default function SchedulePage() {
                           )}
                         </div>
                         {appointment.notes && !appointment.isBlocker && (
-                          <p className="text-sm text-muted-foreground mt-2 pt-2 border-t border-dashed">
+                          <p className="text-sm text-muted-foreground mt-2 pt-2 border-t border-dashed break-words">
                             <strong>Notas:</strong> {appointment.notes}
                           </p>
                         )}
@@ -544,4 +544,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
