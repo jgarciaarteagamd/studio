@@ -403,7 +403,7 @@ export default function SchedulePage() {
           </DialogContent>
         </Dialog>
         
-        <Card className="shadow-lg max-w-3xl mx-auto w-full">
+        <Card className="shadow-lg max-w-2xl mx-auto w-full">
           <CardHeader>
             <CardTitle>Calendario de Citas</CardTitle>
             <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
@@ -493,9 +493,9 @@ export default function SchedulePage() {
                               {format(parseISO(appointment.dateTime), "HH:mm", { locale: es })}
                               <span className="text-muted-foreground text-sm ml-2">({appointment.durationMinutes} min)</span>
                             </p>
-                            <p className="text-md flex items-center mt-1">
+                            <p className="text-md flex items-center mt-1 break-words">
                               {appointment.isBlocker ? (
-                                <span className="text-gray-700 font-medium break-words">{appointment.blockerReason || "Horario Bloqueado"}</span>
+                                <span className="text-gray-700 font-medium ">{appointment.blockerReason || "Horario Bloqueado"}</span>
                               ) : (
                                 <>
                                   <User className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -544,3 +544,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
