@@ -1,3 +1,4 @@
+
 // src/app/dashboard/consultations/new/page.tsx
 "use client";
 
@@ -17,7 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { mockPatients, getPatientById, addMedicalEncounterToPatient, getPatientFullName, type NewConsultationData } from '@/lib/mock-data';
 import type { PatientRecord, MedicalEncounter } from '@/lib/types';
-import { User, FileText, History, PlusCircle, Search, ListChecks, Activity, Microscope, Stethoscope as StethoscopeIcon, Brain, Printer, Download } from 'lucide-react';
+import { User, FileText, History, PlusCircle, Search, ListChecks, Activity, Microscope, Stethoscope as StethoscopeIcon, Brain, Printer, Download, ClipboardList, FileEdit } from 'lucide-react';
 import { format, differenceInYears } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Link from 'next/link';
@@ -69,6 +70,7 @@ export default function NewConsultationPage() {
 
   const handleSelectPatient = (patient: PatientRecord) => {
     setIsLoadingPatient(true);
+    // Simular carga
     setTimeout(() => {
       setSelectedPatient(patient);
       setSearchTerm(''); 
@@ -140,10 +142,17 @@ export default function NewConsultationPage() {
     let pdfContent = `== CONSULTA MÉDICA ==\n\n`;
     pdfContent += `Paciente: ${getPatientFullName(selectedPatient)}\n`;
     pdfContent += `Fecha de Consulta: ${format(new Date(encounter.date), "PPP", { locale: es })}\n\n`;
-    pdfContent += `Detalles de la Consulta:\n${encounter.details}\n\n`; // details ya está formateado
+    pdfContent += `Detalles de la Consulta:\n${encounter.details}\n\n`; 
     pdfContent += `\n\nFirma del Médico:\n_________________________`;
     alert("Descarga de Consulta Específica (simulada):\n\n" + pdfContent);
   };
+
+  const recentEncounters = useMemo(() => {
+    if (!selectedPatient || !selectedPatient.medicalEncounters) return [];
+    return [...selectedPatient.medicalEncounters]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+  }, [selectedPatient]);
 
 
   return (
@@ -222,6 +231,43 @@ export default function NewConsultationPage() {
                     </Button>
                   </CardContent>
                 </Card>
+
+                {selectedPatient.backgroundInformation && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center text-lg">
+                        <ClipboardList className="mr-2 h-5 w-5 text-primary" />
+                        Antecedentes del Paciente
+                      </CardTitle>
+                      <Button variant="outline" size="sm" asChild className="mt-2 text-xs">
+                        <Link href={`/dashboard/patients/${selectedPatient.id}`}>
+                          <FileEdit className="mr-2 h-3 w-3" /> Modificar Antecedentes
+                        </Link>
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="text-xs space-y-2">
+                      <div>
+                        <p className="font-semibold">Antecedentes Personales:</p>
+                        <p className="text-muted-foreground whitespace-pre-wrap">
+                          {selectedPatient.backgroundInformation.personalHistory || "No registrados"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-semibold">Alergias:</p>
+                        <p className="text-muted-foreground whitespace-pre-wrap">
+                          {selectedPatient.backgroundInformation.allergies || "No registradas"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-semibold">Medicación Habitual:</p>
+                        <p className="text-muted-foreground whitespace-pre-wrap">
+                          {selectedPatient.backgroundInformation.habitualMedication || "No registrada"}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center text-lg">
@@ -230,10 +276,10 @@ export default function NewConsultationPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {selectedPatient.medicalEncounters && selectedPatient.medicalEncounters.length > 0 ? (
-                      <ScrollArea className="pr-3">
+                    {recentEncounters.length > 0 ? (
+                      <ScrollArea className="pr-3"> {/* No height fixed */}
                         <ul className="space-y-3">
-                          {[...selectedPatient.medicalEncounters].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0,5).map(enc => ( 
+                          {recentEncounters.map((enc, index) => ( 
                             <li key={enc.id} className="text-xs border-b pb-2 mb-2">
                                <div className="flex justify-between items-center">
                                 <p className="font-semibold">{format(new Date(enc.date), "PPP, p", { locale: es })}</p>
@@ -241,7 +287,13 @@ export default function NewConsultationPage() {
                                     <Download className="h-3 w-3" />
                                 </Button>
                               </div>
-                              <p className="text-muted-foreground truncate whitespace-normal line-clamp-3 mt-1">{enc.details.split('\n\n')[0]}</p> 
+                              {index === 0 ? (
+                                <p className="text-muted-foreground whitespace-pre-wrap mt-1">{enc.details}</p>
+                              ) : (
+                                <p className="text-muted-foreground truncate whitespace-normal line-clamp-3 hover:line-clamp-none transition-all duration-300 ease-in-out mt-1">
+                                  {enc.details.split('\n\n')[0]}
+                                </p>
+                              )}
                             </li>
                           ))}
                         </ul>
