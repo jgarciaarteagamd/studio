@@ -259,15 +259,17 @@ export default function NewRecipePage() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1 space-y-4">
+                 <div className="mb-4">
+                    <Button variant="outline" size="sm" onClick={() => setSelectedPatient(null)} className="w-full sm:w-auto">
+                        <Search className="mr-2 h-4 w-4" /> Cambiar Paciente
+                    </Button>
+                </div>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center text-xl">
                       <User className="mr-2 h-5 w-5 text-primary" />
                       {getPatientFullName(selectedPatient)}
                     </CardTitle>
-                    <Button variant="outline" size="sm" onClick={() => setSelectedPatient(null)} className="mt-2">
-                      <Search className="mr-2 h-4 w-4" /> Cambiar Paciente
-                    </Button>
                   </CardHeader>
                   <CardContent className="text-sm space-y-1">
                     <p><strong>Documento:</strong> {selectedPatient.personalDetails.documentoIdentidad || 'N/A'}</p>
@@ -454,4 +456,3 @@ export default function NewRecipePage() {
     </div>
   );
 }
-
