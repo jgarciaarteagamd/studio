@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -202,7 +202,7 @@ export default function SchedulePage() {
 
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto w-full">
       <div className="space-y-6 w-full">
       
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -403,7 +403,7 @@ export default function SchedulePage() {
           </DialogContent>
         </Dialog>
         
-        <Card className="shadow-lg max-w-xl mx-auto w-full">
+        <Card className="shadow-lg max-w-xl mx-auto w-full overflow-hidden">
           <CardHeader>
             <CardTitle>Calendario de Citas</CardTitle>
             <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
@@ -433,11 +433,11 @@ export default function SchedulePage() {
                   day: (date, modifiers, dayProps) => {
                       let klasses = cn(
                         buttonVariants({ variant: "ghost" }),
-                        "h-full w-full p-0 font-normal text-foreground"
+                        "h-full w-full p-0 font-normal text-foreground" 
                       );
                     
                       if (modifiers.selected) {
-                        klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-foreground"); 
+                        klasses = cn(klasses, "bg-primary/70 text-foreground !h-8 !w-8 rounded-full"); 
                       } else if (modifiers.today && !modifiers.selected) {
                         klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
                       } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter && !modifiers.selected && !modifiers.today) {
@@ -543,4 +543,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
