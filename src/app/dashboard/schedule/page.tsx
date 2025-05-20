@@ -4,8 +4,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription as ShadCNFormDescription } from "@/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -228,20 +228,6 @@ export default function SchedulePage() {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
-              <FormField
-                control={form.control}
-                name="isBlocker"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
-                     <FormControl>
-                       {/* Switch or Checkbox can be used here if preferred over buttons defining the mode */}
-                     </FormControl>
-                     {/* This FormDescription might be redundant if buttons define mode */}
-                  </FormItem>
-                )}
-              />
-
-
               {!isBlockerWatch && (
                 <FormField
                   control={form.control}
@@ -412,7 +398,7 @@ export default function SchedulePage() {
         </DialogContent>
       </Dialog>
       
-      <Card className="shadow-lg">
+      <Card className="shadow-lg max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Calendario de Citas</CardTitle>
           <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
@@ -440,32 +426,31 @@ export default function SchedulePage() {
                   "h-10 sm:h-12 md:h-14" 
                 ),
                 day: (date, modifiers, dayProps) => {
-                  let klasses = cn(
-                    buttonVariants({ variant: "ghost" }),
-                    "h-full w-full p-0 font-normal text-foreground", // Ensure text-foreground is always applied for numbers
-                    "flex items-center justify-center" // Center number
-                  );
-                
-                  // Precedencia: Seleccionado > Hoy > Hover Normal
-                  if (modifiers.selected) {
-                    klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-foreground"); // Celeste degradado, texto oscuro
-                  } else if (modifiers.today) {
-                    klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground"); // Anillo celeste, texto oscuro
-                  } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter) {
-                    klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full text-foreground"); // Gris en hover, texto oscuro
-                  }
+                    let klasses = cn(
+                      buttonVariants({ variant: "ghost" }),
+                      "h-full w-full p-0 font-normal text-foreground", 
+                      "flex items-center justify-center text-foreground" // Ensure text is always foreground
+                    );
                   
-                  if (modifiers.disabled) {
-                    klasses = cn(klasses, "opacity-50");
-                  }
-                  if (modifiers.outside) {
-                    klasses = cn(klasses, "text-muted-foreground opacity-50");
-                     if (modifiers.selected) { // Si un día exterior está seleccionado
-                        klasses = cn(klasses, "bg-primary/20 text-foreground"); // Fondo aún más degradado, texto oscuro
-                     }
-                  }
-                  return klasses;
-                },
+                    if (modifiers.selected) {
+                      klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-foreground"); 
+                    } else if (modifiers.today) {
+                      klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
+                    } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter) {
+                      klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full text-foreground");
+                    }
+                    
+                    if (modifiers.disabled) {
+                      klasses = cn(klasses, "opacity-50 text-foreground");
+                    }
+                    if (modifiers.outside) {
+                       klasses = cn(klasses, "text-muted-foreground opacity-50");
+                       if (modifiers.selected) { 
+                          klasses = cn(klasses, "bg-primary/20 text-foreground"); 
+                       }
+                    }
+                    return klasses;
+                  },
             }}
           />
         </CardContent>
