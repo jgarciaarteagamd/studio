@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Button, buttonVariants } from "@/components/ui/button"; // Import buttonVariants
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription as ShadCNFormDescription } from "@/components/ui/form";
@@ -11,17 +11,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-// Checkbox ya no es necesario para "isBlocker" en el formulario
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord } from "@/lib/mock-data";
+import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord, getPatientFullName } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react"; // Added ShieldOff for Blocker
+import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react";
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
 import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
-// import { buttonVariants } from "@/components/ui/button"; // Already imported at the top
 import { DayAppointmentsSidebar } from "@/components/schedule/DayAppointmentsSidebar";
 
 const appointmentFormSchema = z.object({
@@ -84,17 +82,18 @@ export default function SchedulePage() {
   const isBlockerWatch = form.watch("isBlocker");
 
   const openFormDialog = (blockerMode: boolean) => {
-    form.reset({ // Reset form with appropriate defaults
+    const defaultDate = selectedCalendarDay && !isPast(selectedCalendarDay) ? selectedCalendarDay : new Date();
+    form.reset({ 
       patientId: "",
-      date: new Date(),
+      date: defaultDate,
       time: "09:00",
-      durationMinutes: blockerMode ? 60 : 30, // Default 60 min for blockers, 30 for appointments
+      durationMinutes: blockerMode ? 60 : 30,
       notes: "",
       status: "programada",
       isBlocker: blockerMode,
       blockerReason: "",
     });
-    form.setValue('isBlocker', blockerMode); // Explicitly set isBlocker after reset
+    form.setValue('isBlocker', blockerMode); 
     setIsFormOpen(true);
   };
 
@@ -107,7 +106,7 @@ export default function SchedulePage() {
     const newAppointmentData: Omit<Appointment, 'id' | 'patientName'> = {
       dateTime: dateTime.toISOString(),
       durationMinutes: data.durationMinutes,
-      status: data.isBlocker ? 'programada' : data.status, // Blockers can default to 'programada' or a specific status
+      status: data.isBlocker ? 'programada' : data.status, 
       isBlocker: data.isBlocker,
     };
 
@@ -129,7 +128,6 @@ export default function SchedulePage() {
         description: data.isBlocker ? "El periodo ha sido bloqueado exitosamente." : "La nueva cita ha sido programada exitosamente.",
       });
       setIsFormOpen(false);
-      // Form is reset when opening the dialog now
     } catch (error) {
       console.error("Error agendando/bloqueando:", error);
       toast({
@@ -183,7 +181,6 @@ export default function SchedulePage() {
   };
   const calendarModifiersClassNames = {
     hasAppointments: 'day-with-appointments',
-    // selected: 'rdp-day_selected', // Handled by custom day render function
   };
 
   const handleCalendarDayClick = useCallback((day: Date | undefined) => {
@@ -202,7 +199,7 @@ export default function SchedulePage() {
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Agenda de Citas</h1>
@@ -223,7 +220,6 @@ export default function SchedulePage() {
       </div>
       
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        {/* DialogTrigger is no longer needed here as buttons control openFormDialog */}
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isBlockerWatch ? "Bloquear Horario" : "Programar Nueva Cita"}</DialogTitle>
@@ -231,7 +227,6 @@ export default function SchedulePage() {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
-              {/* Checkbox for isBlocker is removed */}
 
               {!isBlockerWatch && (
                 <FormField
@@ -249,7 +244,7 @@ export default function SchedulePage() {
                         <SelectContent>
                           {patients.map((patient) => (
                             <SelectItem key={patient.id} value={patient.id}>
-                              {patient.personalDetails.name}
+                              {getPatientFullName(patient)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -345,7 +340,7 @@ export default function SchedulePage() {
                     <FormItem>
                       <FormLabel>Motivo del Bloqueo</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Ej: Almuerzo, Reunión importante, Mantenimiento" {...field} />
+                        <Textarea placeholder="Ej: Almuerzo, Reunión importante, Mantenimiento" {...field} value={field.value || ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -359,7 +354,7 @@ export default function SchedulePage() {
                     <FormItem>
                       <FormLabel>Notas Adicionales (Opcional)</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Notas sobre la cita, motivo, etc." {...field} />
+                        <Textarea placeholder="Notas sobre la cita, motivo, etc." {...field} value={field.value || ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -367,7 +362,7 @@ export default function SchedulePage() {
                 />
               )}
 
-              {!isBlockerWatch && ( // Only show Status for non-blockers
+              {!isBlockerWatch && ( 
                  <FormField
                     control={form.control}
                     name="status"
@@ -430,18 +425,17 @@ export default function SchedulePage() {
                   "flex items-center justify-center", 
                   "h-10 sm:h-12 md:h-14" 
                 ),
-                day: (date, modifiers, dayProps) => {
+                day: (date, modifiers) => {
                   let klasses = cn(
-                    buttonVariants({ variant: "ghost" }), // Base button style
-                    "h-full w-full p-0 font-normal text-foreground" // Ensure text is visible
+                    buttonVariants({ variant: "ghost" }),
+                    "h-full w-full p-0 font-normal text-foreground"
                   );
-                  
                   if (modifiers.selected) {
-                    klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-foreground hover:bg-primary/60");
+                    klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-primary-foreground hover:bg-primary/60");
                   } else if (modifiers.today) {
-                    klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
-                  } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter) {
-                    klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full text-foreground");
+                    klasses = cn(klasses, "ring-1 ring-primary rounded-full");
+                  } else if (modifiers.interactive && !modifiers.disabled) {
+                     klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full");
                   }
 
                   if (modifiers.disabled) {
@@ -450,7 +444,7 @@ export default function SchedulePage() {
                   if (modifiers.outside) {
                      klasses = cn(klasses, "text-muted-foreground opacity-50");
                      if (modifiers.selected) {
-                        klasses = cn(klasses, "bg-primary/20"); 
+                        klasses = cn(klasses, "bg-primary/20 text-primary-foreground"); 
                      }
                   }
                   return klasses;
@@ -542,4 +536,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
