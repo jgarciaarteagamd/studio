@@ -202,8 +202,8 @@ export default function SchedulePage() {
 
 
   return (
-    <div className="max-w-5xl mx-auto"> 
-      <div className="space-y-6">
+    <div className="max-w-5xl mx-auto">
+      <div className="space-y-6 w-full">
       
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -433,15 +433,15 @@ export default function SchedulePage() {
                   day: (date, modifiers, dayProps) => {
                       let klasses = cn(
                         buttonVariants({ variant: "ghost" }),
-                        "h-full w-full p-0 font-normal text-foreground", 
-                        "flex items-center justify-center text-foreground" 
+                        "h-full w-full p-0 font-normal", 
+                        "text-foreground"
                       );
                     
                       if (modifiers.selected) {
                         klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-foreground"); 
-                      } else if (modifiers.today) {
+                      } else if (modifiers.today && !modifiers.selected) {
                         klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
-                      } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter) {
+                      } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter && !modifiers.selected && !modifiers.today) {
                         klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full text-foreground");
                       }
                       
@@ -471,7 +471,7 @@ export default function SchedulePage() {
         {isLoading ? (
           <p>Cargando agenda...</p>
         ) : sortedGroupKeys.length > 0 ? (
-          <div className="space-y-8">
+          <div className="space-y-8 w-full">
             {sortedGroupKeys.map(dateKey => (
               <Card key={dateKey} className="shadow-md">
                 <CardHeader>
@@ -544,3 +544,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
