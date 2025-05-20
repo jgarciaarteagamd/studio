@@ -21,7 +21,7 @@ function Calendar({
 }: CalendarProps) {
   const defaultClassNames: Partial<Record<keyof ReturnType<ClassNameFormatter>, string | ((date: Date, modifiers: Modifiers, options?: CalendarProps) => string | undefined)>> = {
     months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-    month: "space-y-4 w-full", // Added w-full
+    month: "space-y-4 w-full",
     caption: "flex justify-center pt-1 relative items-center",
     caption_label: "text-sm font-medium",
     nav: "space-x-1 flex items-center",
@@ -31,39 +31,32 @@ function Calendar({
     ),
     nav_button_previous: "absolute left-1",
     nav_button_next: "absolute right-1",
-    table: "w-full border-collapse space-y-1",
+    table: "w-full border-collapse table-fixed", // Changed: Added table-fixed, removed space-y-1
     head_row: "flex w-full",
     head_cell:
       "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-sm p-0 flex items-center justify-center",
     
     row: "flex w-full mt-2",
     cell: cn( 
-      "h-9 flex-1 min-w-0 text-sm p-0 relative focus-within:relative focus-within:z-20", 
-      "flex items-center justify-center" 
+      "flex-1 min-w-0 text-center text-sm p-0 relative flex items-center justify-center"
     ),
     
     day: (date: Date, modifiers: Modifiers, dayProps: DayProps) => {
       let klasses = cn(
-        buttonVariants({ variant: "ghost" }), 
-        "h-full w-full p-0 font-normal text-foreground", 
-        "flex items-center justify-center" 
+        buttonVariants({ variant: "ghost" }),
+        "h-full w-full p-0 font-normal", 
+        "flex items-center justify-center", // Center number inside button
+        "text-foreground" // Ensure text is always foreground color
       );
-
+    
       if (modifiers.selected) {
-        klasses = cn(
-          klasses,
-          "bg-primary/70 text-foreground !h-8 !w-8 rounded-full hover:bg-primary/80" 
-        );
+        klasses = cn(klasses, "bg-primary/70 !h-8 !w-8 rounded-full text-foreground hover:bg-primary/80"); 
       } else if (modifiers.today) {
-        klasses = cn(
-          klasses,
-          "bg-primary text-foreground !h-8 !w-8 rounded-full hover:bg-primary/90" 
-        );
+        // Subtle ring for today, no background change if not selected to maintain alignment
+        klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
       } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter) {
-        klasses = cn(
-          klasses,
-          "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full hover:text-foreground"
-        );
+        // Hover for normal days (not selected, not today)
+        klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full text-foreground");
       }
       
       if (modifiers.disabled) {
@@ -80,7 +73,7 @@ function Calendar({
     day_selected: undefined, 
     day_today: undefined,    
     
-    day_outside: "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
+    day_outside: "text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
     day_disabled: "text-muted-foreground opacity-50",
     day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
     day_hidden: "invisible",
@@ -102,7 +95,7 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("w-full", className)} // Eliminado p-3 de aquí
+      className={cn("w-full", className)} // No p-3 here, padding comes from CardContent
       classNames={mergedClassNames as Required<Parameters<typeof DayPicker>[0]['classNames']>}
       components={{
         IconLeft: ({ className: iconClassName, ...restIconProps }) => ( 
