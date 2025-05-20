@@ -4,8 +4,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,16 +28,16 @@ const appointmentFormSchema = z.object({
   date: z.date({ required_error: "La fecha es obligatoria." }),
   time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Formato de hora inválido (HH:MM)."),
   durationMinutes: z.coerce.number().min(5, "La duración debe ser al menos 5 minutos.").max(1440, "La duración no puede exceder 1 día (1440 min)."),
-  notes: z.string().optional(), // For patient appointments
+  notes: z.string().optional(),
   status: z.enum(['programada', 'confirmada', 'cancelada', 'completada']).default('programada'),
   isBlocker: z.boolean().optional().default(false),
-  blockerReason: z.string().optional(), // For blockers
+  blockerReason: z.string().optional(),
 }).refine(data => {
   if (data.isBlocker && !data.blockerReason) {
-    return false; // Blocker must have a reason
+    return false;
   }
   if (!data.isBlocker && !data.patientId) {
-    return false; // Appointment must have a patient
+    return false; 
   }
   return true;
 }, {
@@ -128,7 +129,7 @@ export default function SchedulePage() {
         description: data.isBlocker ? "El periodo ha sido bloqueado exitosamente." : "La nueva cita ha sido programada exitosamente.",
       });
       setIsFormOpen(false);
-      setSelectedCalendarDay(null); // Reset selected day to refresh calendar markers potentially
+      setSelectedCalendarDay(null); 
     } catch (error) {
       console.error("Error agendando/bloqueando:", error);
       toast({
@@ -200,7 +201,7 @@ export default function SchedulePage() {
 
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6"> {/* Eliminado max-w-5xl mx-auto de aquí */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Agenda de Citas</h1>
@@ -228,6 +229,32 @@ export default function SchedulePage() {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
+               <FormField
+                control={form.control}
+                name="isBlocker"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4 shadow-sm bg-background transition-colors hover:bg-muted/50 cursor-pointer"
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        aria-label="Marcar como bloqueo de horario"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="cursor-pointer">
+                        Marcar como bloqueo de horario
+                      </FormLabel>
+                       <FormDescription>
+                        Seleccione esto si no es una cita de paciente (ej. almuerzo, reunión).
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
               {!isBlockerWatch && (
                 <FormField
                   control={form.control}
@@ -398,7 +425,7 @@ export default function SchedulePage() {
         </DialogContent>
       </Dialog>
       
-      <Card className="shadow-lg max-w-3xl mx-auto">
+      <Card className="shadow-lg max-w-3xl mx-auto"> {/* El calendario tiene su propio max-width aquí */}
         <CardHeader>
           <CardTitle>Calendario de Citas</CardTitle>
           <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
@@ -429,7 +456,7 @@ export default function SchedulePage() {
                     let klasses = cn(
                       buttonVariants({ variant: "ghost" }),
                       "h-full w-full p-0 font-normal text-foreground", 
-                      "flex items-center justify-center text-foreground" // Ensure text is always foreground
+                      "flex items-center justify-center text-foreground" 
                     );
                   
                     if (modifiers.selected) {
