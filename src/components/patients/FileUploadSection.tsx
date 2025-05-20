@@ -79,6 +79,9 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     }
     if (confirm(`¿Está seguro de que desea eliminar ${selectedAttachmentIds.length} archivo(s) adjunto(s)? Esta acción podría ser irreversible.`)) {
       alert(`Eliminando archivos adjuntos con IDs: ${selectedAttachmentIds.join(', ')} (simulado).`);
+      // Aquí iría la lógica para llamar a onFileDelete(selectedAttachmentIds)
+      // y luego actualizar el estado 'attachments' o recargar.
+      // Por ahora, solo limpiamos la selección.
       setSelectedAttachmentIds([]);
     }
   };
@@ -111,7 +114,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
 
       <Card className="w-full">
         <CardHeader className="flex flex-col p-6 gap-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> {/* Increased gap from gap-2 */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6"> {/* Changed gap-4 to gap-6 */}
             <CardTitle>Archivos Adjuntos</CardTitle>
             {attachments.length > 0 && (
               <Button 
