@@ -1,3 +1,4 @@
+
 // src/components/schedule/DayAppointmentsSidebar.tsx
 "use client";
 
@@ -7,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Appointment } from "@/lib/types";
 import { format, parseISO } from "date-fns";
 import { es } from 'date-fns/locale';
-import { CalendarDays, Clock, User, Info, X, Lock } from "lucide-react"; 
+import { CalendarDays, Clock, User, Info, X, Lock } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -27,9 +28,9 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md w-full">
-        <SheetHeader className="pb-6"> {/* Increased bottom padding */}
-          <SheetTitle className="flex items-center text-lg mt-2"> {/* Smaller text, added top margin */}
+      <SheetContent className="sm:max-w-md w-full flex flex-col"> {/* Added flex flex-col */}
+        <SheetHeader className="pb-6">
+          <SheetTitle className="flex items-center text-lg mt-2">
             <CalendarDays className="mr-2 h-5 w-5 text-primary" />
             Agenda para el {formattedDate}
           </SheetTitle>
@@ -38,7 +39,7 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
           </SheetDescription>
         </SheetHeader>
         
-        <ScrollArea className="h-[calc(100vh-12rem)] pr-4"> {/* Consider adjusting 12rem if header/footer height changes significantly */}
+        <ScrollArea className="flex-1 min-h-0 pr-4"> {/* Changed to flex-1 min-h-0 */}
           {appointmentsForDay.length > 0 ? (
             <ul className="space-y-4">
               {appointmentsForDay.map((appointment) => (
@@ -83,7 +84,7 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
             </div>
           )}
         </ScrollArea>
-        <div className="mt-auto pt-2 border-t"> {/* Reduced top padding */}
+        <div className="pt-2 border-t"> {/* Removed mt-auto as flex structure handles it */}
             <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
                 <X className="mr-2 h-4 w-4" /> Cerrar Panel
             </Button>
@@ -92,3 +93,5 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
     </Sheet>
   );
 }
+
+    
