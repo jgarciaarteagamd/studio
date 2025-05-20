@@ -403,7 +403,7 @@ export default function SchedulePage() {
           </DialogContent>
         </Dialog>
         
-        <Card className="shadow-lg max-w-xl mx-auto overflow-hidden"> {/* MODIFIED LINE */}
+        <Card className="shadow-lg max-w-xl mx-auto w-full overflow-hidden">
           <CardHeader>
             <CardTitle>Calendario de Citas</CardTitle>
             <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
@@ -430,31 +430,32 @@ export default function SchedulePage() {
                     "flex items-center justify-center", 
                     "h-10 sm:h-12 md:h-14" 
                   ),
-                  day: (date, modifiers, dayProps) => {
-                      let klasses = cn(
-                        buttonVariants({ variant: "ghost" }),
-                        "h-full w-full p-0 font-normal text-foreground" 
-                      );
+                  day: (date, modifiers) => {
+                    let klasses = cn(
+                      buttonVariants({ variant: "ghost" }),
+                      "h-full w-full p-0 font-normal text-foreground",
+                      "flex items-center justify-center" 
+                    );
+                  
+                    if (modifiers.selected) {
+                      klasses = cn(klasses, "bg-primary/70 text-foreground !h-8 !w-8 rounded-full"); 
+                    } else if (modifiers.today && !modifiers.selected) {
+                      klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
+                    } else if (modifiers.interactive && !modifiers.disabled && !modifiers.selected && !modifiers.today) {
+                      klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full text-foreground");
+                    }
                     
-                      if (modifiers.selected) {
-                        klasses = cn(klasses, "bg-primary/70 text-foreground !h-8 !w-8 rounded-full"); 
-                      } else if (modifiers.today && !modifiers.selected) {
-                        klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
-                      } else if (modifiers.interactive && !modifiers.disabled && dayProps.onPointerEnter && !modifiers.selected && !modifiers.today) {
-                        klasses = cn(klasses, "hover:bg-muted hover:!h-8 hover:!w-8 hover:rounded-full text-foreground");
-                      }
-                      
-                      if (modifiers.disabled) {
-                        klasses = cn(klasses, "opacity-50 text-foreground");
-                      }
-                      if (modifiers.outside) {
-                         klasses = cn(klasses, "text-muted-foreground opacity-50");
-                         if (modifiers.selected) { 
-                            klasses = cn(klasses, "bg-primary/20 text-foreground"); 
-                         }
-                      }
-                      return klasses;
-                    },
+                    if (modifiers.disabled) {
+                      klasses = cn(klasses, "opacity-50 text-foreground");
+                    }
+                    if (modifiers.outside) {
+                       klasses = cn(klasses, "text-muted-foreground opacity-50");
+                       if (modifiers.selected) { 
+                          klasses = cn(klasses, "bg-primary/20 text-foreground"); 
+                       }
+                    }
+                    return klasses;
+                  },
               }}
             />
           </CardContent>
