@@ -20,14 +20,6 @@ interface FileUploadSectionProps {
   onDeleteAttachments: (attachmentIdsToDelete: string[]) => void;
 }
 
-const getFileIcon = (type: Attachment['type']) => {
-  switch (type) {
-    case 'pdf': return <FileType2 className="h-5 w-5 text-red-600" />;
-    case 'image': return <FileImage className="h-5 w-5 text-blue-500" />;
-    default: return <FileArchive className="h-5 w-5 text-gray-500" />;
-  }
-};
-
 export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachments }: FileUploadSectionProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -121,7 +113,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
 
       <Card className="w-full">
         <CardHeader className="flex flex-col p-6 gap-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
             <CardTitle>Archivos Adjuntos</CardTitle>
             {attachments.length > 0 && (
               <Button
@@ -136,7 +128,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2 mt-10 pt-8">
+             <div className="flex items-center space-x-2 mt-8">
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
@@ -154,7 +146,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
         </CardHeader>
         <CardContent>
           {attachments.length > 0 ? (
-            <ScrollArea className="h-[300px] pr-3"> {/* Added ScrollArea for long lists */}
+            <ScrollArea> {/* Eliminada h-[300px] y pr-3 */}
               <ul className="space-y-3">
                 {attachments.map((attachment) => (
                   <li
@@ -172,7 +164,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
                       className="flex-shrink-0"
                     />
                     <div className="flex-grow min-w-0">
-                      <div
+                       <div
                         id={`attachment-name-${attachment.id}`}
                         onClick={() => handleOpenFile(attachment.driveLink)}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenFile(attachment.driveLink); }}
