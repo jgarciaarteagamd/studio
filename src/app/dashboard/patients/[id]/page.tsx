@@ -164,22 +164,22 @@ export default function PatientDetailPage() {
             {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil: {patient.personalDetails.telefono1}</p>)}
             {patient.personalDetails.telefono2 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono opcional: {patient.personalDetails.telefono2}</p>)}
           </div>
-           <Badge variant="secondary" className="w-fit mt-3 mb-3"> {/* Added mb-3 */}
+          {patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal) && (
+            <>
+              <Separator className="my-4" /> {}
+              <div className="pb-2">
+                <h4 className="text-sm font-medium mb-2 flex items-center"><BuildingIcon className="mr-2 h-4 w-4 text-primary/70" /> Datos de Facturación Rápidos</h4>
+                <div className="text-xs text-muted-foreground space-y-0.5">
+                    {patient.datosFacturacion.ruc && <p>RUC: {patient.datosFacturacion.ruc}</p>}
+                    {patient.datosFacturacion.direccionFiscal && <p>Dirección: {patient.datosFacturacion.direccionFiscal}</p>}
+                </div>
+              </div>
+            </>
+          )}
+           <Badge variant="secondary" className="w-fit mt-4"> {}
             Última actualización general: {new Date(patient.updatedAt).toLocaleDateString(currentLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
           </Badge>
         </CardHeader>
-        {patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal) && (
-          <>
-            <Separator className="my-0" />
-            <CardContent className="pt-4 pb-2">
-              <h4 className="text-sm font-medium mb-2 flex items-center"><BuildingIcon className="mr-2 h-4 w-4 text-primary/70" /> Datos de Facturación Rápidos</h4>
-              <div className="text-xs text-muted-foreground space-y-0.5">
-                {patient.datosFacturacion.ruc && <p>RUC: {patient.datosFacturacion.ruc}</p>}
-                {patient.datosFacturacion.direccionFiscal && <p>Dirección: {patient.datosFacturacion.direccionFiscal}</p>}
-              </div>
-            </CardContent>
-          </>
-        )}
       </Card>
 
       <Tabs defaultValue="personalData" className="w-full max-w-5xl mx-auto">
@@ -188,7 +188,7 @@ export default function PatientDetailPage() {
             "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
             SIMULATED_ROLE === 'doctor' ? "md:grid-cols-4" : "md:grid-cols-2" 
             )}>
-          <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos</TabsTrigger> {/* Changed label */}
+          <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos</TabsTrigger>
           {SIMULATED_ROLE === 'doctor' && (
             <>
               <TabsTrigger value="backgroundInfo" className="flex-grow md:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2"/> Antecedentes</TabsTrigger>
@@ -249,11 +249,11 @@ export default function PatientDetailPage() {
             <TabsContent value="encounters">
               <Card className="w-full">
                 <CardHeader>
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"> {/* Added gap-2 for better spacing */}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <CardTitle>Historial</CardTitle>
                     <Button onClick={handleNavigateToNewConsultation} size="sm">
                       <Stethoscope className="mr-2 h-4 w-4" />
-                      Nueva Consulta {/* Changed button text */}
+                      Nueva Consulta
                     </Button>
                   </div>
                   <CardDescription>Revise las consultas anteriores del paciente. La más reciente primero.</CardDescription>
@@ -304,7 +304,7 @@ export default function PatientDetailPage() {
             </TabsContent>
 
             <TabsContent value="attachments">
-              <Card className="w-full">
+              <Card className="w-full overflow-hidden"> {}
                 <CardHeader>
                   <CardTitle>Archivos Adjuntos</CardTitle>
                   <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
