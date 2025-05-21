@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
 import { UploadCloud, Trash2, AlertCircle, FileArchive, FileImage, FileType2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ScrollArea } from '../ui/scroll-area';
+// ScrollArea import is removed as it's no longer used
 
 
 interface FileUploadSectionProps {
@@ -128,7 +128,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2 mt-8">
+             <div className="flex items-center space-x-2 mt-10 pt-8">
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
@@ -146,13 +146,12 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
         </CardHeader>
         <CardContent>
           {attachments.length > 0 ? (
-            <ScrollArea> {/* Eliminada h-[300px] y pr-3 */}
               <ul className="space-y-3">
                 {attachments.map((attachment) => (
                   <li
                     key={attachment.id}
                     className={cn(
-                      "flex items-center gap-3 p-3 border rounded-md transition-colors overflow-hidden",
+                      "flex items-center gap-3 p-3 border rounded-md transition-colors overflow-hidden", // overflow-hidden added to li
                       selectedAttachmentIds.includes(attachment.id) ? "bg-primary/10 border-primary" : "hover:bg-muted/50"
                     )}
                   >
@@ -182,7 +181,6 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
                   </li>
                 ))}
               </ul>
-            </ScrollArea>
           ) : (
              <div className="flex flex-col items-center justify-center py-10 text-center">
                 <AlertCircle className="h-12 w-12 text-muted-foreground mb-3" />
