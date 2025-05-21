@@ -96,7 +96,7 @@ export default function PatientDetailPage() {
       const updatedAttachments = [...patient.attachments, newAttachment];
       const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
       if (updatedRecord) {
-        setPatient({...updatedRecord}); // Ensure re-render
+        setPatient({...updatedRecord}); 
       }
       toast({
         title: "Archivo Adjuntado",
@@ -113,7 +113,7 @@ export default function PatientDetailPage() {
       );
       const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
       if (updatedRecord) {
-        setPatient({ ...updatedRecord }); // Ensure re-render
+        setPatient({ ...updatedRecord }); 
         toast({
           title: "Adjuntos Eliminados",
           description: `${attachmentIdsToDelete.length} archivo(s) ha(n) sido eliminado(s) (simulado).`,
@@ -125,7 +125,6 @@ export default function PatientDetailPage() {
           variant: "destructive",
         });
       }
-      // setIsAttachmentDialogOpen(false); // Optionally close dialog after deletion
     }
   };
 
@@ -213,7 +212,7 @@ export default function PatientDetailPage() {
          <TabsList className={cn(
             "w-full h-auto mb-4 p-1 bg-muted rounded-md",
             "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
-             SIMULATED_ROLE === 'doctor' ? "md:grid-cols-4" : "md:grid-cols-2" // Updated logic for more tabs
+             SIMULATED_ROLE === 'doctor' ? "md:grid-cols-4" : "md:grid-cols-2" 
             )}>
           <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos</TabsTrigger>
           {SIMULATED_ROLE === 'doctor' && (
@@ -350,7 +349,7 @@ export default function PatientDetailPage() {
                           Suba nuevos archivos o elimine existentes. Los archivos se guardarán en su Google Drive.
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="flex-1 overflow-y-auto">
+                      <div className="flex-1 overflow-y-auto min-h-0"> {/* Added min-h-0 */}
                         <FileUploadSection
                           attachments={patient.attachments}
                           onFileUpload={handleFileUpload}
@@ -368,6 +367,3 @@ export default function PatientDetailPage() {
     </div>
   );
 }
-
-
-    
