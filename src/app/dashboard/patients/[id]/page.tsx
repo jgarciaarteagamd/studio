@@ -8,10 +8,11 @@ import { PatientForm, type PatientFormValues } from "@/components/patients/Patie
 import { FileUploadSection } from "@/components/patients/FileUploadSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { getPatientById, updatePatient, getPatientFullName, calculateAge } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays, ClipboardList } from "lucide-react";
+import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays, ClipboardList, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -30,6 +31,7 @@ export default function PatientDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentLocale, setCurrentLocale] = useState('es-ES');
   const [patientAge, setPatientAge] = useState<string | null>(null);
+  const [isAttachmentDialogOpen, setIsAttachmentDialogOpen] = useState(false);
 
   const SIMULATED_ROLE = 'doctor'; // Cambiar a 'secretary' para probar
 
@@ -65,7 +67,7 @@ export default function PatientDetailPage() {
 
       const updatedRecord = updatePatient(patient.id, updatedPatientData);
       if (updatedRecord) {
-        setPatient({...updatedRecord}); 
+        setPatient({...updatedRecord});
         setPatientAge(calculateAge(updatedRecord.personalDetails.fechaNacimiento));
          toast({
           title: "Historial Actualizado",
@@ -94,7 +96,7 @@ export default function PatientDetailPage() {
       const updatedAttachments = [...patient.attachments, newAttachment];
       const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
       if (updatedRecord) {
-        setPatient({...updatedRecord}); 
+        setPatient({...updatedRecord});
       }
       toast({
         title: "Archivo Adjuntado",
@@ -102,6 +104,31 @@ export default function PatientDetailPage() {
       });
     }
   };
+
+  const handleDeleteAttachments = (attachmentIdsToDelete: string[]) => {
+    if (patient) {
+      const currentAttachments = patient.attachments || [];
+      const updatedAttachments = currentAttachments.filter(
+        (att) => !attachmentIdsToDelete.includes(att.id)
+      );
+      const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
+      if (updatedRecord) {
+        setPatient({ ...updatedRecord }); // Ensure re-render
+        toast({
+          title: "Adjuntos Eliminados",
+          description: `${attachmentIdsToDelete.length} archivo(s) ha(n) sido eliminado(s) (simulado).`,
+        });
+      } else {
+         toast({
+          title: "Error",
+          description: "No se pudieron eliminar los adjuntos.",
+          variant: "destructive",
+        });
+      }
+      // setIsAttachmentDialogOpen(false); // Optionally close dialog after deletion
+    }
+  };
+
 
   const handleNavigateToNewConsultation = () => {
     router.push('/dashboard/consultations/new');
@@ -166,7 +193,7 @@ export default function PatientDetailPage() {
           </div>
           {patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal) && (
             <>
-              <Separator className="my-4" /> {}
+              <Separator className="my-3" /> {/* Adjusted margin */}
               <div className="pb-2">
                 <h4 className="text-sm font-medium mb-2 flex items-center"><BuildingIcon className="mr-2 h-4 w-4 text-primary/70" /> Datos de Facturación Rápidos</h4>
                 <div className="text-xs text-muted-foreground space-y-0.5">
@@ -176,7 +203,7 @@ export default function PatientDetailPage() {
               </div>
             </>
           )}
-           <Badge variant="secondary" className="w-fit mt-4"> {}
+           <Badge variant="secondary" className="w-fit mt-4">
             Última actualización general: {new Date(patient.updatedAt).toLocaleDateString(currentLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
           </Badge>
         </CardHeader>
@@ -186,7 +213,7 @@ export default function PatientDetailPage() {
          <TabsList className={cn(
             "w-full h-auto mb-4 p-1 bg-muted rounded-md",
             "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
-            SIMULATED_ROLE === 'doctor' ? "md:grid-cols-4" : "md:grid-cols-2" 
+             SIMULATED_ROLE === 'doctor' ? "md:grid-cols-4" : "md:grid-cols-2"
             )}>
           <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos</TabsTrigger>
           {SIMULATED_ROLE === 'doctor' && (
@@ -213,14 +240,14 @@ export default function PatientDetailPage() {
                 submitButtonText="Guardar Cambios"
                 showPersonalDetailsSection={true}
                 showDatosFacturacionSection={true}
-                allowEditFacturacionInfo={true} 
-                showBackgroundInformationSection={false} 
-                allowEditBackgroundInfo={false} 
+                allowEditFacturacionInfo={true}
+                showBackgroundInformationSection={false}
+                allowEditBackgroundInfo={false}
               />
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         {SIMULATED_ROLE === 'doctor' && (
            <TabsContent value="backgroundInfo">
              <Card className="w-full">
@@ -230,13 +257,13 @@ export default function PatientDetailPage() {
                </CardHeader>
                <CardContent>
                  <PatientForm
-                   onSubmit={handleFormSubmit} 
+                   onSubmit={handleFormSubmit}
                    initialData={patientFormInitialData}
                    submitButtonText="Guardar Antecedentes"
-                   showPersonalDetailsSection={false} 
-                   showDatosFacturacionSection={false} 
-                   showBackgroundInformationSection={true} 
-                   allowEditBackgroundInfo={true} 
+                   showPersonalDetailsSection={false}
+                   showDatosFacturacionSection={false}
+                   showBackgroundInformationSection={true}
+                   allowEditBackgroundInfo={true}
                  />
                </CardContent>
              </Card>
@@ -304,16 +331,35 @@ export default function PatientDetailPage() {
             </TabsContent>
 
             <TabsContent value="attachments">
-              <Card className="w-full overflow-hidden"> {}
+              <Card className="w-full overflow-hidden">
                 <CardHeader>
                   <CardTitle>Archivos Adjuntos</CardTitle>
                   <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-hidden">
-                  <FileUploadSection
-                    attachments={patient.attachments}
-                    onFileUpload={handleFileUpload}
-                  />
+                  <Dialog open={isAttachmentDialogOpen} onOpenChange={setIsAttachmentDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline">
+                        <FolderOpen className="mr-2 h-4 w-4" /> Gestionar Archivos Adjuntos ({patient.attachments.length})
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-3xl max-h-[80vh] flex flex-col">
+                      <DialogHeader>
+                        <DialogTitle>Archivos Adjuntos de {getPatientFullName(patient)}</DialogTitle>
+                        <DialogDescription>
+                          Suba nuevos archivos o elimine existentes. Los archivos se guardarán en su Google Drive.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex-grow overflow-y-auto p-1 -m-1"> {/* Added for scroll within dialog */}
+                        <FileUploadSection
+                          attachments={patient.attachments}
+                          onFileUpload={handleFileUpload}
+                          onDeleteAttachments={handleDeleteAttachments}
+                        />
+                      </div>
+                      {/* Footer can be added if needed, e.g. for a close button */}
+                    </DialogContent>
+                  </Dialog>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -323,4 +369,3 @@ export default function PatientDetailPage() {
     </div>
   );
 }
-

@@ -9,15 +9,26 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, Trash2, AlertCircle } from "lucide-react";
+import { UploadCloud, Trash2, AlertCircle, FileArchive, FileImage, FileType2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from '../ui/scroll-area';
+
 
 interface FileUploadSectionProps {
   attachments: Attachment[];
   onFileUpload: (file: File) => void;
+  onDeleteAttachments: (attachmentIdsToDelete: string[]) => void;
 }
 
-export function FileUploadSection({ attachments, onFileUpload }: FileUploadSectionProps) {
+const getFileIcon = (type: Attachment['type']) => {
+  switch (type) {
+    case 'pdf': return <FileType2 className="h-5 w-5 text-red-600" />;
+    case 'image': return <FileImage className="h-5 w-5 text-blue-500" />;
+    default: return <FileArchive className="h-5 w-5 text-gray-500" />;
+  }
+};
+
+export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachments }: FileUploadSectionProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentLocale, setCurrentLocale] = useState('es-ES');
@@ -27,6 +38,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     setCurrentLocale(navigator.language || 'es-ES');
   }, []);
 
+  // Reset selection when attachments list changes from parent
   useEffect(() => {
     setSelectedAttachmentIds([]);
   }, [attachments]);
@@ -41,15 +53,15 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
   const handleUploadClick = () => {
     if (selectedFile) {
       onFileUpload(selectedFile);
-      setSelectedFile(null); 
+      setSelectedFile(null);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""; 
+        fileInputRef.current.value = "";
       }
     } else {
       alert("Por favor, seleccione un archivo primero.");
     }
   };
-  
+
   const handleOpenFile = (driveLink: string) => {
     alert(`Abriendo/Descargando archivo (simulado): ${driveLink}. En una aplicación real, esto abriría o descargaría el archivo de Google Drive.`);
   };
@@ -70,14 +82,14 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     }
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelectedLocal = () => {
     if (selectedAttachmentIds.length === 0) {
       alert("No hay archivos seleccionados para eliminar.");
       return;
     }
     if (confirm(`¿Está seguro de que desea eliminar ${selectedAttachmentIds.length} archivo(s) adjunto(s)? Esta acción podría ser irreversible.`)) {
-      alert(`Eliminando archivos adjuntos con IDs: ${selectedAttachmentIds.join(', ')} (simulado).`);
-      setSelectedAttachmentIds([]); 
+      onDeleteAttachments(selectedAttachmentIds);
+      // The parent will update the attachments prop, which will trigger the useEffect to clear selectedAttachmentIds
     }
   };
 
@@ -86,13 +98,13 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Subir Nuevo Adjunto</CardTitle>
-          <CardDescription>Seleccione un archivo (PDF, imagen, etc.) para vincularlo al historial de este paciente. Los archivos se guardarán en su Google Drive.</CardDescription>
+          <CardDescription>Seleccione un archivo (PDF, imagen, etc.).</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row items-center gap-4">
-          <Input 
-            type="file" 
-            onChange={handleFileChange} 
-            ref={fileInputRef} 
+          <Input
+            type="file"
+            onChange={handleFileChange}
+            ref={fileInputRef}
             className="flex-grow"
           />
           <Button onClick={handleUploadClick} disabled={!selectedFile}>
@@ -109,12 +121,12 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
 
       <Card className="w-full">
         <CardHeader className="flex flex-col p-6 gap-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <CardTitle>Archivos Adjuntos</CardTitle>
             {attachments.length > 0 && (
-              <Button 
-                variant="destructive" 
-                onClick={handleDeleteSelected} 
+              <Button
+                variant="destructive"
+                onClick={handleDeleteSelectedLocal}
                 disabled={selectedAttachmentIds.length === 0}
                 size="sm"
               >
@@ -124,7 +136,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2 mt-10">
+             <div className="flex items-center space-x-2 mt-10 pt-8">
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
@@ -140,43 +152,45 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             </div>
           )}
         </CardHeader>
-        <CardContent> 
+        <CardContent>
           {attachments.length > 0 ? (
-            <ul className="space-y-3">
-              {attachments.map((attachment) => (
-                <li 
-                  key={attachment.id} 
-                  className={cn(
-                    "flex items-center gap-3 p-3 border rounded-md transition-colors overflow-hidden", // Added overflow-hidden here
-                    selectedAttachmentIds.includes(attachment.id) ? "bg-primary/10 border-primary" : "hover:bg-muted/50"
-                  )}
-                >
-                  <Checkbox
-                    id={`attachment-${attachment.id}`}
-                    checked={selectedAttachmentIds.includes(attachment.id)}
-                    onCheckedChange={() => handleSelectAttachment(attachment.id)}
-                    aria-labelledby={`attachment-name-${attachment.id}`}
-                    className="flex-shrink-0"
-                  />
-                  <div className="flex-grow min-w-0">
-                    <div
-                      id={`attachment-name-${attachment.id}`}
-                      onClick={() => handleOpenFile(attachment.driveLink)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenFile(attachment.driveLink); }}
-                      role="button"
-                      tabIndex={0}
-                      className="font-medium text-primary hover:underline text-left block w-full truncate cursor-pointer"
-                      title={attachment.name}
-                    >
-                      {attachment.name}
+            <ScrollArea className="h-[300px] pr-3"> {/* Added ScrollArea for long lists */}
+              <ul className="space-y-3">
+                {attachments.map((attachment) => (
+                  <li
+                    key={attachment.id}
+                    className={cn(
+                      "flex items-center gap-3 p-3 border rounded-md transition-colors overflow-hidden",
+                      selectedAttachmentIds.includes(attachment.id) ? "bg-primary/10 border-primary" : "hover:bg-muted/50"
+                    )}
+                  >
+                    <Checkbox
+                      id={`attachment-${attachment.id}`}
+                      checked={selectedAttachmentIds.includes(attachment.id)}
+                      onCheckedChange={() => handleSelectAttachment(attachment.id)}
+                      aria-labelledby={`attachment-name-${attachment.id}`}
+                      className="flex-shrink-0"
+                    />
+                    <div className="flex-grow min-w-0">
+                      <div
+                        id={`attachment-name-${attachment.id}`}
+                        onClick={() => handleOpenFile(attachment.driveLink)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenFile(attachment.driveLink); }}
+                        role="button"
+                        tabIndex={0}
+                        className="font-medium text-primary hover:underline text-left block w-full truncate cursor-pointer"
+                        title={attachment.name}
+                      >
+                        {attachment.name}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Subido: {new Date(attachment.uploadedAt).toLocaleDateString(currentLocale)}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Subido: {new Date(attachment.uploadedAt).toLocaleDateString(currentLocale)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
           ) : (
              <div className="flex flex-col items-center justify-center py-10 text-center">
                 <AlertCircle className="h-12 w-12 text-muted-foreground mb-3" />
@@ -188,4 +202,3 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     </div>
   );
 }
-
