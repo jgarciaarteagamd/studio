@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, Trash2, FileArchive, FileText, ImageIcon } from "lucide-react";
+import { UploadCloud, Trash2, FileArchive, FileText as FileTextIconLucide, ImageIcon, Download } from "lucide-react"; // Renamed FileText to avoid conflict
 import { cn } from "@/lib/utils";
 
 
@@ -30,6 +30,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
   }, []);
 
   useEffect(() => {
+    // Reset selection when attachments list changes (e.g., after deletion from parent)
     setSelectedAttachmentIds([]);
   }, [attachments]);
 
@@ -37,6 +38,8 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       setSelectedFile(event.target.files[0]);
+    } else {
+      setSelectedFile(null);
     }
   };
 
@@ -45,7 +48,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
       onFileUpload(selectedFile);
       setSelectedFile(null);
       if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+        fileInputRef.current.value = ""; // Reset file input
       }
     } else {
       alert("Por favor, seleccione un archivo primero.");
@@ -79,11 +82,20 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
     }
     if (confirm(`¿Está seguro de que desea eliminar ${selectedAttachmentIds.length} archivo(s) adjunto(s)? Esta acción podría ser irreversible.`)) {
       onDeleteAttachments(selectedAttachmentIds);
+      // Parent will update attachments, which will trigger useEffect to clear selectedAttachmentIds
+    }
+  };
+  
+  const getFileIcon = (type: Attachment['type']) => {
+    switch (type) {
+      case 'pdf': return <FileTextIconLucide className="h-5 w-5 text-red-600 flex-shrink-0" />;
+      case 'image': return <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />;
+      default: return <FileArchive className="h-5 w-5 text-gray-500 flex-shrink-0" />;
     }
   };
 
   return (
-    <div className="space-y-4 w-full p-1">
+    <div className="space-y-4 w-full">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Subir Nuevo Adjunto</CardTitle>
@@ -94,7 +106,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
             type="file"
             onChange={handleFileChange}
             ref={fileInputRef}
-            className="flex-grow"
+            className="flex-grow text-xs sm:text-sm" // Adjusted font size
           />
           <Button onClick={handleUploadClick} disabled={!selectedFile}>
             <UploadCloud className="mr-2 h-4 w-4" />
@@ -110,7 +122,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
 
       <Card className="w-full">
         <CardHeader className="flex flex-col p-6 gap-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <CardTitle>Archivos Adjuntos</CardTitle>
             {attachments.length > 0 && (
               <Button
@@ -150,7 +162,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
                     className={cn(
                       "flex items-center gap-3 p-3 border rounded-md transition-colors hover:bg-muted/50", 
                       selectedAttachmentIds.includes(attachment.id) ? "bg-primary/10 border-primary" : "",
-                      "overflow-hidden" 
+                      "overflow-hidden"
                     )}
                   >
                     <Checkbox
@@ -160,7 +172,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
                       aria-labelledby={`attachment-name-${attachment.id}`}
                       className="flex-shrink-0"
                     />
-                     <div className="flex-grow min-w-0">
+                     <div className="flex-grow min-w-0"> {/* Crucial for truncate */}
                       <div
                         id={`attachment-name-${attachment.id}`}
                         onClick={() => handleOpenFile(attachment.driveLink)}
@@ -190,4 +202,3 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
     </div>
   );
 }
-
