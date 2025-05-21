@@ -1,25 +1,57 @@
-
 // src/components/schedule/DayAppointmentsSidebar.tsx
 "use client";
 
+import type { SheetProps } from "react-day-picker"; // This import seems incorrect, should be related to Sheet component
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Appointment } from "@/lib/types";
 import { format, parseISO } from "date-fns";
 import { es } from 'date-fns/locale';
-import { CalendarDays, Clock, User, Info, X, Lock } from "lucide-react";
+import { Clock, User, Info, X, Lock, Trash2, CalendarClock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Helper functions for status (copied from schedule/page.tsx for simplicity)
+const getStatusIcon = (status: Appointment['status']) => {
+  switch (status) {
+    case 'programada': return <CalendarClock className="mr-2 h-4 w-4 text-blue-500" />;
+    case 'confirmada': return <CheckCircle className="mr-2 h-4 w-4 text-green-500" />;
+    case 'cancelada': return <XCircle className="mr-2 h-4 w-4 text-red-500" />;
+    case 'completada': return <CheckCircle className="mr-2 h-4 w-4 text-gray-500" />; // Or a different icon for completed
+    default: return <AlertCircle className="mr-2 h-4 w-4 text-yellow-500" />;
+  }
+};
+
+const getStatusText = (status: Appointment['status']) => {
+  const map: Record<Appointment['status'], string> = {
+    programada: "Programada",
+    confirmada: "Confirmada",
+    cancelada: "Cancelada",
+    completada: "Completada"
+  };
+  return map[status] || status;
+};
+
 
 interface DayAppointmentsSidebarProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   selectedDate: Date | null;
   appointmentsForDay: Appointment[];
+  onStatusChange: (appointmentId: string, newStatus: Appointment['status']) => void;
+  requestDeleteBlocker: (appointmentId: string) => void;
 }
 
-export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, appointmentsForDay }: DayAppointmentsSidebarProps) {
+export function DayAppointmentsSidebar({ 
+  isOpen, 
+  onOpenChange, 
+  selectedDate, 
+  appointmentsForDay,
+  onStatusChange,
+  requestDeleteBlocker
+}: DayAppointmentsSidebarProps) {
   if (!selectedDate) {
     return null;
   }
@@ -28,10 +60,9 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md w-full flex flex-col"> {/* Added flex flex-col */}
+      <SheetContent className="sm:max-w-md w-full flex flex-col">
         <SheetHeader className="pb-6">
-          <SheetTitle className="flex items-center text-lg mt-2">
-            <CalendarDays className="mr-2 h-5 w-5 text-primary" />
+          <SheetTitle className="text-lg mt-2"> {/* Removed CalendarDays icon */}
             Agenda para el {formattedDate}
           </SheetTitle>
           <SheetDescription>
@@ -39,16 +70,16 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
           </SheetDescription>
         </SheetHeader>
         
-        <ScrollArea className="flex-1 min-h-0 pr-4"> {/* Changed to flex-1 min-h-0 */}
+        <ScrollArea className="flex-1 min-h-0 pr-4">
           {appointmentsForDay.length > 0 ? (
             <ul className="space-y-4">
               {appointmentsForDay.map((appointment) => (
                 <li key={appointment.id} className={cn(
-                  "rounded-lg border p-4 shadow-sm hover:shadow-md transition-shadow",
+                  "rounded-lg border p-3 shadow-sm", // Reduced padding a bit from p-4 to p-3
                   appointment.isBlocker && "bg-muted/70 border-dashed"
                 )}>
-                  <div className="flex justify-between items-start">
-                    <div>
+                  <div className="flex flex-col gap-2"> {/* Main content and actions in a column */}
+                    <div> {/* Appointment/Blocker Info */}
                       <p className="font-semibold text-primary text-md flex items-center">
                         {appointment.isBlocker ? <Lock className="mr-2 h-4 w-4 text-gray-500" /> : <Clock className="mr-2 h-4 w-4" />}
                         {format(parseISO(appointment.dateTime), "HH:mm", { locale: es })}
@@ -66,14 +97,53 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
                           </p>
                         )
                       )}
+                      {appointment.notes && !appointment.isBlocker && (
+                        <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-dashed break-words">
+                          <strong>Notas:</strong> {appointment.notes}
+                        </p>
+                      )}
                     </div>
-                    {/* Status badge could be shown here for non-blockers if desired */}
+
+                    {/* Actions Section */}
+                    <div className="mt-2 pt-2 border-t border-dashed">
+                      {!appointment.isBlocker ? (
+                        <Select
+                          value={appointment.status}
+                          onValueChange={(newStatus) => onStatusChange(appointment.id, newStatus as Appointment['status'])}
+                        >
+                          <SelectTrigger className="w-full text-xs h-9">
+                            <div className="flex items-center gap-1"> {/* Reduced gap for icon and text */}
+                              {getStatusIcon(appointment.status)}
+                              <span>{getStatusText(appointment.status)}</span>
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="programada">
+                              <div className="flex items-center gap-2">{getStatusIcon("programada")} Programada</div>
+                            </SelectItem>
+                            <SelectItem value="confirmada">
+                              <div className="flex items-center gap-2">{getStatusIcon("confirmada")} Confirmada</div>
+                            </SelectItem>
+                            <SelectItem value="cancelada">
+                              <div className="flex items-center gap-2">{getStatusIcon("cancelada")} Cancelada</div>
+                            </SelectItem>
+                            <SelectItem value="completada">
+                              <div className="flex items-center gap-2">{getStatusIcon("completada")} Completada</div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full text-destructive hover:bg-destructive/10"
+                          onClick={() => requestDeleteBlocker(appointment.id)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" /> Eliminar Bloqueo
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  {appointment.notes && !appointment.isBlocker && (
-                    <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-dashed break-words">
-                      <strong>Notas:</strong> {appointment.notes}
-                    </p>
-                  )}
                 </li>
               ))}
             </ul>
@@ -84,7 +154,7 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
             </div>
           )}
         </ScrollArea>
-        <div className="pt-2 border-t"> {/* Removed mt-auto as flex structure handles it */}
+        <div className="pt-2 border-t">
             <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
                 <X className="mr-2 h-4 w-4" /> Cerrar Panel
             </Button>
@@ -93,5 +163,3 @@ export function DayAppointmentsSidebar({ isOpen, onOpenChange, selectedDate, app
     </Sheet>
   );
 }
-
-    

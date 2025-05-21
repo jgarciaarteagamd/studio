@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -133,6 +133,10 @@ export default function SchedulePage() {
         description: data.isBlocker ? "El periodo ha sido bloqueado exitosamente." : "La nueva cita ha sido programada exitosamente.",
       });
       setIsFormOpen(false);
+      if (isDaySidebarOpen && selectedCalendarDay) { // Refresh sidebar if open
+         setIsDaySidebarOpen(false); // Close and reopen to force data refresh for the day
+         setTimeout(() => setIsDaySidebarOpen(true), 50);
+      }
     } catch (error) {
       console.error("Error agendando/bloqueando:", error);
       toast({
@@ -145,11 +149,11 @@ export default function SchedulePage() {
   
   const getStatusIcon = (status: Appointment['status']) => {
     switch (status) {
-      case 'programada': return <CalendarClock className="h-4 w-4 text-blue-500" />;
-      case 'confirmada': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'cancelada': return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'completada': return <CheckCircle className="h-4 w-4 text-gray-500" />;
-      default: return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case 'programada': return <CalendarClock className="mr-2 h-4 w-4 text-blue-500" />;
+      case 'confirmada': return <CheckCircle className="mr-2 h-4 w-4 text-green-500" />;
+      case 'cancelada': return <XCircle className="mr-2 h-4 w-4 text-red-500" />;
+      case 'completada': return <CheckCircle className="mr-2 h-4 w-4 text-gray-500" />;
+      default: return <AlertCircle className="mr-2 h-4 w-4 text-yellow-500" />;
     }
   };
   
@@ -175,6 +179,7 @@ export default function SchedulePage() {
         title: "Estado Actualizado",
         description: `El estado de la cita ha sido cambiado a "${getStatusText(newStatus)}".`,
       });
+      // If sidebar is open and showing this appointment, it will reflect the change.
     } else {
       toast({
         title: "Error",
@@ -184,16 +189,26 @@ export default function SchedulePage() {
     }
   };
 
+  const openDeleteBlockerDialog = (appointmentId: string) => {
+    setAppointmentToDelete(appointmentId);
+    // The AlertDialog will become visible because appointmentToDelete is now set
+  };
+
+
   const handleDeleteConfirm = () => {
     if (appointmentToDelete) {
       const success = apiDeleteAppointment(appointmentToDelete);
       if (success) {
         setAppointments(prev => prev.filter(app => app.id !== appointmentToDelete));
-        toast({ title: "Bloqueo Eliminado", description: "El bloqueo de horario ha sido eliminado." });
+        toast({ title: "Cita/Bloqueo Eliminado", description: "La entrada ha sido eliminada." });
+        if (isDaySidebarOpen && selectedCalendarDay) { // Refresh sidebar if open
+         setIsDaySidebarOpen(false); 
+         setTimeout(() => setIsDaySidebarOpen(true), 50);
+        }
       } else {
-        toast({ title: "Error", description: "No se pudo eliminar el bloqueo.", variant: "destructive" });
+        toast({ title: "Error", description: "No se pudo eliminar la entrada.", variant: "destructive" });
       }
-      setAppointmentToDelete(null); // Close dialog
+      setAppointmentToDelete(null); 
     }
   };
 
@@ -218,9 +233,13 @@ export default function SchedulePage() {
   const calendarModifiers = {
     hasAppointments: daysWithAppointments,
     selected: selectedCalendarDay || undefined, 
+    today_selected_highlight: (date: Date) => isToday(date) && selectedCalendarDay && isSameDay(date, selectedCalendarDay),
+    today_default_highlight: (date: Date) => isToday(date) && (!selectedCalendarDay || !isSameDay(date, selectedCalendarDay)),
   };
   const calendarModifiersClassNames = {
     hasAppointments: 'day-with-appointments',
+    today_selected_highlight: "bg-primary/70 text-primary-foreground !h-8 !w-8 rounded-full",
+    today_default_highlight: "ring-1 ring-primary rounded-full",
   };
 
   const handleCalendarDayClick = useCallback((day: Date | undefined) => {
@@ -464,16 +483,23 @@ export default function SchedulePage() {
                     let klasses = cn(
                       buttonVariants({ variant: "ghost" }),
                       "h-full w-full p-0 font-normal", 
-                      "text-xs sm:text-sm flex items-center justify-center",
+                      "text-xs sm:text-sm flex items-center justify-center", // Centrar número
                       "text-foreground" 
                     );
                   
-                    if (modifiers.selected) {
-                      klasses = cn(klasses, "bg-primary/70 !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full text-foreground hover:bg-primary/80"); 
-                    } else if (modifiers.today && !modifiers.selected) {
-                      klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
-                    } else if (modifiers.interactive && !modifiers.disabled && !modifiers.selected && !modifiers.today) {
-                      klasses = cn(klasses, "hover:bg-muted hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:hover:!w-7 hover:rounded-full text-foreground");
+                    if (modifiers.selected) { // Día seleccionado
+                      klasses = cn(klasses, "bg-primary/70 text-primary-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full hover:bg-primary/80");
+                    } else if (modifiers.today_default_highlight) { // Día "hoy" NO seleccionado
+                       klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
+                    } else if (modifiers.today_selected_highlight) { // Día "hoy" Y seleccionado
+                        // This should be handled by selected style if selected takes precedence, or a specific style here
+                        // For now, let selected style (bg-primary/70) take precedence if "selected" is true
+                        // If today and selected should be different, add a class like 'bg-green-500 text-white ...'
+                    }
+                    
+                    if (modifiers.interactive && !modifiers.selected && !modifiers.today_default_highlight && !modifiers.today_selected_highlight && dayProps?.onPointerEnter) {
+                       // Hover para días normales (no seleccionados, no hoy)
+                       klasses = cn(klasses, "hover:bg-muted hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full text-foreground");
                     }
                     
                     if (modifiers.disabled) {
@@ -497,7 +523,26 @@ export default function SchedulePage() {
           onOpenChange={setIsDaySidebarOpen}
           selectedDate={selectedCalendarDay}
           appointmentsForDay={appointmentsOnSelectedDay}
+          onStatusChange={handleStatusChange}
+          requestDeleteBlocker={openDeleteBlockerDialog}
         />
+
+         {/* AlertDialog for Delete Confirmation */}
+        <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !open && setAppointmentToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer. Esto eliminará permanentemente la entrada.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setAppointmentToDelete(null)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteConfirm}>Continuar</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
 
         {isLoading ? (
           <p>Cargando agenda...</p>
@@ -547,7 +592,7 @@ export default function SchedulePage() {
                                 onValueChange={(newStatus) => handleStatusChange(appointment.id, newStatus as Appointment['status'])}
                               >
                                 <SelectTrigger className="w-full sm:w-[180px] text-xs h-9">
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1"> {/* Reduced gap */}
                                     {getStatusIcon(appointment.status)}
                                     <span>{getStatusText(appointment.status)}</span>
                                   </div>
@@ -576,25 +621,14 @@ export default function SchedulePage() {
                                 </SelectContent>
                               </Select>
                             ) : (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="outline" size="sm" onClick={() => setAppointmentToDelete(appointment.id)} className="w-full sm:w-auto text-destructive hover:bg-destructive/10">
-                                    <Trash2 className="mr-2 h-4 w-4" /> Eliminar Bloqueo
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Esta acción no se puede deshacer. Esto eliminará permanentemente el bloqueo de horario.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel onClick={() => setAppointmentToDelete(null)}>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDeleteConfirm}>Continuar</AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="w-full sm:w-auto text-destructive hover:bg-destructive/10"
+                                  onClick={() => openDeleteBlockerDialog(appointment.id)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Eliminar Bloqueo
+                                </Button>
                             )}
                           </div>
                         </div>
@@ -620,4 +654,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
