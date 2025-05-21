@@ -7,18 +7,18 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as ShadCalendar } from "@/components/ui/calendar"; // Renamed import to avoid conflict
+import { Calendar as ShadCalendar } from "@/components/ui/calendar";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord, getPatientFullName, updateAppointmentStatus as apiUpdateAppointmentStatus, deleteAppointment as apiDeleteAppointment } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Calendar, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react"; // Corrected import
+import { PlusCircle, Calendar, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react";
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
 import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
@@ -232,7 +232,7 @@ export default function SchedulePage() {
   };
 
   const calendarModifiersClassNames = {
-    hasAppointments: 'day-with-appointments',
+    hasAppointments: 'day-with-appointments', // This class will trigger the dot from globals.css
   };
 
   const handleCalendarDayClick = useCallback((day: Date | undefined) => {
@@ -331,7 +331,7 @@ export default function SchedulePage() {
                                 ) : (
                                   <span>Seleccione una fecha</span>
                                 )}
-                                <Calendar className="ml-auto h-4 w-4 opacity-50" /> {/* Corrected Usage */}
+                                <Calendar className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
@@ -423,8 +423,8 @@ export default function SchedulePage() {
                             <FormLabel>Estado</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger>
-                                   <div className="flex items-center gap-1">
+                                <SelectTrigger className="w-full">
+                                  <div className="flex items-center gap-1">
                                     {getStatusIcon(field.value as Appointment['status'])}
                                     <span>{getStatusText(field.value as Appointment['status'])}</span>
                                   </div>
@@ -474,37 +474,23 @@ export default function SchedulePage() {
                   caption_label: "text-lg font-medium",
                   head_cell: cn("text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-xs sm:text-sm p-0 text-center", "h-8 sm:h-10 md:h-12" ),
                   cell: cn("flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", "h-8 sm:h-10 md:h-12"),
-                  day: (date, modifiers) => {
-                      let klasses = cn(
+                  day: (date, {selected, today, outside, disabled, interactive}) => {
+                    if (outside || disabled) {
+                      return cn(
                         buttonVariants({ variant: "ghost" }),
-                        "h-full w-full p-0 font-normal text-foreground",
-                        "flex items-center justify-center",
-                        "text-xs sm:text-sm"
+                        "h-full w-full p-0 font-normal flex items-center justify-center",
+                        "text-muted-foreground opacity-50"
                       );
-
-                      if (modifiers.selected && modifiers.today) {
-                        klasses = cn(klasses, "bg-primary/70 text-primary-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full hover:bg-primary/80");
-                      } else if (modifiers.selected) {
-                        klasses = cn(klasses, "bg-primary/70 text-primary-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full hover:bg-primary/80");
-                      } else if (modifiers.today) {
-                        klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
-                      } else if (modifiers.interactive && !modifiers.disabled) {
-                        klasses = cn(klasses, "hover:bg-muted hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full");
-                      }
-
-                      if (modifiers.outside) {
-                        klasses = cn(klasses, "text-muted-foreground opacity-50");
-                        if (modifiers.selected) {
-                          klasses = cn(klasses, "bg-primary/20 text-muted-foreground");
-                        }
-                      }
-                      if (modifiers.disabled) {
-                        klasses = cn(klasses, "text-muted-foreground opacity-50");
-                      }
-                      return klasses;
-                    },
-                  day_selected: "bg-primary/70 text-primary-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full hover:bg-primary/80",
-                  day_today: "ring-1 ring-primary text-foreground rounded-full",
+                    }
+                    
+                    return cn(
+                      buttonVariants({ variant: "ghost" }),
+                      "h-full w-full p-0 font-normal flex items-center justify-center text-foreground", // Base: full size, dark text
+                      selected && "bg-primary/70 text-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full", // Selected: small circle, primary bg, dark text
+                      today && !selected && "ring-1 ring-primary rounded-full", // Today (not selected): ring, full size, dark text
+                      interactive && !selected && !today && "hover:bg-muted hover:text-foreground hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full" // Hover on normal day: small grey circle
+                    );
+                  },
               }}
             />
           </CardContent>
@@ -644,3 +630,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
