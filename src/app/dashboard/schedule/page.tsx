@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -133,8 +133,8 @@ export default function SchedulePage() {
         description: data.isBlocker ? "El periodo ha sido bloqueado exitosamente." : "La nueva cita ha sido programada exitosamente.",
       });
       setIsFormOpen(false);
-      if (isDaySidebarOpen && selectedCalendarDay) { // Refresh sidebar if open
-         setIsDaySidebarOpen(false); // Close and reopen to force data refresh for the day
+      if (isDaySidebarOpen && selectedCalendarDay) { 
+         setIsDaySidebarOpen(false); 
          setTimeout(() => setIsDaySidebarOpen(true), 50);
       }
     } catch (error) {
@@ -179,7 +179,6 @@ export default function SchedulePage() {
         title: "Estado Actualizado",
         description: `El estado de la cita ha sido cambiado a "${getStatusText(newStatus)}".`,
       });
-      // If sidebar is open and showing this appointment, it will reflect the change.
     } else {
       toast({
         title: "Error",
@@ -191,9 +190,7 @@ export default function SchedulePage() {
 
   const openDeleteBlockerDialog = (appointmentId: string) => {
     setAppointmentToDelete(appointmentId);
-    // The AlertDialog will become visible because appointmentToDelete is now set
   };
-
 
   const handleDeleteConfirm = () => {
     if (appointmentToDelete) {
@@ -201,7 +198,7 @@ export default function SchedulePage() {
       if (success) {
         setAppointments(prev => prev.filter(app => app.id !== appointmentToDelete));
         toast({ title: "Cita/Bloqueo Eliminado", description: "La entrada ha sido eliminada." });
-        if (isDaySidebarOpen && selectedCalendarDay) { // Refresh sidebar if open
+        if (isDaySidebarOpen && selectedCalendarDay) { 
          setIsDaySidebarOpen(false); 
          setTimeout(() => setIsDaySidebarOpen(true), 50);
         }
@@ -232,14 +229,11 @@ export default function SchedulePage() {
 
   const calendarModifiers = {
     hasAppointments: daysWithAppointments,
-    selected: selectedCalendarDay || undefined, 
-    today_selected_highlight: (date: Date) => isToday(date) && selectedCalendarDay && isSameDay(date, selectedCalendarDay),
-    today_default_highlight: (date: Date) => isToday(date) && (!selectedCalendarDay || !isSameDay(date, selectedCalendarDay)),
+    selected: selectedCalendarDay || undefined,
   };
+
   const calendarModifiersClassNames = {
     hasAppointments: 'day-with-appointments',
-    today_selected_highlight: "bg-primary/70 text-primary-foreground !h-8 !w-8 rounded-full",
-    today_default_highlight: "ring-1 ring-primary rounded-full",
   };
 
   const handleCalendarDayClick = useCallback((day: Date | undefined) => {
@@ -479,39 +473,52 @@ export default function SchedulePage() {
                   caption_label: "text-lg font-medium",
                   head_cell: cn("text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-xs sm:text-sm p-0 text-center", "h-8 sm:h-10 md:h-12" ),
                   cell: cn("flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", "h-8 sm:h-10 md:h-12"),
-                  day: (date, modifiers) => {
-                    let klasses = cn(
-                      buttonVariants({ variant: "ghost" }),
-                      "h-full w-full p-0 font-normal", 
-                      "text-xs sm:text-sm flex items-center justify-center", // Centrar número
-                      "text-foreground" 
-                    );
-                  
-                    if (modifiers.selected) { // Día seleccionado
-                      klasses = cn(klasses, "bg-primary/70 text-primary-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full hover:bg-primary/80");
-                    } else if (modifiers.today_default_highlight) { // Día "hoy" NO seleccionado
-                       klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
-                    } else if (modifiers.today_selected_highlight) { // Día "hoy" Y seleccionado
-                        // This should be handled by selected style if selected takes precedence, or a specific style here
-                        // For now, let selected style (bg-primary/70) take precedence if "selected" is true
-                        // If today and selected should be different, add a class like 'bg-green-500 text-white ...'
+                  day: (date, modifiers, dayProps) => {
+                    // Base classes for structure, responsiveness, and default text color
+                    const structuralClasses = "h-full w-full p-0 font-normal text-xs sm:text-sm flex items-center justify-center";
+                    let stateSpecificClasses = "";
+                    let textOverrideClass = "text-foreground"; // Default to dark text
+
+                    if (modifiers.selected) {
+                      stateSpecificClasses = cn(
+                        "bg-primary/70 !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full", // Celeste claro circle
+                        "hover:bg-primary/80" // Hover for selected day
+                      );
+                      // textOverrideClass remains text-foreground to ensure dark text on light blue
+                    } else if (modifiers.today) {
+                      stateSpecificClasses = "ring-1 ring-primary rounded-full"; // Celeste ring for today
+                      // textOverrideClass remains text-foreground
+                    } else if (modifiers.interactive && !modifiers.disabled && dayProps?.onPointerEnter) {
+                      // Normal interactive day hover
+                      stateSpecificClasses = "hover:bg-muted hover:!h-6 !w-6 sm:!h-7 sm:!w-7 hover:rounded-full hover:text-foreground";
+                      // textOverrideClass remains text-foreground
                     }
-                    
-                    if (modifiers.interactive && !modifiers.selected && !modifiers.today_default_highlight && !modifiers.today_selected_highlight && dayProps?.onPointerEnter) {
-                       // Hover para días normales (no seleccionados, no hoy)
-                       klasses = cn(klasses, "hover:bg-muted hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full text-foreground");
-                    }
-                    
-                    if (modifiers.disabled) {
-                      klasses = cn(klasses, "opacity-50 text-foreground");
-                    }
+
+                    // Handle 'outside' and 'disabled' states by primarily adjusting text color and opacity
                     if (modifiers.outside) {
-                       klasses = cn(klasses, "text-muted-foreground opacity-50");
-                       if (modifiers.selected) { 
-                          klasses = cn(klasses, "bg-primary/20 text-foreground"); 
-                       }
+                      textOverrideClass = "text-muted-foreground"; // Muted text for outside days
+                      stateSpecificClasses = cn(stateSpecificClasses, "opacity-50"); // Fade outside days
+                      if (modifiers.selected) { // If an outside day is also selected
+                          stateSpecificClasses = cn(
+                            "bg-primary/20 !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full opacity-50", 
+                            stateSpecificClasses.replace(/opacity-\d+/g, '') // Remove previous opacity if any
+                          ); 
+                          textOverrideClass = "text-foreground"; // Selected outside day should still have prominent (dark) text
+                      }
                     }
-                    return klasses;
+
+                    if (modifiers.disabled) {
+                      textOverrideClass = "text-muted-foreground";
+                      stateSpecificClasses = cn(stateSpecificClasses, "opacity-50"); // Ensure opacity for disabled
+                    }
+                    
+                    // Combine buttonVariants for focus, structural classes, state-specific classes, and final text color
+                    return cn(
+                      buttonVariants({ variant: "ghost" }), // Base button styles (focus, transitions)
+                      structuralClasses,                   // Our defined structure and responsive text size
+                      stateSpecificClasses,                // Backgrounds, shapes, rings for states
+                      textOverrideClass                    // Final text color override
+                    );
                   },
               }}
             />
@@ -527,7 +534,6 @@ export default function SchedulePage() {
           requestDeleteBlocker={openDeleteBlockerDialog}
         />
 
-         {/* AlertDialog for Delete Confirmation */}
         <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !open && setAppointmentToDelete(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -542,7 +548,6 @@ export default function SchedulePage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
 
         {isLoading ? (
           <p>Cargando agenda...</p>
@@ -592,7 +597,7 @@ export default function SchedulePage() {
                                 onValueChange={(newStatus) => handleStatusChange(appointment.id, newStatus as Appointment['status'])}
                               >
                                 <SelectTrigger className="w-full sm:w-[180px] text-xs h-9">
-                                  <div className="flex items-center gap-1"> {/* Reduced gap */}
+                                  <div className="flex items-center gap-1">
                                     {getStatusIcon(appointment.status)}
                                     <span>{getStatusText(appointment.status)}</span>
                                   </div>
@@ -654,3 +659,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
