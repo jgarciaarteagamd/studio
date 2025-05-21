@@ -349,12 +349,13 @@ export default function PatientDetailPage() {
                           Suba nuevos archivos o elimine existentes. Los archivos se guardarán en su Google Drive.
                         </DialogDescription>
                       </DialogHeader>
-                      <FileUploadSection
-                        attachments={patient.attachments}
-                        onFileUpload={handleFileUpload}
-                        onDeleteAttachments={handleDeleteAttachments}
-                        
-                      />
+                      <div className="flex-1 overflow-y-auto min-h-0">
+                        <FileUploadSection
+                          attachments={patient.attachments}
+                          onFileUpload={handleFileUpload}
+                          onDeleteAttachments={handleDeleteAttachments}
+                        />
+                      </div>
                     </DialogContent>
                   </Dialog>
                 </CardContent>

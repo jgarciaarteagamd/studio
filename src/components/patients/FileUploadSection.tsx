@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, Trash2, FileArchive } from "lucide-react";
+import { UploadCloud, Trash2, FileArchive, FileText, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 
@@ -17,10 +17,9 @@ interface FileUploadSectionProps {
   attachments: Attachment[];
   onFileUpload: (file: File) => void;
   onDeleteAttachments: (attachmentIdsToDelete: string[]) => void;
-  className?: string;
 }
 
-export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachments, className }: FileUploadSectionProps) {
+export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachments }: FileUploadSectionProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentLocale, setCurrentLocale] = useState('es-ES');
@@ -30,7 +29,6 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
     setCurrentLocale(navigator.language || 'es-ES');
   }, []);
 
-  // Reset selection when attachments list changes from parent
   useEffect(() => {
     setSelectedAttachmentIds([]);
   }, [attachments]);
@@ -85,7 +83,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
   };
 
   return (
-    <div className={cn("flex flex-col space-y-4 w-full h-full", className)}>
+    <div className="space-y-4 w-full p-1">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Subir Nuevo Adjunto</CardTitle>
@@ -110,7 +108,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
         )}
       </Card>
 
-      <Card className="w-full flex-1 flex flex-col min-h-0">
+      <Card className="w-full">
         <CardHeader className="flex flex-col p-6 gap-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
             <CardTitle>Archivos Adjuntos</CardTitle>
@@ -127,7 +125,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2 mt-4">
+             <div className="flex items-center space-x-2 mt-2">
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
@@ -143,15 +141,16 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
             </div>
           )}
         </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto">
+        <CardContent>
           {attachments.length > 0 ? (
               <ul className="space-y-3">
                 {attachments.map((attachment) => (
                   <li
                     key={attachment.id}
                     className={cn(
-                      "flex items-center gap-3 p-3 border rounded-md transition-colors hover:bg-muted/50 overflow-hidden", 
-                      selectedAttachmentIds.includes(attachment.id) ? "bg-primary/10 border-primary" : ""
+                      "flex items-center gap-3 p-3 border rounded-md transition-colors hover:bg-muted/50", 
+                      selectedAttachmentIds.includes(attachment.id) ? "bg-primary/10 border-primary" : "",
+                      "overflow-hidden" 
                     )}
                   >
                     <Checkbox
@@ -161,8 +160,8 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
                       aria-labelledby={`attachment-name-${attachment.id}`}
                       className="flex-shrink-0"
                     />
-                    <div className="flex-grow min-w-0">
-                       <div
+                     <div className="flex-grow min-w-0">
+                      <div
                         id={`attachment-name-${attachment.id}`}
                         onClick={() => handleOpenFile(attachment.driveLink)}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenFile(attachment.driveLink); }}
@@ -191,3 +190,4 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
     </div>
   );
 }
+
