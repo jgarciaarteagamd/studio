@@ -7,18 +7,18 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as ShadCalendar } from "@/components/ui/calendar"; // Renamed import to avoid conflict
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord, getPatientFullName, updateAppointmentStatus as apiUpdateAppointmentStatus, deleteAppointment as apiDeleteAppointment } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react";
+import { PlusCircle, Calendar, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react"; // Corrected import
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
 import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
@@ -38,12 +38,12 @@ const appointmentFormSchema = z.object({
     return false;
   }
   if (!data.isBlocker && !data.patientId) {
-    return false; 
+    return false;
   }
   return true;
 }, {
   message: "Si es un bloqueo, debe indicar un motivo. Si es una cita, debe seleccionar un paciente.",
-  path: ["isBlocker"], 
+  path: ["isBlocker"],
 });
 
 
@@ -65,7 +65,7 @@ export default function SchedulePage() {
   useEffect(() => {
     setCurrentLocale(navigator.language || 'es-ES');
     setAppointments(getAppointments());
-    setPatients(mockPatients); 
+    setPatients(mockPatients);
     setIsLoading(false);
   }, []);
 
@@ -87,7 +87,7 @@ export default function SchedulePage() {
 
   const openFormDialog = (blockerMode: boolean) => {
     const defaultDate = selectedCalendarDay && !isPast(selectedCalendarDay) || (selectedCalendarDay && isToday(selectedCalendarDay)) ? selectedCalendarDay : new Date();
-    form.reset({ 
+    form.reset({
       patientId: "",
       date: defaultDate,
       time: "09:00",
@@ -97,7 +97,7 @@ export default function SchedulePage() {
       isBlocker: blockerMode,
       blockerReason: "",
     });
-    form.setValue('isBlocker', blockerMode); 
+    form.setValue('isBlocker', blockerMode);
     setIsFormOpen(true);
   };
 
@@ -110,13 +110,13 @@ export default function SchedulePage() {
     const newAppointmentData: Omit<Appointment, 'id' | 'patientName'> = {
       dateTime: dateTime.toISOString(),
       durationMinutes: data.durationMinutes,
-      status: data.isBlocker ? 'programada' : data.status, 
+      status: data.isBlocker ? 'programada' : data.status,
       isBlocker: data.isBlocker,
     };
 
     if (data.isBlocker) {
       newAppointmentData.blockerReason = data.blockerReason;
-      newAppointmentData.patientId = undefined; 
+      newAppointmentData.patientId = undefined;
       newAppointmentData.notes = undefined;
     } else {
       newAppointmentData.patientId = data.patientId;
@@ -126,14 +126,14 @@ export default function SchedulePage() {
 
     try {
       addAppointment(newAppointmentData);
-      setAppointments(getAppointments()); 
+      setAppointments(getAppointments());
       toast({
         title: data.isBlocker ? "Horario Bloqueado" : "Cita Agendada",
         description: data.isBlocker ? "El periodo ha sido bloqueado exitosamente." : "La nueva cita ha sido programada exitosamente.",
       });
       setIsFormOpen(false);
-      if (isDaySidebarOpen && selectedCalendarDay) { 
-         setIsDaySidebarOpen(false); 
+      if (isDaySidebarOpen && selectedCalendarDay) {
+         setIsDaySidebarOpen(false);
          setTimeout(() => setIsDaySidebarOpen(true), 50);
       }
     } catch (error) {
@@ -145,7 +145,7 @@ export default function SchedulePage() {
       });
     }
   };
-  
+
   const getStatusIcon = (status: Appointment['status']) => {
     switch (status) {
       case 'programada': return <CalendarClock className="mr-2 h-4 w-4 text-blue-500" />;
@@ -155,7 +155,7 @@ export default function SchedulePage() {
       default: return <AlertCircle className="mr-2 h-4 w-4 text-yellow-500" />;
     }
   };
-  
+
   const getStatusText = (status: Appointment['status']) => {
     const map: Record<Appointment['status'], string> = {
       programada: "Programada",
@@ -197,14 +197,14 @@ export default function SchedulePage() {
       if (success) {
         setAppointments(prev => prev.filter(app => app.id !== appointmentToDelete));
         toast({ title: "Cita/Bloqueo Eliminado", description: "La entrada ha sido eliminada." });
-        if (isDaySidebarOpen && selectedCalendarDay) { 
-         setIsDaySidebarOpen(false); 
+        if (isDaySidebarOpen && selectedCalendarDay) {
+         setIsDaySidebarOpen(false);
          setTimeout(() => setIsDaySidebarOpen(true), 50);
         }
       } else {
         toast({ title: "Error", description: "No se pudo eliminar la entrada.", variant: "destructive" });
       }
-      setAppointmentToDelete(null); 
+      setAppointmentToDelete(null);
     }
   };
 
@@ -253,7 +253,7 @@ export default function SchedulePage() {
   return (
     <div className="max-w-5xl mx-auto w-full">
       <div className="space-y-6 w-full">
-      
+
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Agenda de Citas</h1>
@@ -272,7 +272,7 @@ export default function SchedulePage() {
             </Button>
           </div>
         </div>
-        
+
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -281,7 +281,7 @@ export default function SchedulePage() {
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
-                
+
                 {!isBlockerWatch && (
                   <FormField
                     control={form.control}
@@ -331,12 +331,12 @@ export default function SchedulePage() {
                                 ) : (
                                   <span>Seleccione una fecha</span>
                                 )}
-                                <LucideCalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                <Calendar className="ml-auto h-4 w-4 opacity-50" /> {/* Corrected Usage */}
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
+                            <ShadCalendar
                               mode="single"
                               selected={field.value}
                               onSelect={(date) => {
@@ -385,7 +385,7 @@ export default function SchedulePage() {
                     </FormItem>
                   )}
                 />
-                
+
                 {isBlockerWatch ? (
                    <FormField
                     control={form.control}
@@ -401,48 +401,47 @@ export default function SchedulePage() {
                     )}
                   />
                 ) : (
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Notas Adicionales (Opcional)</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Notas sobre la cita, motivo, etc." {...field} value={field.value || ''} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                {!isBlockerWatch && ( 
-                   <FormField
+                  <>
+                    <FormField
                       control={form.control}
-                      name="status"
+                      name="notes"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Estado</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                 <div className="flex items-center gap-1">
-                                  {getStatusIcon(field.value as Appointment['status'])}
-                                  <span>{getStatusText(field.value as Appointment['status'])}</span>
-                                </div>
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="programada"> <div className="flex items-center gap-2">{getStatusIcon("programada")} Programada</div></SelectItem>
-                              <SelectItem value="confirmada"> <div className="flex items-center gap-2">{getStatusIcon("confirmada")} Confirmada</div></SelectItem>
-                              <SelectItem value="cancelada"> <div className="flex items-center gap-2">{getStatusIcon("cancelada")} Cancelada</div></SelectItem>
-                              <SelectItem value="completada"> <div className="flex items-center gap-2">{getStatusIcon("completada")} Completada</div></SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>Notas Adicionales (Opcional)</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Notas sobre la cita, motivo, etc." {...field} value={field.value || ''} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                     <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Estado</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                   <div className="flex items-center gap-1">
+                                    {getStatusIcon(field.value as Appointment['status'])}
+                                    <span>{getStatusText(field.value as Appointment['status'])}</span>
+                                  </div>
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="programada"> <div className="flex items-center gap-2">{getStatusIcon("programada")} Programada</div></SelectItem>
+                                <SelectItem value="confirmada"> <div className="flex items-center gap-2">{getStatusIcon("confirmada")} Confirmada</div></SelectItem>
+                                <SelectItem value="cancelada"> <div className="flex items-center gap-2">{getStatusIcon("cancelada")} Cancelada</div></SelectItem>
+                                <SelectItem value="completada"> <div className="flex items-center gap-2">{getStatusIcon("completada")} Completada</div></SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                  </>
                 )}
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
@@ -454,14 +453,14 @@ export default function SchedulePage() {
             </Form>
           </DialogContent>
         </Dialog>
-        
+
         <Card className="shadow-lg w-full overflow-hidden max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
           <CardHeader>
             <CardTitle>Calendario de Citas</CardTitle>
-            <CardDescriptionComponent>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescriptionComponent>
+            <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
-             <Calendar
+             <ShadCalendar
               className="rounded-md border shadow-md w-full"
               mode="single"
               selected={selectedCalendarDay || undefined}
@@ -475,49 +474,37 @@ export default function SchedulePage() {
                   caption_label: "text-lg font-medium",
                   head_cell: cn("text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-xs sm:text-sm p-0 text-center", "h-8 sm:h-10 md:h-12" ),
                   cell: cn("flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", "h-8 sm:h-10 md:h-12"),
-                  day: (date, modifiers, dayProps) => {
-                    const structuralClasses = "h-full w-full p-0 font-normal text-xs sm:text-sm flex items-center justify-center";
-                    let stateSpecificClasses = "";
-                    let textOverrideClass = "text-foreground"; 
-
-                    if (modifiers.selected) {
-                      stateSpecificClasses = cn(
-                        "bg-primary/70 !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full", 
-                        "hover:bg-primary/80" 
+                  day: (date, modifiers) => {
+                      let klasses = cn(
+                        buttonVariants({ variant: "ghost" }),
+                        "h-full w-full p-0 font-normal text-foreground",
+                        "flex items-center justify-center",
+                        "text-xs sm:text-sm"
                       );
-                       textOverrideClass = "text-primary-foreground"; 
-                    } else if (modifiers.today) {
-                      stateSpecificClasses = "ring-1 ring-primary rounded-full"; 
-                      textOverrideClass = "text-foreground";
-                    } else if (dayProps.onPointerEnter && !modifiers.disabled && !modifiers.selected) {
-                      stateSpecificClasses = "hover:bg-muted hover:!h-6 !w-6 sm:hover:!h-7 sm:hover:!w-7 hover:rounded-full";
-                      textOverrideClass = "text-foreground";
-                    }
-                    
-                    if (modifiers.outside) {
-                      textOverrideClass = "text-muted-foreground opacity-50";
-                      if (modifiers.selected) {
-                         stateSpecificClasses = cn(stateSpecificClasses.replace(/bg-primary\/70/g, 'bg-primary/20').replace(/hover:bg-primary\/80/g,''), "opacity-70");
-                         textOverrideClass = "text-primary-foreground opacity-90";
-                      } else {
-                        stateSpecificClasses = ""; // No circle for outside days unless selected
-                      }
-                    }
 
-                    if (modifiers.disabled) {
-                      textOverrideClass = "text-muted-foreground opacity-50";
-                      stateSpecificClasses = ""; // No circle for disabled days
-                    }
-                    
-                    return cn(
-                      buttonVariants({ variant: "ghost" }), 
-                      structuralClasses,
-                      stateSpecificClasses,
-                      textOverrideClass 
-                    );
-                  },
-                  day_selected: "", // Handled by day function
-                  day_today: "", // Handled by day function
+                      if (modifiers.selected && modifiers.today) {
+                        klasses = cn(klasses, "bg-primary/70 text-primary-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full hover:bg-primary/80");
+                      } else if (modifiers.selected) {
+                        klasses = cn(klasses, "bg-primary/70 text-primary-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full hover:bg-primary/80");
+                      } else if (modifiers.today) {
+                        klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
+                      } else if (modifiers.interactive && !modifiers.disabled) {
+                        klasses = cn(klasses, "hover:bg-muted hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full");
+                      }
+
+                      if (modifiers.outside) {
+                        klasses = cn(klasses, "text-muted-foreground opacity-50");
+                        if (modifiers.selected) {
+                          klasses = cn(klasses, "bg-primary/20 text-muted-foreground");
+                        }
+                      }
+                      if (modifiers.disabled) {
+                        klasses = cn(klasses, "text-muted-foreground opacity-50");
+                      }
+                      return klasses;
+                    },
+                  day_selected: "bg-primary/70 text-primary-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full hover:bg-primary/80",
+                  day_today: "ring-1 ring-primary text-foreground rounded-full",
               }}
             />
           </CardContent>
@@ -563,7 +550,7 @@ export default function SchedulePage() {
                     {groupedAppointments[dateKey].sort((a,b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime()).map((appointment) => (
                       <li key={appointment.id} className={cn(
                         "border p-4 rounded-lg hover:shadow-lg transition-shadow",
-                        appointment.isBlocker && "bg-muted/70 border-dashed" 
+                        appointment.isBlocker && "bg-muted/70 border-dashed"
                       )}>
                         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                           <div className="flex-grow">
@@ -595,7 +582,7 @@ export default function SchedulePage() {
                                 onValueChange={(newStatus) => handleStatusChange(appointment.id, newStatus as Appointment['status'])}
                               >
                                 <SelectTrigger className="w-full sm:w-[180px] text-xs h-9">
-                                  <div className="flex items-center gap-1">
+                                   <div className="flex items-center gap-1">
                                     {getStatusIcon(appointment.status)}
                                     <span>{getStatusText(appointment.status)}</span>
                                   </div>
@@ -624,9 +611,9 @@ export default function SchedulePage() {
                                 </SelectContent>
                               </Select>
                             ) : (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   className="w-full sm:w-auto text-destructive hover:bg-destructive/10"
                                   onClick={() => openDeleteBlockerDialog(appointment.id)}
                                 >
@@ -657,4 +644,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
