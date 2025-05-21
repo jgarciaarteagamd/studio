@@ -1,7 +1,7 @@
 
 // src/lib/mock-data.ts
 import type { PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment, Appointment, DatosFacturacion, Recipe, MedicationItem } from './types';
-import { formatISO, parseISO, setHours, setMinutes, format, differenceInYears } from 'date-fns';
+import { parseISO, setHours, setMinutes, format, differenceInYears } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 
@@ -149,13 +149,13 @@ export const addPatient = (
     datosFacturacion: data.datosFacturacion || { ruc: '', direccionFiscal: '', telefonoFacturacion: '', emailFacturacion: ''},
     backgroundInformation: data.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' },
     medicalEncounters: [],
-    recipes: [], // Initialize with empty recipes
+    recipes: [], 
     attachments: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
   mockPatients.push(newPatient);
-  return newPatient;
+  return {...newPatient}; // Return a new object reference
 };
 
 export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, 'id' | 'createdAt' >>): PatientRecord | undefined => {
@@ -174,7 +174,7 @@ export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, '
       updatedAt: new Date().toISOString(),
     };
     mockPatients[patientIndex] = updatedPatientData;
-    return {...mockPatients[patientIndex]}; // Return a new object reference
+    return {...mockPatients[patientIndex]}; 
   }
   return undefined;
 };
@@ -203,14 +203,14 @@ export const addMedicalEncounterToPatient = (patientId: string, consultationData
   };
 
   const currentPatient = mockPatients[patientIndex];
-  const updatedPatientData = {
+  const updatedPatientData: PatientRecord = {
     ...currentPatient,
-    medicalEncounters: [...currentPatient.medicalEncounters, newEncounter],
+    medicalEncounters: [...currentPatient.medicalEncounters, newEncounter].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     updatedAt: new Date().toISOString(),
   };
   mockPatients[patientIndex] = updatedPatientData;
 
-  return { ...updatedPatientData }; // Return a new object reference
+  return { ...updatedPatientData }; 
 };
 
 export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, 'id' | 'patientId' | 'date'>): PatientRecord | undefined => {
@@ -228,7 +228,7 @@ export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, '
   };
 
   const currentPatient = mockPatients[patientIndex];
-  const updatedPatientData = {
+  const updatedPatientData: PatientRecord = {
     ...currentPatient,
     recipes: [...currentPatient.recipes, newRecipe].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     updatedAt: new Date().toISOString(),
@@ -236,7 +236,7 @@ export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, '
 
   mockPatients[patientIndex] = updatedPatientData;
 
-  return { ...updatedPatientData }; // Return a new object reference
+  return { ...updatedPatientData }; 
 };
 
 
@@ -255,7 +255,7 @@ export let mockAppointments: Appointment[] = [
     id: 'appt-block-lunch',
     dateTime: setHours(setMinutes(today, 0), 13).toISOString(),
     durationMinutes: 60,
-    status: 'programada',
+    status: 'programada', // Status for blockers might not be strictly necessary but good to have a default
     isBlocker: true,
     blockerReason: 'Almuerzo del Personal',
   },
@@ -282,7 +282,7 @@ export let mockAppointments: Appointment[] = [
 ];
 
 export const getAppointments = (): Appointment[] => {
-  return mockAppointments.sort((a,b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime());
+  return [...mockAppointments].sort((a,b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime());
 };
 
 export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & { patientName?: string }): Appointment => {
@@ -298,18 +298,17 @@ export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & {
   }
 
   const newAppointment: Appointment = {
-    id: `appt-${Date.now()}`,
+    id: `appt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`, // Added randomness to ID
     patientId: data.isBlocker ? undefined : data.patientId,
     patientName: patientNameResolved,
     dateTime: data.dateTime,
     durationMinutes: data.durationMinutes,
     notes: data.isBlocker ? undefined : data.notes,
-    status: data.status,
+    status: data.isBlocker ? 'programada' : data.status, // Default status for blockers if needed
     isBlocker: data.isBlocker || false,
     blockerReason: data.isBlocker ? data.blockerReason : undefined,
   };
   mockAppointments.push(newAppointment);
-  // Re-sort appointments after adding
   mockAppointments.sort((a,b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime());
   return newAppointment;
 };
@@ -318,10 +317,17 @@ export const updateAppointmentStatus = (appointmentId: string, newStatus: Appoin
   const appointmentIndex = mockAppointments.findIndex(app => app.id === appointmentId);
   if (appointmentIndex !== -1) {
     mockAppointments[appointmentIndex].status = newStatus;
-    return { ...mockAppointments[appointmentIndex] }; // Return a new object reference
+    return { ...mockAppointments[appointmentIndex] }; 
   }
   return undefined;
 };
+
+export const deleteAppointment = (appointmentId: string): boolean => {
+  const initialLength = mockAppointments.length;
+  mockAppointments = mockAppointments.filter(app => app.id !== appointmentId);
+  return mockAppointments.length < initialLength;
+};
+
 
 export const getPatientFullName = (patient: PatientRecord | PersonalDetails | undefined | null): string => {
   if (!patient) return 'Nombre no disponible';
@@ -341,7 +347,8 @@ export const getPatientFullName = (patient: PatientRecord | PersonalDetails | un
 export const calculateAge = (birthDate: string | undefined): string => {
   if (!birthDate) return "N/A";
   try {
-    return `${differenceInYears(new Date(), new Date(birthDate))} años`;
+    const age = differenceInYears(new Date(), new Date(birthDate));
+    return `${age} años`;
   } catch {
     return "N/A";
   }

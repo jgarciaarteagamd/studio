@@ -7,7 +7,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,7 +17,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord, getPatientFullName, updateAppointmentStatus as apiUpdateAppointmentStatus } from "@/lib/mock-data";
+import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord, getPatientFullName, updateAppointmentStatus as apiUpdateAppointmentStatus, deleteAppointment as apiDeleteAppointment } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react";
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
@@ -59,6 +60,8 @@ export default function SchedulePage() {
   const [displayedMonth, setDisplayedMonth] = useState<Date>(startOfMonth(new Date()));
   const [selectedCalendarDay, setSelectedCalendarDay] = useState<Date | null>(null);
   const [isDaySidebarOpen, setIsDaySidebarOpen] = useState(false);
+  const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null);
+
 
   useEffect(() => {
     setCurrentLocale(navigator.language || 'es-ES');
@@ -178,6 +181,19 @@ export default function SchedulePage() {
         description: "No se pudo actualizar el estado de la cita.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    if (appointmentToDelete) {
+      const success = apiDeleteAppointment(appointmentToDelete);
+      if (success) {
+        setAppointments(prev => prev.filter(app => app.id !== appointmentToDelete));
+        toast({ title: "Bloqueo Eliminado", description: "El bloqueo de horario ha sido eliminado." });
+      } else {
+        toast({ title: "Error", description: "No se pudo eliminar el bloqueo.", variant: "destructive" });
+      }
+      setAppointmentToDelete(null); // Close dialog
     }
   };
 
@@ -453,7 +469,7 @@ export default function SchedulePage() {
                   
                     if (modifiers.selected) {
                       klasses = cn(klasses, "bg-primary/70 text-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full hover:bg-primary/80"); 
-                    } else if (modifiers.today) {
+                    } else if (modifiers.today && !modifiers.selected) {
                       klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
                     } else if (modifiers.interactive && !modifiers.disabled && !modifiers.selected && !modifiers.today) {
                       klasses = cn(klasses, "hover:bg-muted hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:hover:!w-7 hover:rounded-full text-foreground");
@@ -523,8 +539,8 @@ export default function SchedulePage() {
                                 </p>
                             )}
                           </div>
-                          {!appointment.isBlocker && (
-                            <div className="flex-shrink-0 w-full sm:w-auto">
+                          <div className="flex-shrink-0 w-full sm:w-auto">
+                            {!appointment.isBlocker ? (
                               <Select
                                 value={appointment.status}
                                 onValueChange={(newStatus) => handleStatusChange(appointment.id, newStatus as Appointment['status'])}
@@ -532,7 +548,7 @@ export default function SchedulePage() {
                                 <SelectTrigger className="w-full sm:w-[180px] text-xs h-9">
                                   <div className="flex items-center gap-2">
                                     {getStatusIcon(appointment.status)}
-                                    <SelectValue />
+                                    <SelectValue placeholder="Seleccionar estado" />
                                   </div>
                                 </SelectTrigger>
                                 <SelectContent>
@@ -558,8 +574,28 @@ export default function SchedulePage() {
                                   </SelectItem>
                                 </SelectContent>
                               </Select>
-                            </div>
-                          )}
+                            ) : (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="destructive" size="sm" onClick={() => setAppointmentToDelete(appointment.id)} className="w-full sm:w-auto">
+                                    <Trash2 className="mr-2 h-4 w-4" /> Eliminar Bloqueo
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Esta acción no se puede deshacer. Esto eliminará permanentemente el bloqueo de horario.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel onClick={() => setAppointmentToDelete(null)}>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteConfirm}>Continuar</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                          </div>
                         </div>
                       </li>
                     ))}
@@ -583,3 +619,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
