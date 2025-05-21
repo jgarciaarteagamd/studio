@@ -9,13 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, Trash2, FileText, FileImage, FileArchive, Download, AlertCircle } from "lucide-react";
+import { UploadCloud, Trash2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FileUploadSectionProps {
   attachments: Attachment[];
   onFileUpload: (file: File) => void;
-  // onFileDelete: (attachmentIds: string[]) => void; // Futura implementación para eliminación real
 }
 
 export function FileUploadSection({ attachments, onFileUpload }: FileUploadSectionProps) {
@@ -44,7 +43,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
       onFileUpload(selectedFile);
       setSelectedFile(null);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Reset file input
+        fileInputRef.current.value = ""; 
       }
       setSelectedAttachmentIds([]);
     } else {
@@ -79,9 +78,6 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     }
     if (confirm(`¿Está seguro de que desea eliminar ${selectedAttachmentIds.length} archivo(s) adjunto(s)? Esta acción podría ser irreversible.`)) {
       alert(`Eliminando archivos adjuntos con IDs: ${selectedAttachmentIds.join(', ')} (simulado).`);
-      // Aquí iría la lógica para llamar a onFileDelete(selectedAttachmentIds)
-      // y luego actualizar el estado 'attachments' o recargar.
-      // Por ahora, solo limpiamos la selección.
       setSelectedAttachmentIds([]);
     }
   };
@@ -114,7 +110,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
 
       <Card className="w-full">
         <CardHeader className="flex flex-col p-6 gap-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6"> {/* Changed gap-4 to gap-6 */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
             <CardTitle>Archivos Adjuntos</CardTitle>
             {attachments.length > 0 && (
               <Button 
@@ -129,7 +125,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2">
+             <div className="flex items-center space-x-2 mt-8"> {/* Adjusted mt-8 for spacing */}
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}

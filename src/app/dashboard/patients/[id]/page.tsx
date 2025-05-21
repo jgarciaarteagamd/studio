@@ -157,14 +157,14 @@ export default function PatientDetailPage() {
             {patient.personalDetails.documentoIdentidad && (
                 <p className="flex items-center"><FileTextIcon className="mr-2 h-4 w-4 text-primary/70" /> Doc. Identidad: {patient.personalDetails.documentoIdentidad}</p>
             )}
-            {patient.personalDetails.fechaNacimiento && (
+            {patientAge && (
              <p className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary/70" /> Edad: {patientAge}</p>
             )}
             {patient.personalDetails.email && (<p className="flex items-center"><User className="mr-2 h-4 w-4 text-primary/70" /> Email: {patient.personalDetails.email}</p>)}
             {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil: {patient.personalDetails.telefono1}</p>)}
             {patient.personalDetails.telefono2 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono opcional: {patient.personalDetails.telefono2}</p>)}
           </div>
-           <Badge variant="secondary" className="w-fit mt-3">
+           <Badge variant="secondary" className="w-fit mt-3 mb-3"> {/* Added mb-3 */}
             Última actualización general: {new Date(patient.updatedAt).toLocaleDateString(currentLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
           </Badge>
         </CardHeader>
@@ -188,7 +188,7 @@ export default function PatientDetailPage() {
             "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
             SIMULATED_ROLE === 'doctor' ? "md:grid-cols-4" : "md:grid-cols-2" 
             )}>
-          <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos del Paciente</TabsTrigger>
+          <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos</TabsTrigger> {/* Changed label */}
           {SIMULATED_ROLE === 'doctor' && (
             <>
               <TabsTrigger value="backgroundInfo" className="flex-grow md:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2"/> Antecedentes</TabsTrigger>
@@ -199,7 +199,7 @@ export default function PatientDetailPage() {
         </TabsList>
 
         <TabsContent value="personalData">
-          <Card>
+          <Card className="w-full">
             <CardHeader>
               <CardTitle>Información Personal y de Facturación</CardTitle>
               <CardDescription>
@@ -213,8 +213,8 @@ export default function PatientDetailPage() {
                 submitButtonText="Guardar Cambios"
                 showPersonalDetailsSection={true}
                 showDatosFacturacionSection={true}
-                allowEditFacturacionInfo={true} // Médico o secretaria puede editar datos de facturación aquí
-                showBackgroundInformationSection={false} // Antecedentes se editan en su propia pestaña
+                allowEditFacturacionInfo={true} 
+                showBackgroundInformationSection={false} 
                 allowEditBackgroundInfo={false} 
               />
             </CardContent>
@@ -223,7 +223,7 @@ export default function PatientDetailPage() {
         
         {SIMULATED_ROLE === 'doctor' && (
            <TabsContent value="backgroundInfo">
-             <Card>
+             <Card className="w-full">
                <CardHeader>
                  <CardTitle>Antecedentes y Medicación Habitual</CardTitle>
                  <CardDescription>Actualice los antecedentes personales, alergias y medicación habitual del paciente.</CardDescription>
@@ -236,7 +236,7 @@ export default function PatientDetailPage() {
                    showPersonalDetailsSection={false} 
                    showDatosFacturacionSection={false} 
                    showBackgroundInformationSection={true} 
-                   allowEditBackgroundInfo={true} // Solo médico puede editar antecedentes aquí
+                   allowEditBackgroundInfo={true} 
                  />
                </CardContent>
              </Card>
@@ -247,13 +247,13 @@ export default function PatientDetailPage() {
         {SIMULATED_ROLE === 'doctor' && (
           <>
             <TabsContent value="encounters">
-              <Card>
+              <Card className="w-full">
                 <CardHeader>
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"> {/* Added gap-2 for better spacing */}
                     <CardTitle>Historial</CardTitle>
                     <Button onClick={handleNavigateToNewConsultation} size="sm">
                       <Stethoscope className="mr-2 h-4 w-4" />
-                      Registrar Nueva Consulta
+                      Nueva Consulta {/* Changed button text */}
                     </Button>
                   </div>
                   <CardDescription>Revise las consultas anteriores del paciente. La más reciente primero.</CardDescription>
@@ -323,3 +323,4 @@ export default function PatientDetailPage() {
     </div>
   );
 }
+
