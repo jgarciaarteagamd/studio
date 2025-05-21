@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, Trash2, AlertCircle, FileText, FileImage, FileArchive } from "lucide-react"; // Added more specific icons
+import { UploadCloud, Trash2, AlertCircle, FileText, FileImage, FileArchive } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FileUploadSectionProps {
@@ -28,6 +28,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
   }, []);
 
   useEffect(() => {
+    // Reset selection when attachments list changes (e.g., after upload)
     setSelectedAttachmentIds([]);
   }, [attachments]);
 
@@ -45,7 +46,6 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
       if (fileInputRef.current) {
         fileInputRef.current.value = ""; 
       }
-      setSelectedAttachmentIds([]);
     } else {
       alert("Por favor, seleccione un archivo primero.");
     }
@@ -80,7 +80,9 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
       alert(`Eliminando archivos adjuntos con IDs: ${selectedAttachmentIds.join(', ')} (simulado).`);
       // Aquí iría la lógica para actualizar el estado `patient` en la página padre,
       // por ejemplo, llamando a una función prop: onDeleteAttachments(selectedAttachmentIds)
+      // Por ahora, solo limpiamos la selección local.
       setSelectedAttachmentIds([]);
+      // Nota: La actualización real de la lista de adjuntos debe venir de la página padre.
     }
   };
 
@@ -112,7 +114,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
 
       <Card className="w-full">
         <CardHeader className="flex flex-col p-6 gap-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
             <CardTitle>Archivos Adjuntos</CardTitle>
             {attachments.length > 0 && (
               <Button 
@@ -127,7 +129,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2 mt-8">
+             <div className="flex items-center space-x-2">
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
@@ -161,14 +163,14 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
                     aria-labelledby={`attachment-name-${attachment.id}`}
                     className="flex-shrink-0"
                   />
-                  <div className="flex-grow min-w-0"> {/* Crucial for truncate to work */}
+                  <div className="flex-grow min-w-0">
                     <button 
                       id={`attachment-name-${attachment.id}`}
                       onClick={() => handleOpenFile(attachment.driveLink)} 
-                      className="font-medium text-primary hover:underline text-left block w-full"
+                      className="font-medium text-primary hover:underline text-left block w-full truncate"
                       title={attachment.name}
                     >
-                      <span className="block truncate">{attachment.name}</span>
+                      {attachment.name}
                     </button>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       Subido: {new Date(attachment.uploadedAt).toLocaleDateString(currentLocale)}
@@ -188,4 +190,3 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     </div>
   );
 }
-
