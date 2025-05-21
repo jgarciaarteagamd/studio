@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -463,12 +463,13 @@ export default function SchedulePage() {
                   day: (date, modifiers) => {
                     let klasses = cn(
                       buttonVariants({ variant: "ghost" }),
-                      "h-full w-full p-0 font-normal text-foreground",
-                      "text-xs sm:text-sm flex items-center justify-center" 
+                      "h-full w-full p-0 font-normal", 
+                      "text-xs sm:text-sm flex items-center justify-center",
+                      "text-foreground" 
                     );
                   
                     if (modifiers.selected) {
-                      klasses = cn(klasses, "bg-primary/70 text-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full hover:bg-primary/80"); 
+                      klasses = cn(klasses, "bg-primary/70 !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full text-foreground hover:bg-primary/80"); 
                     } else if (modifiers.today && !modifiers.selected) {
                       klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
                     } else if (modifiers.interactive && !modifiers.disabled && !modifiers.selected && !modifiers.today) {
@@ -548,7 +549,7 @@ export default function SchedulePage() {
                                 <SelectTrigger className="w-full sm:w-[180px] text-xs h-9">
                                   <div className="flex items-center gap-2">
                                     {getStatusIcon(appointment.status)}
-                                    <SelectValue placeholder="Seleccionar estado" />
+                                    <span>{getStatusText(appointment.status)}</span>
                                   </div>
                                 </SelectTrigger>
                                 <SelectContent>
@@ -577,7 +578,7 @@ export default function SchedulePage() {
                             ) : (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button variant="destructive" size="sm" onClick={() => setAppointmentToDelete(appointment.id)} className="w-full sm:w-auto">
+                                  <Button variant="outline" size="sm" onClick={() => setAppointmentToDelete(appointment.id)} className="w-full sm:w-auto text-destructive hover:bg-destructive/10">
                                     <Trash2 className="mr-2 h-4 w-4" /> Eliminar Bloqueo
                                   </Button>
                                 </AlertDialogTrigger>
