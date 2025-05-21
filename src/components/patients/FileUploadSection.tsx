@@ -9,18 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, Trash2, AlertCircle, FileArchive, FileImage, FileType2 } from "lucide-react";
+import { UploadCloud, Trash2, AlertCircle, FileArchive, FileImage, FileType2, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
-// ScrollArea import is removed as it's no longer used
 
 
 interface FileUploadSectionProps {
   attachments: Attachment[];
   onFileUpload: (file: File) => void;
   onDeleteAttachments: (attachmentIdsToDelete: string[]) => void;
+  className?: string;
 }
 
-export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachments }: FileUploadSectionProps) {
+export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachments, className }: FileUploadSectionProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentLocale, setCurrentLocale] = useState('es-ES');
@@ -81,12 +81,11 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
     }
     if (confirm(`¿Está seguro de que desea eliminar ${selectedAttachmentIds.length} archivo(s) adjunto(s)? Esta acción podría ser irreversible.`)) {
       onDeleteAttachments(selectedAttachmentIds);
-      // The parent will update the attachments prop, which will trigger the useEffect to clear selectedAttachmentIds
     }
   };
 
   return (
-    <div className="space-y-6 w-full">
+    <div className={cn("space-y-6 w-full", className)}>
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Subir Nuevo Adjunto</CardTitle>
@@ -128,7 +127,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2 mt-10 pt-8">
+             <div className="flex items-center space-x-2 mt-8 pt-8">
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
@@ -151,7 +150,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
                   <li
                     key={attachment.id}
                     className={cn(
-                      "flex items-center gap-3 p-3 border rounded-md transition-colors overflow-hidden", // overflow-hidden added to li
+                      "flex items-center gap-3 p-3 border rounded-md transition-colors overflow-hidden", 
                       selectedAttachmentIds.includes(attachment.id) ? "bg-primary/10 border-primary" : "hover:bg-muted/50"
                     )}
                   >
@@ -183,7 +182,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
               </ul>
           ) : (
              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <AlertCircle className="h-12 w-12 text-muted-foreground mb-3" />
+                <Paperclip className="h-12 w-12 text-muted-foreground mb-3" />
                 <p className="text-muted-foreground">Aún no hay archivos adjuntos a este historial.</p>
              </div>
           )}
@@ -192,3 +191,4 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
     </div>
   );
 }
+

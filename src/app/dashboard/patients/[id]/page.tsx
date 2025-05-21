@@ -349,13 +349,12 @@ export default function PatientDetailPage() {
                           Suba nuevos archivos o elimine existentes. Los archivos se guardarán en su Google Drive.
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="flex-1 overflow-y-auto min-h-0"> {/* Added min-h-0 */}
-                        <FileUploadSection
-                          attachments={patient.attachments}
-                          onFileUpload={handleFileUpload}
-                          onDeleteAttachments={handleDeleteAttachments}
-                        />
-                      </div>
+                      <FileUploadSection
+                        attachments={patient.attachments}
+                        onFileUpload={handleFileUpload}
+                        onDeleteAttachments={handleDeleteAttachments}
+                        className="flex-1 overflow-y-auto min-h-0"
+                      />
                     </DialogContent>
                   </Dialog>
                 </CardContent>
@@ -367,3 +366,4 @@ export default function PatientDetailPage() {
     </div>
   );
 }
+
