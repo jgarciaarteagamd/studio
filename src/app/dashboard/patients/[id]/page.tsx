@@ -96,7 +96,7 @@ export default function PatientDetailPage() {
       const updatedAttachments = [...patient.attachments, newAttachment];
       const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
       if (updatedRecord) {
-        setPatient({...updatedRecord});
+        setPatient({...updatedRecord}); // Ensure re-render
       }
       toast({
         title: "Archivo Adjuntado",
@@ -193,7 +193,7 @@ export default function PatientDetailPage() {
           </div>
           {patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal) && (
             <>
-              <Separator className="my-3" /> {/* Adjusted margin */}
+              <Separator className="my-3" />
               <div className="pb-2">
                 <h4 className="text-sm font-medium mb-2 flex items-center"><BuildingIcon className="mr-2 h-4 w-4 text-primary/70" /> Datos de Facturación Rápidos</h4>
                 <div className="text-xs text-muted-foreground space-y-0.5">
@@ -213,7 +213,7 @@ export default function PatientDetailPage() {
          <TabsList className={cn(
             "w-full h-auto mb-4 p-1 bg-muted rounded-md",
             "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
-             SIMULATED_ROLE === 'doctor' ? "md:grid-cols-4" : "md:grid-cols-2"
+             SIMULATED_ROLE === 'doctor' ? "md:grid-cols-4" : "md:grid-cols-2" // Updated logic for more tabs
             )}>
           <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos</TabsTrigger>
           {SIMULATED_ROLE === 'doctor' && (
@@ -331,7 +331,7 @@ export default function PatientDetailPage() {
             </TabsContent>
 
             <TabsContent value="attachments">
-              <Card className="w-full overflow-hidden">
+              <Card className="w-full">
                 <CardHeader>
                   <CardTitle>Archivos Adjuntos</CardTitle>
                   <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
@@ -350,14 +350,13 @@ export default function PatientDetailPage() {
                           Suba nuevos archivos o elimine existentes. Los archivos se guardarán en su Google Drive.
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="flex-grow overflow-y-auto p-1 -m-1"> {/* Added for scroll within dialog */}
+                      <div className="flex-1 overflow-y-auto">
                         <FileUploadSection
                           attachments={patient.attachments}
                           onFileUpload={handleFileUpload}
                           onDeleteAttachments={handleDeleteAttachments}
                         />
                       </div>
-                      {/* Footer can be added if needed, e.g. for a close button */}
                     </DialogContent>
                   </Dialog>
                 </CardContent>
@@ -369,3 +368,6 @@ export default function PatientDetailPage() {
     </div>
   );
 }
+
+
+    
