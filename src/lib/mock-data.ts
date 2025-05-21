@@ -230,7 +230,7 @@ export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, '
   const currentPatient = mockPatients[patientIndex];
   const updatedPatientData = {
     ...currentPatient,
-    recipes: [...currentPatient.recipes, newRecipe],
+    recipes: [...currentPatient.recipes, newRecipe].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     updatedAt: new Date().toISOString(),
   };
 
@@ -309,7 +309,18 @@ export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & {
     blockerReason: data.isBlocker ? data.blockerReason : undefined,
   };
   mockAppointments.push(newAppointment);
+  // Re-sort appointments after adding
+  mockAppointments.sort((a,b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime());
   return newAppointment;
+};
+
+export const updateAppointmentStatus = (appointmentId: string, newStatus: Appointment['status']): Appointment | undefined => {
+  const appointmentIndex = mockAppointments.findIndex(app => app.id === appointmentId);
+  if (appointmentIndex !== -1) {
+    mockAppointments[appointmentIndex].status = newStatus;
+    return { ...mockAppointments[appointmentIndex] }; // Return a new object reference
+  }
+  return undefined;
 };
 
 export const getPatientFullName = (patient: PatientRecord | PersonalDetails | undefined | null): string => {

@@ -16,7 +16,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord, getPatientFullName } from "@/lib/mock-data";
+import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord, getPatientFullName, updateAppointmentStatus as apiUpdateAppointmentStatus } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react";
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
@@ -151,7 +151,7 @@ export default function SchedulePage() {
   };
   
   const getStatusText = (status: Appointment['status']) => {
-    const map = {
+    const map: Record<Appointment['status'], string> = {
       programada: "Programada",
       confirmada: "Confirmada",
       cancelada: "Cancelada",
@@ -159,6 +159,28 @@ export default function SchedulePage() {
     };
     return map[status] || status;
   };
+
+  const handleStatusChange = (appointmentId: string, newStatus: Appointment['status']) => {
+    const updatedAppointment = apiUpdateAppointmentStatus(appointmentId, newStatus);
+    if (updatedAppointment) {
+      setAppointments(prevAppointments =>
+        prevAppointments.map(app =>
+          app.id === appointmentId ? { ...app, status: newStatus } : app
+        )
+      );
+      toast({
+        title: "Estado Actualizado",
+        description: `El estado de la cita ha sido cambiado a "${getStatusText(newStatus)}".`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado de la cita.",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   const groupedAppointments = useMemo(() => {
     return appointments.reduce((acc, appointment) => {
@@ -420,19 +442,13 @@ export default function SchedulePage() {
               locale={es}
               classNames={{
                   caption_label: "text-lg font-medium",
-                  head_cell: cn(
-                    "text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-xs sm:text-sm p-0 text-center", 
-                    "h-8 sm:h-10 md:h-12" 
-                  ),
-                  cell: cn(
-                    "flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", 
-                    "h-8 sm:h-10 md:h-12"
-                  ),
+                  head_cell: cn("text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-xs sm:text-sm p-0 text-center", "h-8 sm:h-10 md:h-12" ),
+                  cell: cn("flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", "h-8 sm:h-10 md:h-12"),
                   day: (date, modifiers) => {
                     let klasses = cn(
                       buttonVariants({ variant: "ghost" }),
                       "h-full w-full p-0 font-normal text-foreground",
-                      "text-xs sm:text-sm" // Asegurar que el texto del día también sea responsive
+                      "text-xs sm:text-sm flex items-center justify-center" 
                     );
                   
                     if (modifiers.selected) {
@@ -484,8 +500,8 @@ export default function SchedulePage() {
                         "border p-4 rounded-lg hover:shadow-lg transition-shadow",
                         appointment.isBlocker && "bg-muted/70 border-dashed" 
                       )}>
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                          <div>
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                          <div className="flex-grow">
                             <p className="font-semibold text-primary text-lg flex items-center">
                               {appointment.isBlocker ? <Lock className="mr-2 h-5 w-5 text-gray-500" /> : <Clock className="mr-2 h-5 w-5" />}
                               {format(parseISO(appointment.dateTime), "HH:mm", { locale: es })}
@@ -501,25 +517,50 @@ export default function SchedulePage() {
                                 </>
                               )}
                             </p>
+                             {appointment.notes && !appointment.isBlocker && (
+                                <p className="text-sm text-muted-foreground mt-2 pt-2 border-t border-dashed break-words">
+                                    <strong>Notas:</strong> {appointment.notes}
+                                </p>
+                            )}
                           </div>
                           {!appointment.isBlocker && (
-                            <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                              <span className={cn("text-xs font-medium mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full", {
-                                "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200": appointment.status === "programada",
-                                "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200": appointment.status === "confirmada" || appointment.status === "completada",
-                                "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200": appointment.status === "cancelada",
-                              })}>
-                                {getStatusIcon(appointment.status)}
-                                <span className="ml-1">{getStatusText(appointment.status)}</span>
-                              </span>
+                            <div className="flex-shrink-0 w-full sm:w-auto">
+                              <Select
+                                value={appointment.status}
+                                onValueChange={(newStatus) => handleStatusChange(appointment.id, newStatus as Appointment['status'])}
+                              >
+                                <SelectTrigger className="w-full sm:w-[180px] text-xs h-9">
+                                  <div className="flex items-center gap-2">
+                                    {getStatusIcon(appointment.status)}
+                                    <SelectValue />
+                                  </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="programada">
+                                    <div className="flex items-center gap-2">
+                                      {getStatusIcon("programada")} Programada
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="confirmada">
+                                    <div className="flex items-center gap-2">
+                                     {getStatusIcon("confirmada")} Confirmada
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="cancelada">
+                                    <div className="flex items-center gap-2">
+                                      {getStatusIcon("cancelada")} Cancelada
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="completada">
+                                    <div className="flex items-center gap-2">
+                                      {getStatusIcon("completada")} Completada
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                           )}
                         </div>
-                        {appointment.notes && !appointment.isBlocker && (
-                          <p className="text-sm text-muted-foreground mt-2 pt-2 border-t border-dashed break-words">
-                            <strong>Notas:</strong> {appointment.notes}
-                          </p>
-                        )}
                       </li>
                     ))}
                   </ul>
@@ -542,4 +583,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
