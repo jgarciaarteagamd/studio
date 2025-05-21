@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, Trash2, AlertCircle, FileArchive, FileImage, FileType2, Paperclip } from "lucide-react";
+import { UploadCloud, Trash2, FileArchive } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 
@@ -85,7 +85,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
   };
 
   return (
-    <div className={cn("space-y-6 w-full", className)}>
+    <div className={cn("flex flex-col space-y-4 w-full h-full", className)}>
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Subir Nuevo Adjunto</CardTitle>
@@ -110,7 +110,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
         )}
       </Card>
 
-      <Card className="w-full">
+      <Card className="w-full flex-1 flex flex-col min-h-0">
         <CardHeader className="flex flex-col p-6 gap-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
             <CardTitle>Archivos Adjuntos</CardTitle>
@@ -127,7 +127,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2 mt-8 pt-8">
+             <div className="flex items-center space-x-2 mt-4">
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
@@ -143,15 +143,15 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
             </div>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 overflow-y-auto">
           {attachments.length > 0 ? (
               <ul className="space-y-3">
                 {attachments.map((attachment) => (
                   <li
                     key={attachment.id}
                     className={cn(
-                      "flex items-center gap-3 p-3 border rounded-md transition-colors overflow-hidden", 
-                      selectedAttachmentIds.includes(attachment.id) ? "bg-primary/10 border-primary" : "hover:bg-muted/50"
+                      "flex items-center gap-3 p-3 border rounded-md transition-colors hover:bg-muted/50 overflow-hidden", 
+                      selectedAttachmentIds.includes(attachment.id) ? "bg-primary/10 border-primary" : ""
                     )}
                   >
                     <Checkbox
@@ -181,8 +181,8 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
                 ))}
               </ul>
           ) : (
-             <div className="flex flex-col items-center justify-center py-10 text-center">
-                <Paperclip className="h-12 w-12 text-muted-foreground mb-3" />
+             <div className="flex flex-col items-center justify-center py-10 text-center h-full">
+                <FileArchive className="h-12 w-12 text-muted-foreground mb-3" />
                 <p className="text-muted-foreground">Aún no hay archivos adjuntos a este historial.</p>
              </div>
           )}
@@ -191,4 +191,3 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
     </div>
   );
 }
-
