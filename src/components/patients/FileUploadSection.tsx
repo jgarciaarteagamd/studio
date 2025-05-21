@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Attachment } from "@/lib/types";
-import { UploadCloud, Trash2, AlertCircle, FileText, FileImage, FileArchive } from "lucide-react";
+import { UploadCloud, Trash2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FileUploadSectionProps {
@@ -28,7 +28,6 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
   }, []);
 
   useEffect(() => {
-    // Reset selection when attachments list changes (e.g., after upload or deletion if implemented)
     setSelectedAttachmentIds([]);
   }, [attachments]);
 
@@ -42,9 +41,9 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
   const handleUploadClick = () => {
     if (selectedFile) {
       onFileUpload(selectedFile);
-      setSelectedFile(null); // Reset after upload
+      setSelectedFile(null); 
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Clear the file input
+        fileInputRef.current.value = ""; 
       }
     } else {
       alert("Por favor, seleccione un archivo primero.");
@@ -52,7 +51,6 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
   };
   
   const handleOpenFile = (driveLink: string) => {
-    // In a real app, this would open the file from Google Drive or trigger a download
     alert(`Abriendo/Descargando archivo (simulado): ${driveLink}. En una aplicación real, esto abriría o descargaría el archivo de Google Drive.`);
   };
 
@@ -77,13 +75,9 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
       alert("No hay archivos seleccionados para eliminar.");
       return;
     }
-    // Placeholder for actual deletion logic
-    // This should eventually call a function to update the patient's attachments array
-    // and potentially delete from Google Drive
     if (confirm(`¿Está seguro de que desea eliminar ${selectedAttachmentIds.length} archivo(s) adjunto(s)? Esta acción podría ser irreversible.`)) {
       alert(`Eliminando archivos adjuntos con IDs: ${selectedAttachmentIds.join(', ')} (simulado).`);
-      // Example: onFilesDelete(selectedAttachmentIds); // This prop would come from the parent page
-      setSelectedAttachmentIds([]); // Clear selection after "deletion"
+      setSelectedAttachmentIds([]); 
     }
   };
 
@@ -130,7 +124,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
             )}
           </div>
           {attachments.length > 0 && (
-             <div className="flex items-center space-x-2 mt-10 pt-8">
+             <div className="flex items-center space-x-2 mt-10">
                 <Checkbox
                     id="selectAllAttachments"
                     checked={selectedAttachmentIds.length === attachments.length && attachments.length > 0}
@@ -153,7 +147,7 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
                 <li 
                   key={attachment.id} 
                   className={cn(
-                    "flex items-center gap-3 p-3 border rounded-md transition-colors",
+                    "flex items-center gap-3 p-3 border rounded-md transition-colors overflow-hidden", // Added overflow-hidden here
                     selectedAttachmentIds.includes(attachment.id) ? "bg-primary/10 border-primary" : "hover:bg-muted/50"
                   )}
                 >
@@ -194,3 +188,4 @@ export function FileUploadSection({ attachments, onFileUpload }: FileUploadSecti
     </div>
   );
 }
+
