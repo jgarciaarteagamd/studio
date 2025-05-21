@@ -5,10 +5,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord, getPatientFullName, updateAppointmentStatus as apiUpdateAppointmentStatus, deleteAppointment as apiDeleteAppointment } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, CalendarIcon as LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react";
+import { PlusCircle, LucideCalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react";
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
 import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
@@ -427,14 +426,17 @@ export default function SchedulePage() {
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Seleccione un estado" />
+                                 <div className="flex items-center gap-1">
+                                  {getStatusIcon(field.value as Appointment['status'])}
+                                  <span>{getStatusText(field.value as Appointment['status'])}</span>
+                                </div>
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="programada">Programada</SelectItem>
-                              <SelectItem value="confirmada">Confirmada</SelectItem>
-                              <SelectItem value="cancelada">Cancelada</SelectItem>
-                              <SelectItem value="completada">Completada</SelectItem>
+                              <SelectItem value="programada"> <div className="flex items-center gap-2">{getStatusIcon("programada")} Programada</div></SelectItem>
+                              <SelectItem value="confirmada"> <div className="flex items-center gap-2">{getStatusIcon("confirmada")} Confirmada</div></SelectItem>
+                              <SelectItem value="cancelada"> <div className="flex items-center gap-2">{getStatusIcon("cancelada")} Cancelada</div></SelectItem>
+                              <SelectItem value="completada"> <div className="flex items-center gap-2">{getStatusIcon("completada")} Completada</div></SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -456,7 +458,7 @@ export default function SchedulePage() {
         <Card className="shadow-lg w-full overflow-hidden max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
           <CardHeader>
             <CardTitle>Calendario de Citas</CardTitle>
-            <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
+            <CardDescriptionComponent>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescriptionComponent>
           </CardHeader>
           <CardContent className="p-4">
              <Calendar
@@ -474,52 +476,48 @@ export default function SchedulePage() {
                   head_cell: cn("text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-xs sm:text-sm p-0 text-center", "h-8 sm:h-10 md:h-12" ),
                   cell: cn("flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", "h-8 sm:h-10 md:h-12"),
                   day: (date, modifiers, dayProps) => {
-                    // Base classes for structure, responsiveness, and default text color
                     const structuralClasses = "h-full w-full p-0 font-normal text-xs sm:text-sm flex items-center justify-center";
                     let stateSpecificClasses = "";
-                    let textOverrideClass = "text-foreground"; // Default to dark text
+                    let textOverrideClass = "text-foreground"; 
 
                     if (modifiers.selected) {
                       stateSpecificClasses = cn(
-                        "bg-primary/70 !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full", // Celeste claro circle
-                        "hover:bg-primary/80" // Hover for selected day
+                        "bg-primary/70 !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full", 
+                        "hover:bg-primary/80" 
                       );
-                      // textOverrideClass remains text-foreground to ensure dark text on light blue
+                       textOverrideClass = "text-primary-foreground"; 
                     } else if (modifiers.today) {
-                      stateSpecificClasses = "ring-1 ring-primary rounded-full"; // Celeste ring for today
-                      // textOverrideClass remains text-foreground
-                    } else if (modifiers.interactive && !modifiers.disabled && dayProps?.onPointerEnter) {
-                      // Normal interactive day hover
-                      stateSpecificClasses = "hover:bg-muted hover:!h-6 !w-6 sm:!h-7 sm:!w-7 hover:rounded-full hover:text-foreground";
-                      // textOverrideClass remains text-foreground
+                      stateSpecificClasses = "ring-1 ring-primary rounded-full"; 
+                      textOverrideClass = "text-foreground";
+                    } else if (dayProps.onPointerEnter && !modifiers.disabled && !modifiers.selected) {
+                      stateSpecificClasses = "hover:bg-muted hover:!h-6 !w-6 sm:hover:!h-7 sm:hover:!w-7 hover:rounded-full";
+                      textOverrideClass = "text-foreground";
                     }
-
-                    // Handle 'outside' and 'disabled' states by primarily adjusting text color and opacity
+                    
                     if (modifiers.outside) {
-                      textOverrideClass = "text-muted-foreground"; // Muted text for outside days
-                      stateSpecificClasses = cn(stateSpecificClasses, "opacity-50"); // Fade outside days
-                      if (modifiers.selected) { // If an outside day is also selected
-                          stateSpecificClasses = cn(
-                            "bg-primary/20 !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full opacity-50", 
-                            stateSpecificClasses.replace(/opacity-\d+/g, '') // Remove previous opacity if any
-                          ); 
-                          textOverrideClass = "text-foreground"; // Selected outside day should still have prominent (dark) text
+                      textOverrideClass = "text-muted-foreground opacity-50";
+                      if (modifiers.selected) {
+                         stateSpecificClasses = cn(stateSpecificClasses.replace(/bg-primary\/70/g, 'bg-primary/20').replace(/hover:bg-primary\/80/g,''), "opacity-70");
+                         textOverrideClass = "text-primary-foreground opacity-90";
+                      } else {
+                        stateSpecificClasses = ""; // No circle for outside days unless selected
                       }
                     }
 
                     if (modifiers.disabled) {
-                      textOverrideClass = "text-muted-foreground";
-                      stateSpecificClasses = cn(stateSpecificClasses, "opacity-50"); // Ensure opacity for disabled
+                      textOverrideClass = "text-muted-foreground opacity-50";
+                      stateSpecificClasses = ""; // No circle for disabled days
                     }
                     
-                    // Combine buttonVariants for focus, structural classes, state-specific classes, and final text color
                     return cn(
-                      buttonVariants({ variant: "ghost" }), // Base button styles (focus, transitions)
-                      structuralClasses,                   // Our defined structure and responsive text size
-                      stateSpecificClasses,                // Backgrounds, shapes, rings for states
-                      textOverrideClass                    // Final text color override
+                      buttonVariants({ variant: "ghost" }), 
+                      structuralClasses,
+                      stateSpecificClasses,
+                      textOverrideClass 
                     );
                   },
+                  day_selected: "", // Handled by day function
+                  day_today: "", // Handled by day function
               }}
             />
           </CardContent>
