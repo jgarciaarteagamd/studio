@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Receipt, FilePlus2, ListChecks, Printer, Search, Banknote, Construction, ChevronLeft, ChevronRight } from "lucide-react";
+import { Receipt, FilePlus2, Edit3, Printer, Search, Banknote, Construction, ChevronLeft, ChevronRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
