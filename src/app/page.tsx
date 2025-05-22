@@ -5,9 +5,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ActivitySquare } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { ActivitySquare, LogIn } from "lucide-react";
 import Image from 'next/image';
+import { SIMULATED_CURRENT_ROLE, setSimulatedRole } from '@/lib/mock-data'; // Asumimos que mock-data exportará esto
 
 // SVG for Google G Logo
 const GoogleIcon = () => (
@@ -34,14 +38,31 @@ const GoogleIcon = () => (
 
 export default function LoginPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  const [isLoadingSecretary, setIsLoadingSecretary] = useState(false);
+  const [secretaryUser, setSecretaryUser] = useState('');
+  const [secretaryPassword, setSecretaryPassword] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleDoctorLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    setIsLoading(true);
-    // Simulación de login
+    setIsLoadingGoogle(true);
+    // Simulación de login de médico
     await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsLoading(false);
+    setSimulatedRole('doctor'); // Actualiza el rol simulado
+    setIsLoadingGoogle(false);
+    router.push('/dashboard');
+  };
+
+  const handleSecretaryLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoadingSecretary(true);
+    // Simulación de login de secretaria
+    console.log("Intento de login de secretaria:", { user: secretaryUser, pass: secretaryPassword });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // En una app real, aquí validarías user/pass
+    // y si es exitoso:
+    setSimulatedRole('secretary'); // Actualiza el rol simulado
+    setIsLoadingSecretary(false);
     router.push('/dashboard');
   };
 
@@ -51,7 +72,7 @@ export default function LoginPage() {
         <Image
           src="https://placehold.co/1920x1080.png?text=."
           alt="Fondo abstracto medico"
-          layout="fill"
+          fill // Reemplaza layout="fill" objectFit="cover"
           objectFit="cover"
           quality={80}
           className="opacity-20 blur-sm"
@@ -64,31 +85,76 @@ export default function LoginPage() {
         <CardHeader className="text-center space-y-2 pt-8">
           <ActivitySquare className="mx-auto h-12 w-12 text-primary" />
           <CardTitle className="text-3xl font-bold tracking-tight">Bienvenido a medlog cloud</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Inicia sesión con tu cuenta de Google para continuar.
-          </CardDescription>
         </CardHeader>
-        <CardContent className="p-6">
-          <form onSubmit={handleLogin} className="space-y-6">
-            <Button type="submit" className="w-full text-base py-6" disabled={isLoading}>
-              {isLoading ? (
+        <CardContent className="p-6 space-y-6">
+          {/* Sección Médico */}
+          <div>
+            <h3 className="text-lg font-medium text-center mb-3 text-primary">Acceso Médico</h3>
+            <Button 
+              onClick={handleDoctorLogin} 
+              className="w-full text-base py-3" 
+              disabled={isLoadingGoogle || isLoadingSecretary}
+            >
+              {isLoadingGoogle ? (
                 'Ingresando...'
               ) : (
                 <>
                   <GoogleIcon />
-                  Iniciar Sesión con Google
+                  Acceder con Google
                 </>
               )}
             </Button>
-          </form>
-           <p className="mt-6 text-center text-xs text-muted-foreground">
+            <CardDescription className="text-xs text-muted-foreground text-center mt-2">
+              (Para administradores y acceso a Google Drive)
+            </CardDescription>
+          </div>
+
+          <Separator />
+
+          {/* Sección Secretario/a */}
+          <div>
+            <h3 className="text-lg font-medium text-center mb-4 text-primary">Acceso Personal Asistencial</h3>
+            <form onSubmit={handleSecretaryLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="secretaryUser">Usuario</Label>
+                <Input
+                  id="secretaryUser"
+                  type="text"
+                  placeholder="Ej: gonmar08"
+                  value={secretaryUser}
+                  onChange={(e) => setSecretaryUser(e.target.value)}
+                  disabled={isLoadingGoogle || isLoadingSecretary}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="secretaryPassword">Contraseña</Label>
+                <Input
+                  id="secretaryPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={secretaryPassword}
+                  onChange={(e) => setSecretaryPassword(e.target.value)}
+                  disabled={isLoadingGoogle || isLoadingSecretary}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full text-base py-3" disabled={isLoadingGoogle || isLoadingSecretary}>
+                {isLoadingSecretary ? 'Ingresando...' : 'Iniciar Sesión'}
+              </Button>
+            </form>
+            {/* Podríamos añadir un enlace de "Olvidé mi contraseña" aquí en el futuro */}
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col items-center p-6 pt-2">
+           <p className="text-xs text-muted-foreground text-center">
             Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad.
           </p>
-        </CardContent>
+          <p className="mt-4 text-xs text-muted-foreground/70">
+            &copy; {new Date().getFullYear()} medlog cloud. Todos los derechos reservados.
+          </p>
+        </CardFooter>
       </Card>
-       <p className="mt-8 text-xs text-muted-foreground/70">
-        &copy; {new Date().getFullYear()} medlog cloud. Todos los derechos reservados.
-      </p>
     </div>
   );
 }

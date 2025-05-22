@@ -13,6 +13,38 @@ const threeMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 3)).
 const sixMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString();
 const oneWeekAgo = new Date(new Date().setDate(new Date().getDate() - 7)).toISOString();
 
+// --- SIMULACIÓN DE ROLES Y PERMISOS ---
+// Cambia SIMULATED_CURRENT_ROLE para probar diferentes vistas.
+// Si es 'secretary', SIMULATED_SECRETARY_PERMISSIONS se usará para controlar el acceso a funciones.
+export let SIMULATED_CURRENT_ROLE: 'doctor' | 'secretary' = 'doctor';
+
+export const SIMULATED_SECRETARY_PERMISSIONS = {
+  patients: {
+    canCreate: true, // Puede acceder a la página de crear
+    canModifyPersonalAndBilling: true, // Puede modificar datos personales y de facturación
+    canModifyBackground: false, // No puede modificar antecedentes
+    canAddAttachments: true, // Puede agregar adjuntos
+    canViewFullHistory: false, // Puede ver solo resúmenes de historial si no es médico
+    canDeletePatient: false, // No puede eliminar paciente
+  },
+  schedule: {
+    canProgramAppointments: true,
+    canBlockTime: true,
+    canChangeStatus: true,
+    canDeleteAppointments: true, // Para citas y bloqueos
+  },
+  billing: {
+    canAccess: true,
+  },
+};
+
+// Función para cambiar el rol simulado (usada por la página de login simulada)
+export const setSimulatedRole = (role: 'doctor' | 'secretary') => {
+  SIMULATED_CURRENT_ROLE = role;
+  console.log(`Simulated role set to: ${role}`);
+};
+// --- FIN SIMULACIÓN DE ROLES ---
+
 
 export const mockAttachments: Attachment[] = [
   { id: 'attach1', name: 'Lab_Results_Jan2024.pdf', type: 'pdf', driveLink: '#', uploadedAt: todayISO },
