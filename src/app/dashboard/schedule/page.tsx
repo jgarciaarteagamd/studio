@@ -16,7 +16,7 @@ import { Calendar as ShadCalendar } from "@/components/ui/calendar";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord, getPatientFullName, updateAppointmentStatus as apiUpdateAppointmentStatus, deleteAppointment as apiDeleteAppointment } from "@/lib/mock-data";
+import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord, getPatientFullName, updateAppointmentStatus as apiUpdateAppointmentStatus, deleteAppointment as apiDeleteAppointment, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Calendar, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react";
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
@@ -43,7 +43,7 @@ const appointmentFormSchema = z.object({
   return true;
 }, {
   message: "Si es un bloqueo, debe indicar un motivo. Si es una cita, debe seleccionar un paciente.",
-  path: ["isBlocker"],
+  path: ["isBlocker"], // This path might need to be more specific if it's causing issues, e.g. ["blockerReason"] or ["patientId"]
 });
 
 
@@ -60,6 +60,14 @@ export default function SchedulePage() {
   const [selectedCalendarDay, setSelectedCalendarDay] = useState<Date | null>(null);
   const [isDaySidebarOpen, setIsDaySidebarOpen] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null);
+
+  const isDoctor = SIMULATED_CURRENT_ROLE === 'doctor';
+  const secretaryPermissions = SIMULATED_SECRETARY_PERMISSIONS;
+
+  const canProgramAppointments = isDoctor || (SIMULATED_CURRENT_ROLE === 'secretary' && secretaryPermissions.schedule.canProgramAppointments);
+  const canBlockTime = isDoctor || (SIMULATED_CURRENT_ROLE === 'secretary' && secretaryPermissions.schedule.canBlockTime);
+  const canChangeStatus = isDoctor || (SIMULATED_CURRENT_ROLE === 'secretary' && secretaryPermissions.schedule.canChangeStatus);
+  const canDeleteAppointmentsOrBlockers = isDoctor || (SIMULATED_CURRENT_ROLE === 'secretary' && secretaryPermissions.schedule.canDeleteAppointments);
 
 
   useEffect(() => {
@@ -262,14 +270,18 @@ export default function SchedulePage() {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Button size="lg" onClick={() => openFormDialog(false)} className="w-full sm:w-auto">
-              <PlusCircle className="mr-2 h-5 w-5" />
-              Programar Cita
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => openFormDialog(true)} className="w-full sm:w-auto">
-              <ShieldOff className="mr-2 h-5 w-5" />
-              Bloquear Horario
-            </Button>
+            {canProgramAppointments && (
+              <Button size="lg" onClick={() => openFormDialog(false)} className="w-full sm:w-auto">
+                <PlusCircle className="mr-2 h-5 w-5" />
+                Programar Cita
+              </Button>
+            )}
+            {canBlockTime && (
+              <Button size="lg" variant="outline" onClick={() => openFormDialog(true)} className="w-full sm:w-auto">
+                <ShieldOff className="mr-2 h-5 w-5" />
+                Bloquear Horario
+              </Button>
+            )}
           </div>
         </div>
 
@@ -421,7 +433,7 @@ export default function SchedulePage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Estado</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value} disabled={!canChangeStatus && !isDoctor}>
                               <FormControl>
                                 <SelectTrigger className="w-full">
                                    <div className="flex items-center gap-1">
@@ -454,7 +466,7 @@ export default function SchedulePage() {
           </DialogContent>
         </Dialog>
 
-        <Card className="shadow-lg w-full overflow-hidden">
+        <Card className="shadow-lg w-full overflow-hidden max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
           <CardHeader>
             <CardTitle>Calendario de Citas</CardTitle>
             <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
@@ -471,27 +483,26 @@ export default function SchedulePage() {
                 modifiers={calendarModifiers}
                 modifiersClassNames={calendarModifiersClassNames}
                 locale={es}
-                classNames={{
-                    caption_label: "text-lg font-medium",
-                    head_cell: cn("text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-xs sm:text-sm p-0 text-center", "h-8 sm:h-10 md:h-12" ),
-                    cell: cn("flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", "h-8 sm:h-10 md:h-12"),
-                    day: (date, modifiers) => {
-                      let klasses = cn(
-                        buttonVariants({ variant: "ghost" }),
-                        "h-full w-full p-0 font-normal flex items-center justify-center text-foreground"
-                      );
-                      if (modifiers.outside || modifiers.disabled) {
-                        klasses = cn(klasses, "text-muted-foreground opacity-50");
-                      }
-                      if (modifiers.selected && !modifiers.disabled) {
-                        klasses = cn(klasses, "bg-primary/70 text-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full");
-                      } else if (modifiers.today && !modifiers.disabled) {
-                        klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
-                      } else if (!modifiers.disabled && !modifiers.selected && !modifiers.today) {
-                        klasses = cn(klasses, "hover:bg-muted hover:text-foreground hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full");
-                      }
-                      return klasses;
-                    },
+                 classNames={{
+                  caption_label: "text-lg font-medium",
+                  head_cell: cn("text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-xs sm:text-sm p-0 text-center", "h-8 sm:h-10 md:h-12"),
+                  cell: cn("flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", "h-8 sm:h-10 md:h-12"),
+                  day: (date, modifiers) => {
+                    let klasses = cn(
+                      buttonVariants({ variant: "ghost" }),
+                      "h-full w-full p-0 font-normal flex items-center justify-center text-foreground text-xs sm:text-sm"
+                    );
+                    if (modifiers.outside || modifiers.disabled) {
+                      klasses = cn(klasses, "text-muted-foreground opacity-50");
+                    } else if (modifiers.selected) {
+                       klasses = cn(klasses, "bg-primary/70 text-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full");
+                    } else if (modifiers.today) {
+                       klasses = cn(klasses, "ring-1 ring-primary text-foreground rounded-full");
+                    } else {
+                      klasses = cn(klasses, "hover:bg-muted hover:text-foreground hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full");
+                    }
+                    return klasses;
+                  },
                 }}
               />
             </div>
@@ -505,6 +516,8 @@ export default function SchedulePage() {
           appointmentsForDay={appointmentsOnSelectedDay}
           onStatusChange={handleStatusChange}
           requestDeleteBlocker={openDeleteBlockerDialog}
+          canChangeStatus={canChangeStatus}
+          canDeleteAppointmentsOrBlockers={canDeleteAppointmentsOrBlockers}
         />
 
         <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !open && setAppointmentToDelete(null)}>
@@ -568,6 +581,7 @@ export default function SchedulePage() {
                               <Select
                                 value={appointment.status}
                                 onValueChange={(newStatus) => handleStatusChange(appointment.id, newStatus as Appointment['status'])}
+                                disabled={!canChangeStatus}
                               >
                                 <SelectTrigger className="w-full sm:w-[180px] text-xs h-9">
                                    <div className="flex items-center gap-1">
@@ -605,6 +619,7 @@ export default function SchedulePage() {
                                       variant="outline"
                                       size="sm"
                                       className="w-full sm:w-auto text-destructive hover:bg-destructive/10"
+                                      disabled={!canDeleteAppointmentsOrBlockers}
                                     >
                                       <Trash2 className="mr-2 h-4 w-4" /> Eliminar Bloqueo
                                     </Button>
@@ -636,10 +651,12 @@ export default function SchedulePage() {
           <Card>
             <CardContent className="py-10 text-center">
               <p className="text-lg text-muted-foreground">No hay citas ni bloqueos programados.</p>
-              <Button className="mt-4" onClick={() => openFormDialog(false)}>
-                <PlusCircle className="mr-2 h-5 w-5" />
-                Programar la Primera Cita
-              </Button>
+              {(canProgramAppointments || canBlockTime) && (
+                 <Button className="mt-4" onClick={() => openFormDialog(false)}>
+                    <PlusCircle className="mr-2 h-5 w-5" />
+                    Programar la Primera Cita
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}

@@ -1,3 +1,4 @@
+
 // src/components/schedule/DayAppointmentsSidebar.tsx
 "use client";
 
@@ -12,6 +13,7 @@ import { Clock, User, Info, X, Lock, Trash2, CalendarClock, CheckCircle, XCircle
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SIMULATED_CURRENT_ROLE } from "@/lib/mock-data"; // No need for permissions here as they are passed as props
 
 // Helper functions for status (copied from schedule/page.tsx for simplicity)
 const getStatusIcon = (status: Appointment['status']) => {
@@ -42,6 +44,8 @@ interface DayAppointmentsSidebarProps {
   appointmentsForDay: Appointment[];
   onStatusChange: (appointmentId: string, newStatus: Appointment['status']) => void;
   requestDeleteBlocker: (appointmentId: string) => void;
+  canChangeStatus: boolean;
+  canDeleteAppointmentsOrBlockers: boolean;
 }
 
 export function DayAppointmentsSidebar({ 
@@ -50,7 +54,9 @@ export function DayAppointmentsSidebar({
   selectedDate, 
   appointmentsForDay,
   onStatusChange,
-  requestDeleteBlocker
+  requestDeleteBlocker,
+  canChangeStatus,
+  canDeleteAppointmentsOrBlockers
 }: DayAppointmentsSidebarProps) {
   if (!selectedDate) {
     return null;
@@ -62,7 +68,7 @@ export function DayAppointmentsSidebar({
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-md w-full flex flex-col">
         <SheetHeader className="pb-6">
-          <SheetTitle className="text-lg mt-2"> {/* Removed CalendarDays icon */}
+          <SheetTitle className="text-lg mt-2"> 
             Agenda para el {formattedDate}
           </SheetTitle>
           <SheetDescription>
@@ -70,16 +76,16 @@ export function DayAppointmentsSidebar({
           </SheetDescription>
         </SheetHeader>
         
-        <ScrollArea className="flex-1 min-h-0 pr-4">
+        <ScrollArea className="flex-1 min-h-0">
           {appointmentsForDay.length > 0 ? (
-            <ul className="space-y-4">
+            <ul className="space-y-4 pr-3">
               {appointmentsForDay.map((appointment) => (
                 <li key={appointment.id} className={cn(
-                  "rounded-lg border p-3 shadow-sm", // Reduced padding a bit from p-4 to p-3
+                  "rounded-lg border p-3 shadow-sm", 
                   appointment.isBlocker && "bg-muted/70 border-dashed"
                 )}>
-                  <div className="flex flex-col gap-2"> {/* Main content and actions in a column */}
-                    <div> {/* Appointment/Blocker Info */}
+                  <div className="flex flex-col gap-2"> 
+                    <div> 
                       <p className="font-semibold text-primary text-md flex items-center">
                         {appointment.isBlocker ? <Lock className="mr-2 h-4 w-4 text-gray-500" /> : <Clock className="mr-2 h-4 w-4" />}
                         {format(parseISO(appointment.dateTime), "HH:mm", { locale: es })}
@@ -104,15 +110,16 @@ export function DayAppointmentsSidebar({
                       )}
                     </div>
 
-                    {/* Actions Section */}
+                    
                     <div className="mt-2 pt-2 border-t border-dashed">
                       {!appointment.isBlocker ? (
                         <Select
                           value={appointment.status}
                           onValueChange={(newStatus) => onStatusChange(appointment.id, newStatus as Appointment['status'])}
+                          disabled={!canChangeStatus}
                         >
                           <SelectTrigger className="w-full text-xs h-9">
-                            <div className="flex items-center gap-1"> {/* Reduced gap for icon and text */}
+                            <div className="flex items-center gap-1"> 
                               {getStatusIcon(appointment.status)}
                               <span>{getStatusText(appointment.status)}</span>
                             </div>
@@ -138,6 +145,7 @@ export function DayAppointmentsSidebar({
                           size="sm" 
                           className="w-full text-destructive hover:bg-destructive/10"
                           onClick={() => requestDeleteBlocker(appointment.id)}
+                          disabled={!canDeleteAppointmentsOrBlockers}
                         >
                           <Trash2 className="mr-2 h-4 w-4" /> Eliminar Bloqueo
                         </Button>
@@ -163,3 +171,4 @@ export function DayAppointmentsSidebar({
     </Sheet>
   );
 }
+

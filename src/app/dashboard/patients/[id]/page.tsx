@@ -8,8 +8,8 @@ import { PatientForm, type PatientFormValues } from "@/components/patients/Patie
 import { FileUploadSection } from "@/components/patients/FileUploadSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
-import { getPatientById, updatePatient, getPatientFullName, calculateAge } from "@/lib/mock-data";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { getPatientById, updatePatient, getPatientFullName, calculateAge, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays, ClipboardList, FolderOpen } from "lucide-react";
@@ -33,7 +33,8 @@ export default function PatientDetailPage() {
   const [patientAge, setPatientAge] = useState<string | null>(null);
   const [isAttachmentDialogOpen, setIsAttachmentDialogOpen] = useState(false);
 
-  const SIMULATED_ROLE = 'doctor'; // Cambiar a 'secretary' para probar
+  const isDoctor = SIMULATED_CURRENT_ROLE === 'doctor';
+  const secretaryPermissions = SIMULATED_SECRETARY_PERMISSIONS;
 
   const patientId = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -167,6 +168,14 @@ export default function PatientDetailPage() {
     datosFacturacion: patient.datosFacturacion || { ruc: '', direccionFiscal: '', telefonoFacturacion: '', emailFacturacion: '' },
     backgroundInformation: patient.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' },
   };
+  
+  const canSecretaryModifyPatientData = SIMULATED_CURRENT_ROLE === 'secretary' && secretaryPermissions.patients.canModifyPersonalAndBilling;
+  const canSecretaryManageAttachments = SIMULATED_CURRENT_ROLE === 'secretary' && secretaryPermissions.patients.canAddAttachments;
+
+  const numDoctorTabs = 4; // Datos, Antecedentes, Historial, Adjuntos
+  const numSecretaryTabs = 1 + (canSecretaryManageAttachments ? 1 : 0); // Datos + Adjuntos (si tiene permiso)
+  const gridColsClass = isDoctor ? `md:grid-cols-${numDoctorTabs}` : `md:grid-cols-${numSecretaryTabs}`;
+
 
   return (
     <div className="space-y-6">
@@ -212,15 +221,17 @@ export default function PatientDetailPage() {
          <TabsList className={cn(
             "w-full h-auto mb-4 p-1 bg-muted rounded-md",
             "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
-             SIMULATED_ROLE === 'doctor' ? "md:grid-cols-4" : "md:grid-cols-2" 
+             isDoctor ? "md:grid-cols-4" : (canSecretaryManageAttachments ? "md:grid-cols-2" : "md:grid-cols-1")
             )}>
           <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos</TabsTrigger>
-          {SIMULATED_ROLE === 'doctor' && (
+          {isDoctor && (
             <>
               <TabsTrigger value="backgroundInfo" className="flex-grow md:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2"/> Antecedentes</TabsTrigger>
               <TabsTrigger value="encounters" className="flex-grow md:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Historial</TabsTrigger>
-              <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
             </>
+          )}
+          {(isDoctor || canSecretaryManageAttachments) && (
+              <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
           )}
         </TabsList>
 
@@ -239,15 +250,15 @@ export default function PatientDetailPage() {
                 submitButtonText="Guardar Cambios"
                 showPersonalDetailsSection={true}
                 showDatosFacturacionSection={true}
-                allowEditFacturacionInfo={true}
-                showBackgroundInformationSection={false}
+                allowEditFacturacionInfo={isDoctor || canSecretaryModifyPatientData}
+                showBackgroundInformationSection={false} // Antecedentes se manejan en su propia pestaña para el médico
                 allowEditBackgroundInfo={false}
               />
             </CardContent>
           </Card>
         </TabsContent>
 
-        {SIMULATED_ROLE === 'doctor' && (
+        {isDoctor && (
            <TabsContent value="backgroundInfo">
              <Card className="w-full">
                <CardHeader>
@@ -262,7 +273,7 @@ export default function PatientDetailPage() {
                    showPersonalDetailsSection={false}
                    showDatosFacturacionSection={false}
                    showBackgroundInformationSection={true}
-                   allowEditBackgroundInfo={true}
+                   allowEditBackgroundInfo={true} // Solo médico puede editar aquí
                  />
                </CardContent>
              </Card>
@@ -270,8 +281,7 @@ export default function PatientDetailPage() {
         )}
 
 
-        {SIMULATED_ROLE === 'doctor' && (
-          <>
+        {isDoctor && (
             <TabsContent value="encounters">
               <Card className="w-full">
                 <CardHeader>
@@ -328,7 +338,9 @@ export default function PatientDetailPage() {
                 </CardContent>
               </Card>
             </TabsContent>
+        )}
 
+        {(isDoctor || canSecretaryManageAttachments) && (
             <TabsContent value="attachments">
               <Card className="w-full">
                 <CardHeader>
@@ -361,7 +373,6 @@ export default function PatientDetailPage() {
                 </CardContent>
               </Card>
             </TabsContent>
-          </>
         )}
       </Tabs>
     </div>
