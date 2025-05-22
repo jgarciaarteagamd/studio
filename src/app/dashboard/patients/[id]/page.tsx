@@ -8,7 +8,7 @@ import { PatientForm, type PatientFormValues } from "@/components/patients/Patie
 import { FileUploadSection } from "@/components/patients/FileUploadSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { getPatientById, updatePatient, getPatientFullName, calculateAge, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
@@ -172,11 +172,6 @@ export default function PatientDetailPage() {
   const canSecretaryModifyPatientData = SIMULATED_CURRENT_ROLE === 'secretary' && secretaryPermissions.patients.canModifyPersonalAndBilling;
   const canSecretaryManageAttachments = SIMULATED_CURRENT_ROLE === 'secretary' && secretaryPermissions.patients.canAddAttachments;
 
-  const numDoctorTabs = 4; // Datos, Antecedentes, Historial, Adjuntos
-  const numSecretaryTabs = 1 + (canSecretaryManageAttachments ? 1 : 0); // Datos + Adjuntos (si tiene permiso)
-  const gridColsClass = isDoctor ? `md:grid-cols-${numDoctorTabs}` : `md:grid-cols-${numSecretaryTabs}`;
-
-
   return (
     <div className="space-y-6">
        <Button variant="outline" size="sm" asChild className="mb-4">
@@ -251,7 +246,7 @@ export default function PatientDetailPage() {
                 showPersonalDetailsSection={true}
                 showDatosFacturacionSection={true}
                 allowEditFacturacionInfo={isDoctor || canSecretaryModifyPatientData}
-                showBackgroundInformationSection={false} // Antecedentes se manejan en su propia pestaña para el médico
+                showBackgroundInformationSection={false} 
                 allowEditBackgroundInfo={false}
               />
             </CardContent>
@@ -273,7 +268,7 @@ export default function PatientDetailPage() {
                    showPersonalDetailsSection={false}
                    showDatosFacturacionSection={false}
                    showBackgroundInformationSection={true}
-                   allowEditBackgroundInfo={true} // Solo médico puede editar aquí
+                   allowEditBackgroundInfo={true} 
                  />
                </CardContent>
              </Card>
