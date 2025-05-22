@@ -13,8 +13,8 @@ export interface PersonalDetails {
   apellidos: string;
   documentoIdentidad?: string;
   fechaNacimiento: string; // ISO date string
-  telefono1?: string; // Renamed from "Teléfono móvil (1)"
-  telefono2?: string; // Renamed from "Teléfono opcional (2)"
+  telefono1?: string;
+  telefono2?: string;
   email?: string;
 }
 
@@ -26,9 +26,9 @@ export interface DatosFacturacion {
 }
 
 export interface BackgroundInformation {
-  personalHistory?: string;
-  allergies?: string;
-  habitualMedication?: string;
+  personalHistory?: string | null;
+  allergies?: string | null;
+  habitualMedication?: string | null;
 }
 
 export interface MedicalEncounter {
@@ -57,10 +57,10 @@ export interface Recipe {
 export interface PatientRecord {
   id: string;
   personalDetails: PersonalDetails;
-  datosFacturacion?: DatosFacturacion;
-  backgroundInformation?: BackgroundInformation;
+  datosFacturacion?: DatosFacturacion | null;
+  backgroundInformation?: BackgroundInformation | null;
   medicalEncounters: MedicalEncounter[];
-  recipes: Recipe[]; // Added for recipe history
+  recipes: Recipe[];
   attachments: Attachment[];
   createdAt: string; // ISO date string
   updatedAt: string; // Date of the last general update or last encounter/recipe
@@ -76,4 +76,93 @@ export interface Appointment {
   status: 'programada' | 'confirmada' | 'cancelada' | 'completada';
   isBlocker?: boolean;
   blockerReason?: string;
+}
+
+// --- Tipos para Perfil del Médico ---
+export interface DoctorContactDetails {
+  nombreCompleto: string;
+  emailContacto: string;
+  telefonoPrincipal: string;
+  direccionConsultorio: string;
+}
+
+export interface DoctorProfessionalDetails {
+  especialidadPrincipal: string;
+  otrasEspecialidades?: string;
+  numeroMatricula: string;
+  otrosRegistros?: string;
+}
+
+export interface DoctorFiscalDetails {
+  razonSocialFacturacion: string;
+  identificacionTributaria: string; // RUC, CUIT, NIF, etc.
+  domicilioFiscalCompleto: string;
+  condicionIVA?: string;
+}
+
+export interface DoctorProfile {
+  id: string; // Podría ser el ID de usuario de Google
+  contactDetails: DoctorContactDetails;
+  professionalDetails: DoctorProfessionalDetails;
+  fiscalDetails: DoctorFiscalDetails;
+  logotipoUrl?: string; // URL del logotipo subido
+  driveFolderId?: string; // ID de la carpeta "MedLog" en Drive
+  updatedAt: string;
+}
+
+// --- Tipos para Facturación ---
+export interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string; // Ej. F001-0000123
+  patientId: string;
+  patientName: string; // Denormalizado para fácil visualización
+  dateIssued: string; // ISO date string
+  dateDue?: string; // ISO date string
+  items: InvoiceItem[];
+  subtotal: number;
+  taxRate?: number; // Ej. 0.12 para 12%
+  taxAmount?: number;
+  totalAmount: number;
+  status: 'borrador' | 'emitida' | 'pagada' | 'anulada' | 'vencida';
+  notes?: string;
+  // Referencia a datos fiscales del médico usados en esta factura
+  doctorFiscalDetailsSnapshot: DoctorFiscalDetails;
+}
+
+// --- Tipos para Gestión de Usuarios Asistenciales ---
+export interface AssistantPermissions {
+   patients: {
+    canCreate: boolean;
+    canModifyPersonalAndBilling: boolean; // Modificar datos personales y de facturación
+    // canModifyBackground: boolean; // Antecedentes solo médico
+    canAddAttachments: boolean;
+  };
+  schedule: {
+    canProgramAppointments: boolean;
+    canBlockTime: boolean;
+    canChangeStatus: boolean;
+    canDeleteAppointments: boolean;
+  };
+  billing: {
+    canAccess: boolean; // Acceso total o nulo a la sección
+  };
+}
+
+export interface AssistantUser {
+  id: string;
+  username: string; // ej. gonmar08
+  nombreCompleto: string;
+  email: string; // Email para notificaciones / restablecimiento
+  estado: 'activo' | 'inactivo' | 'pendiente_aprobacion';
+  permissions: AssistantPermissions;
+  createdAt: string;
+  lastActivity?: string;
 }

@@ -1,6 +1,10 @@
-
 // src/lib/mock-data.ts
-import type { PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment, Appointment, DatosFacturacion, Recipe, MedicationItem } from './types';
+import type {
+  PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment, Appointment, DatosFacturacion, Recipe, MedicationItem,
+  DoctorProfile, DoctorContactDetails, DoctorProfessionalDetails, DoctorFiscalDetails,
+  Invoice, InvoiceItem,
+  AssistantUser, AssistantPermissions
+} from './types';
 import { parseISO, setHours, setMinutes, format, differenceInYears } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -12,33 +16,29 @@ const tomorrow = new Date(new Date().setDate(new Date().getDate() + 1));
 const threeMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString();
 const sixMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString();
 const oneWeekAgo = new Date(new Date().setDate(new Date().getDate() - 7)).toISOString();
+const oneMonthAgo = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString();
+
 
 // --- SIMULACIÓN DE ROLES Y PERMISOS ---
-// Cambia SIMULATED_CURRENT_ROLE para probar diferentes vistas.
-// Si es 'secretary', SIMULATED_SECRETARY_PERMISSIONS se usará para controlar el acceso a funciones.
 export let SIMULATED_CURRENT_ROLE: 'doctor' | 'secretary' = 'doctor';
 
-export const SIMULATED_SECRETARY_PERMISSIONS = {
+export const SIMULATED_SECRETARY_PERMISSIONS: AssistantPermissions = {
   patients: {
-    canCreate: true, // Puede acceder a la página de crear
-    canModifyPersonalAndBilling: true, // Puede modificar datos personales y de facturación
-    canModifyBackground: false, // No puede modificar antecedentes
-    canAddAttachments: true, // Puede agregar adjuntos
-    canViewFullHistory: false, // Puede ver solo resúmenes de historial si no es médico
-    canDeletePatient: false, // No puede eliminar paciente
+    canCreate: true,
+    canModifyPersonalAndBilling: true,
+    canAddAttachments: true,
   },
   schedule: {
     canProgramAppointments: true,
     canBlockTime: true,
     canChangeStatus: true,
-    canDeleteAppointments: true, // Para citas y bloqueos
+    canDeleteAppointments: true,
   },
   billing: {
     canAccess: true,
   },
 };
 
-// Función para cambiar el rol simulado (usada por la página de login simulada)
 export const setSimulatedRole = (role: 'doctor' | 'secretary') => {
   SIMULATED_CURRENT_ROLE = role;
   console.log(`Simulated role set to: ${role}`);
@@ -145,6 +145,7 @@ export let mockPatients: PatientRecord[] = [
       email: 'ana.martinez@example.com',
       telefono1: '0976543210',
     },
+    datosFacturacion: null,
     backgroundInformation: {
       personalHistory: 'Síndrome de Ovario Poliquístico (SOP). Buscando embarazo.',
       allergies: 'AINEs (malestar gástrico).',
@@ -165,29 +166,30 @@ export let mockPatients: PatientRecord[] = [
 ];
 
 export const getPatientById = (id: string): PatientRecord | undefined => {
-  return mockPatients.find(p => p.id === id);
+  const patient = mockPatients.find(p => p.id === id);
+  return patient ? { ...patient } : undefined; // Return a copy
 };
 
 export const addPatient = (
   data: {
     personalDetails: PersonalDetails;
-    datosFacturacion?: DatosFacturacion;
-    backgroundInformation?: BackgroundInformation
+    datosFacturacion?: DatosFacturacion | null;
+    backgroundInformation?: BackgroundInformation | null;
   }
 ): PatientRecord => {
   const newPatient: PatientRecord = {
     id: String(mockPatients.length + 1 + Math.random()),
     personalDetails: data.personalDetails,
-    datosFacturacion: data.datosFacturacion || { ruc: '', direccionFiscal: '', telefonoFacturacion: '', emailFacturacion: ''},
-    backgroundInformation: data.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' },
+    datosFacturacion: data.datosFacturacion || null,
+    backgroundInformation: data.backgroundInformation || null,
     medicalEncounters: [],
-    recipes: [], 
+    recipes: [],
     attachments: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
   mockPatients.push(newPatient);
-  return {...newPatient}; // Return a new object reference
+  return {...newPatient};
 };
 
 export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, 'id' | 'createdAt' >>): PatientRecord | undefined => {
@@ -206,7 +208,7 @@ export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, '
       updatedAt: new Date().toISOString(),
     };
     mockPatients[patientIndex] = updatedPatientData;
-    return {...mockPatients[patientIndex]}; 
+    return {...mockPatients[patientIndex]};
   }
   return undefined;
 };
@@ -237,12 +239,12 @@ export const addMedicalEncounterToPatient = (patientId: string, consultationData
   const currentPatient = mockPatients[patientIndex];
   const updatedPatientData: PatientRecord = {
     ...currentPatient,
-    medicalEncounters: [...currentPatient.medicalEncounters, newEncounter].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    medicalEncounters: [newEncounter, ...currentPatient.medicalEncounters].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     updatedAt: new Date().toISOString(),
   };
   mockPatients[patientIndex] = updatedPatientData;
 
-  return { ...updatedPatientData }; 
+  return { ...updatedPatientData };
 };
 
 export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, 'id' | 'patientId' | 'date'>): PatientRecord | undefined => {
@@ -262,13 +264,13 @@ export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, '
   const currentPatient = mockPatients[patientIndex];
   const updatedPatientData: PatientRecord = {
     ...currentPatient,
-    recipes: [...currentPatient.recipes, newRecipe].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    recipes: [newRecipe, ...currentPatient.recipes].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     updatedAt: new Date().toISOString(),
   };
 
   mockPatients[patientIndex] = updatedPatientData;
 
-  return { ...updatedPatientData }; 
+  return { ...updatedPatientData };
 };
 
 
@@ -287,7 +289,7 @@ export let mockAppointments: Appointment[] = [
     id: 'appt-block-lunch',
     dateTime: setHours(setMinutes(today, 0), 13).toISOString(),
     durationMinutes: 60,
-    status: 'programada', // Status for blockers might not be strictly necessary but good to have a default
+    status: 'programada',
     isBlocker: true,
     blockerReason: 'Almuerzo del Personal',
   },
@@ -330,26 +332,26 @@ export const addAppointment = (data: Omit<Appointment, 'id' | 'patientName'> & {
   }
 
   const newAppointment: Appointment = {
-    id: `appt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`, // Added randomness to ID
+    id: `appt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     patientId: data.isBlocker ? undefined : data.patientId,
     patientName: patientNameResolved,
     dateTime: data.dateTime,
     durationMinutes: data.durationMinutes,
     notes: data.isBlocker ? undefined : data.notes,
-    status: data.isBlocker ? 'programada' : data.status, // Default status for blockers if needed
+    status: data.isBlocker ? 'programada' : data.status,
     isBlocker: data.isBlocker || false,
     blockerReason: data.isBlocker ? data.blockerReason : undefined,
   };
   mockAppointments.push(newAppointment);
   mockAppointments.sort((a,b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime());
-  return newAppointment;
+  return {...newAppointment};
 };
 
 export const updateAppointmentStatus = (appointmentId: string, newStatus: Appointment['status']): Appointment | undefined => {
   const appointmentIndex = mockAppointments.findIndex(app => app.id === appointmentId);
   if (appointmentIndex !== -1) {
     mockAppointments[appointmentIndex].status = newStatus;
-    return { ...mockAppointments[appointmentIndex] }; 
+    return { ...mockAppointments[appointmentIndex] };
   }
   return undefined;
 };
@@ -363,12 +365,9 @@ export const deleteAppointment = (appointmentId: string): boolean => {
 
 export const getPatientFullName = (patient: PatientRecord | PersonalDetails | undefined | null): string => {
   if (!patient) return 'Nombre no disponible';
-
-  // Check if it's a PatientRecord
   if ('personalDetails' in patient && patient.personalDetails) {
     return `${patient.personalDetails.nombres || ''} ${patient.personalDetails.apellidos || ''}`.trim() || 'Nombre no disponible';
   }
-  // Check if it's PersonalDetails directly
   if ('nombres' in patient && 'apellidos' in patient) {
      return `${patient.nombres || ''} ${patient.apellidos || ''}`.trim() || 'Nombre no disponible';
   }
@@ -392,4 +391,139 @@ export const getLastConsultationDate = (patient: PatientRecord): string => {
   }
   const sortedEncounters = [...patient.medicalEncounters].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   return format(new Date(sortedEncounters[0].date), "P", { locale: es });
+};
+
+// --- Datos para Perfil del Médico ---
+let mockDoctorProfileData: DoctorProfile = {
+  id: 'doc123', // Ejemplo
+  contactDetails: {
+    nombreCompleto: 'Dr. Admin Médico',
+    emailContacto: 'admin@medlog.cloud',
+    telefonoPrincipal: '0991234567',
+    direccionConsultorio: 'Av. Principal 123, Consultorio 401, Quito',
+  },
+  professionalDetails: {
+    especialidadPrincipal: 'Medicina General',
+    otrasEspecialidades: 'Endocrinología (en formación)',
+    numeroMatricula: 'MSP-12345',
+    otrosRegistros: ' Colegio Médico Pichincha: 6789',
+  },
+  fiscalDetails: {
+    razonSocialFacturacion: 'Admin Médico Servicios Profesionales S.A.S.',
+    identificacionTributaria: '1798765432001',
+    domicilioFiscalCompleto: 'Av. Amazonas N20-30 y Patria, Edificio MedCenter, Of. 101, Quito, Pichincha, Ecuador',
+    condicionIVA: 'Agente de Retención',
+  },
+  logotipoUrl: undefined, // 'https://placehold.co/200x80.png?text=Mi+Logo', // Placeholder
+  driveFolderId: undefined,
+  updatedAt: new Date().toISOString(),
+};
+
+export const getDoctorProfile = (): DoctorProfile => {
+  return { ...mockDoctorProfileData }; // Devuelve una copia
+};
+
+export const updateDoctorProfile = (updates: Partial<DoctorProfile>): DoctorProfile => {
+  mockDoctorProfileData = {
+    ...mockDoctorProfileData,
+    ...updates,
+    contactDetails: updates.contactDetails ? { ...mockDoctorProfileData.contactDetails, ...updates.contactDetails } : mockDoctorProfileData.contactDetails,
+    professionalDetails: updates.professionalDetails ? { ...mockDoctorProfileData.professionalDetails, ...updates.professionalDetails } : mockDoctorProfileData.professionalDetails,
+    fiscalDetails: updates.fiscalDetails ? { ...mockDoctorProfileData.fiscalDetails, ...updates.fiscalDetails } : mockDoctorProfileData.fiscalDetails,
+    updatedAt: new Date().toISOString(),
+  };
+  return { ...mockDoctorProfileData };
+};
+
+
+// --- Datos para Facturación ---
+export let mockInvoices: Invoice[] = [
+  {
+    id: 'inv-001',
+    invoiceNumber: 'F001-0000001',
+    patientId: '1',
+    patientName: 'Maria Gonzalez Perez',
+    dateIssued: oneWeekAgo,
+    dateDue: todayISO,
+    items: [
+      { id: 'item1', description: 'Consulta Médica General', quantity: 1, unitPrice: 50, total: 50 },
+      { id: 'item2', description: 'Examen de Glucosa', quantity: 1, unitPrice: 15, total: 15 },
+    ],
+    subtotal: 65,
+    taxRate: 0.12, // 12% IVA Ecuador (ejemplo)
+    taxAmount: 7.80,
+    totalAmount: 72.80,
+    status: 'emitida',
+    doctorFiscalDetailsSnapshot: mockDoctorProfileData.fiscalDetails, // Tomar una instantánea
+  },
+  {
+    id: 'inv-002',
+    invoiceNumber: 'F001-0000002',
+    patientId: '2',
+    patientName: 'Carlos Rodriguez Lopez',
+    dateIssued: oneMonthAgo,
+    dateDue: oneWeekAgo,
+    items: [
+      { id: 'item3', description: 'Consulta de Seguimiento Hipotiroidismo', quantity: 1, unitPrice: 40, total: 40 },
+    ],
+    subtotal: 40,
+    taxRate: 0.12,
+    taxAmount: 4.80,
+    totalAmount: 44.80,
+    status: 'pagada',
+    doctorFiscalDetailsSnapshot: mockDoctorProfileData.fiscalDetails,
+  }
+];
+
+export const getMockInvoices = (): Invoice[] => {
+  return [...mockInvoices].sort((a,b) => new Date(b.dateIssued).getTime() - new Date(a.dateIssued).getTime());
+};
+
+// --- Datos para Gestión de Usuarios Asistenciales ---
+export let mockAssistants: AssistantUser[] = [
+  {
+    id: 'assist-001',
+    username: 'perros01', // perez.rosa
+    nombreCompleto: 'Rosa Pérez',
+    email: 'rosa.perez@example.com',
+    estado: 'activo',
+    permissions: {
+      patients: { canCreate: true, canModifyPersonalAndBilling: true, canAddAttachments: true },
+      schedule: { canProgramAppointments: true, canBlockTime: true, canChangeStatus: true, canDeleteAppointments: true },
+      billing: { canAccess: true },
+    },
+    createdAt: threeMonthsAgo,
+    lastActivity: yesterday,
+  },
+  {
+    id: 'assist-002',
+    username: 'lopjua07', // lopez.juan
+    nombreCompleto: 'Juan López',
+    email: 'juan.lopez@example.com',
+    estado: 'pendiente_aprobacion',
+    permissions: { // Permisos por defecto más restrictivos
+      patients: { canCreate: false, canModifyPersonalAndBilling: false, canAddAttachments: false },
+      schedule: { canProgramAppointments: false, canBlockTime: false, canChangeStatus: false, canDeleteAppointments: false },
+      billing: { canAccess: false },
+    },
+    createdAt: oneWeekAgo,
+  },
+   {
+    id: 'assist-003',
+    username: 'sanana03', // sanchez.ana
+    nombreCompleto: 'Ana Sánchez',
+    email: 'ana.sanchez@example.com',
+    estado: 'inactivo',
+    permissions: {
+      patients: { canCreate: true, canModifyPersonalAndBilling: false, canAddAttachments: false },
+      schedule: { canProgramAppointments: true, canBlockTime: false, canChangeStatus: false, canDeleteAppointments: false },
+      billing: { canAccess: false },
+    },
+    createdAt: sixMonthsAgo,
+    lastActivity: oneMonthAgo,
+  }
+];
+
+export const getMockAssistants = (): AssistantUser[] => {
+  return [...mockAssistants];
 };
