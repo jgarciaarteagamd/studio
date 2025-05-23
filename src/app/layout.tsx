@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'medlog cloud',
-  description: 'Gestiona historiales médicos con facilidad en medlog cloud.',
+  title: 'MedLog',
+  description: 'Gestiona historiales médicos con facilidad en MedLog.',
 };
 
 export default function RootLayout({

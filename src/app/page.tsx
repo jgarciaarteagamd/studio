@@ -84,7 +84,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm border-border/50">
         <CardHeader className="text-center space-y-2 pt-8">
           <ActivitySquare className="mx-auto h-12 w-12 text-primary" />
-          <CardTitle className="text-3xl font-bold tracking-tight">Bienvenido a medlog cloud</CardTitle>
+          <CardTitle className="text-3xl font-bold tracking-tight">Bienvenido a MedLog</CardTitle>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
           {/* Sección Médico */}
@@ -151,7 +151,7 @@ export default function LoginPage() {
             Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad.
           </p>
           <p className="mt-4 text-xs text-muted-foreground/70">
-            &copy; {new Date().getFullYear()} medlog cloud. Todos los derechos reservados.
+            &copy; {new Date().getFullYear()} MedLog. Todos los derechos reservados.
           </p>
         </CardFooter>
       </Card>

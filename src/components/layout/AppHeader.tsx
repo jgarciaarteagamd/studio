@@ -4,7 +4,7 @@
 import type React from 'react';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { ActivitySquare } from 'lucide-react';
+import { ActivitySquare, Stethoscope } from 'lucide-react';
 import Link from 'next/link';
 
 export function AppHeader() {
@@ -15,10 +15,10 @@ export function AppHeader() {
       </div>
       <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold md:text-base">
         <ActivitySquare className="h-6 w-6 text-primary" />
-        <h1 className="text-xl font-bold text-foreground">medlog cloud</h1>
+        <h1 className="text-xl font-bold text-foreground">MedLog</h1>
       </Link>
       <div className="ml-auto flex items-center gap-4">
-        {/* "Nueva Consulta" button removed from here, will be in sidebar */}
+        {/* "Nueva Consulta" button was moved to sidebar */}
         {/* User profile/avatar placeholder could go here */}
       </div>
     </header>

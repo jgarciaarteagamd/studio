@@ -10,8 +10,8 @@ import { AppHeader } from '@/components/layout/AppHeader';
 // y las variables de fuente estarán disponibles.
 
 export const metadata: Metadata = {
-  title: 'Panel | medlog cloud',
-  description: 'Panel de administración de medlog cloud.',
+  title: 'Panel | MedLog',
+  description: 'Panel de administración de MedLog.',
 };
 
 export default function DashboardLayout({
