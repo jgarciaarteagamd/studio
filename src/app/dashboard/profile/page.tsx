@@ -1,3 +1,4 @@
+
 // src/app/dashboard/profile/page.tsx
 "use client";
 
@@ -28,6 +29,7 @@ const professionalDetailsSchema = z.object({
   otrasEspecialidades: z.string().optional(),
   numeroMatricula: z.string().min(3, "Matrícula es requerida."),
   otrosRegistros: z.string().optional(),
+  logotipoUrl: z.string().url("URL de logotipo inválida").optional().or(z.literal('')), // Moved from branding
 });
 
 const fiscalDetailsSchema = z.object({
@@ -42,7 +44,7 @@ const profileFormSchema = z.object({
   contactDetails: contactDetailsSchema,
   professionalDetails: professionalDetailsSchema,
   fiscalDetails: fiscalDetailsSchema,
-  logotipoUrl: z.string().url("URL de logotipo inválida").optional().or(z.literal('')), // Allow empty string
+  // logotipoUrl is now part of professionalDetails
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -69,6 +71,7 @@ export default function ProfilePage() {
         otrasEspecialidades: "",
         numeroMatricula: "",
         otrosRegistros: "",
+        logotipoUrl: "", // Moved
       },
       fiscalDetails: {
         razonSocialFacturacion: "",
@@ -76,7 +79,6 @@ export default function ProfilePage() {
         domicilioFiscalCompleto: "",
         condicionIVA: "",
       },
-      logotipoUrl: "",
     }
   });
   
@@ -86,9 +88,11 @@ export default function ProfilePage() {
       setCurrentProfile(profileData);
       form.reset({
         contactDetails: profileData.contactDetails,
-        professionalDetails: profileData.professionalDetails,
+        professionalDetails: {
+            ...profileData.professionalDetails,
+            logotipoUrl: profileData.logotipoUrl || "" // Ensure it's set here
+        },
         fiscalDetails: profileData.fiscalDetails,
-        logotipoUrl: profileData.logotipoUrl || "",
       });
       setPreviewLogo(profileData.logotipoUrl);
     }
@@ -97,13 +101,17 @@ export default function ProfilePage() {
 
   const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     setIsSaving(true);
-    // Simular guardado
     await new Promise(resolve => setTimeout(resolve, 1000));
     const updatedProfile = updateDoctorProfile({
       contactDetails: data.contactDetails,
-      professionalDetails: data.professionalDetails,
+      professionalDetails: { // Ensure we extract only professional details, not the whole data.professionalDetails which includes logo
+        especialidadPrincipal: data.professionalDetails.especialidadPrincipal,
+        otrasEspecialidades: data.professionalDetails.otrasEspecialidades,
+        numeroMatricula: data.professionalDetails.numeroMatricula,
+        otrosRegistros: data.professionalDetails.otrosRegistros,
+      },
       fiscalDetails: data.fiscalDetails,
-      logotipoUrl: data.logotipoUrl || undefined, // Guardar undefined si está vacío
+      logotipoUrl: data.professionalDetails.logotipoUrl || undefined,
     });
     setCurrentProfile(updatedProfile);
     setPreviewLogo(updatedProfile.logotipoUrl);
@@ -116,9 +124,9 @@ export default function ProfilePage() {
 
   const handleLogoUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const url = event.target.value;
-    form.setValue("logotipoUrl", url, { shouldValidate: true });
-    if (form.getFieldState("logotipoUrl").invalid || !url) {
-       setPreviewLogo(getDoctorProfile().logotipoUrl); // Revert to original if invalid or empty
+    form.setValue("professionalDetails.logotipoUrl", url, { shouldValidate: true });
+    if (form.getFieldState("professionalDetails.logotipoUrl").invalid || !url) {
+       setPreviewLogo(getDoctorProfile().logotipoUrl); 
     } else {
        setPreviewLogo(url);
     }
@@ -146,11 +154,10 @@ export default function ProfilePage() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Tabs defaultValue="contact" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 mb-6">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-8 h-auto">
               <TabsTrigger value="contact"><Edit3 className="mr-2 h-4 w-4" />Contacto</TabsTrigger>
               <TabsTrigger value="professional"><Briefcase className="mr-2 h-4 w-4" />Profesional</TabsTrigger>
               <TabsTrigger value="fiscal"><Building className="mr-2 h-4 w-4" />Fiscal</TabsTrigger>
-              <TabsTrigger value="branding"><ImageIcon className="mr-2 h-4 w-4" />Logotipo</TabsTrigger>
               <TabsTrigger value="security"><ShieldCheck className="mr-2 h-4 w-4" />Seguridad</TabsTrigger>
             </TabsList>
 
@@ -208,7 +215,7 @@ export default function ProfilePage() {
 
             <TabsContent value="professional" className="mt-6">
               <Card>
-                <CardHeader><CardTitle>Datos Profesionales</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Datos Profesionales y Logotipo</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
                     control={form.control}
@@ -254,6 +261,49 @@ export default function ProfilePage() {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="professionalDetails.logotipoUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center"><ImageIcon className="mr-2 h-4 w-4" />URL del Logotipo</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="https://ejemplo.com/logo.png" 
+                            {...field} 
+                            onChange={handleLogoUrlChange} 
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Ingrese la URL pública de su imagen de logotipo (PNG, JPG, SVG).
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {previewLogo && (
+                    <div className="mt-4 p-4 border rounded-md bg-muted/50 flex flex-col items-center">
+                      <FormLabel className="mb-2">Vista Previa del Logotipo:</FormLabel>
+                      <img 
+                        src={previewLogo} 
+                        alt="Vista previa del logotipo" 
+                        className="max-w-xs max-h-24 object-contain rounded"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none'; 
+                            const nextSibling = (e.target as HTMLImageElement).nextElementSibling;
+                            if (nextSibling) nextSibling.classList.remove('hidden');
+                        }}
+                       />
+                       <p className="text-destructive text-sm mt-2 hidden"><AlertTriangle className="inline mr-1 h-4 w-4"/> No se pudo cargar la imagen. Verifique la URL.</p>
+                    </div>
+                  )}
+                  {!previewLogo && currentProfile?.logotipoUrl && (
+                     <p className="text-muted-foreground text-sm">Actualmente no hay un logotipo configurado o la URL es inválida.</p>
+                  )}
+                   <p className="text-xs text-muted-foreground">
+                    Idealmente, use una imagen optimizada para la web. El logotipo se usará en recetas, informes y facturas.
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -310,56 +360,6 @@ export default function ProfilePage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="branding" className="mt-6">
-              <Card>
-                <CardHeader><CardTitle>Logotipo Personal o de Clínica</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="logotipoUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>URL del Logotipo</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="https://ejemplo.com/logo.png" 
-                            {...field} 
-                            onChange={handleLogoUrlChange} 
-                            value={field.value || ""}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Ingrese la URL pública de su imagen de logotipo (PNG, JPG, SVG).
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {previewLogo && (
-                    <div className="mt-4 p-4 border rounded-md bg-muted/50 flex flex-col items-center">
-                      <FormLabel className="mb-2">Vista Previa del Logotipo:</FormLabel>
-                      <img 
-                        src={previewLogo} 
-                        alt="Vista previa del logotipo" 
-                        className="max-w-xs max-h-24 object-contain rounded"
-                        onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none'; // Hide if broken
-                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); // Show error message
-                        }}
-                       />
-                       <p className="text-destructive text-sm mt-2 hidden"><AlertTriangle className="inline mr-1 h-4 w-4"/> No se pudo cargar la imagen. Verifique la URL.</p>
-                    </div>
-                  )}
-                  {!previewLogo && currentProfile?.logotipoUrl && (
-                     <p className="text-muted-foreground text-sm">Actualmente no hay un logotipo configurado o la URL es inválida.</p>
-                  )}
-                   <p className="text-xs text-muted-foreground">
-                    Idealmente, use una imagen optimizada para la web. El logotipo se usará en recetas, informes y facturas.
-                  </p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
             <TabsContent value="security" className="mt-6">
               <Card>
                 <CardHeader><CardTitle>Seguridad y Configuración</CardTitle></CardHeader>
@@ -396,5 +396,6 @@ export default function ProfilePage() {
     </div>
   );
 }
+    
 
     
