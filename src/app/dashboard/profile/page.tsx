@@ -154,7 +154,7 @@ export default function ProfilePage() {
               <TabsTrigger value="security"><ShieldCheck className="mr-2 h-4 w-4" />Seguridad</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="contact">
+            <TabsContent value="contact" className="mt-6">
               <Card>
                 <CardHeader><CardTitle>Datos Personales y de Contacto</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
@@ -206,7 +206,7 @@ export default function ProfilePage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="professional">
+            <TabsContent value="professional" className="mt-6">
               <Card>
                 <CardHeader><CardTitle>Datos Profesionales</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
@@ -258,7 +258,7 @@ export default function ProfilePage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="fiscal">
+            <TabsContent value="fiscal" className="mt-6">
               <Card>
                 <CardHeader><CardTitle>Datos Fiscales y de Facturación</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
@@ -310,7 +310,7 @@ export default function ProfilePage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="branding">
+            <TabsContent value="branding" className="mt-6">
               <Card>
                 <CardHeader><CardTitle>Logotipo Personal o de Clínica</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
@@ -360,7 +360,7 @@ export default function ProfilePage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="security">
+            <TabsContent value="security" className="mt-6">
               <Card>
                 <CardHeader><CardTitle>Seguridad y Configuración</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
@@ -396,3 +396,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
