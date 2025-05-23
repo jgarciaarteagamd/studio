@@ -1,22 +1,19 @@
+
 // src/app/dashboard/admin/users/page.tsx
 "use client";
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Users, UserPlus, LockKeyhole, Settings, MoreHorizontal, Edit, Trash2, ShieldCheck, ShieldOff, MailWarning, ChevronLeft, ChevronRight } from "lucide-react";
+import { UserPlus, LockKeyhole, Settings, MoreHorizontal, Edit, Trash2, ShieldCheck, ShieldOff, MailWarning, ChevronLeft, ChevronRight, UserCog, AtSign, Fingerprint } from "lucide-react";
 import type { AssistantUser } from "@/lib/types";
 import { getMockAssistants, SIMULATED_CURRENT_ROLE } from "@/lib/mock-data";
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 6; // Ajustado para tarjetas
 
 export default function UserManagementPage() {
   const [assistants, setAssistants] = useState<AssistantUser[]>([]);
@@ -24,9 +21,8 @@ export default function UserManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // El acceso a esta página ya está controlado por SidebarNav para SIMULATED_CURRENT_ROLE === 'doctor'
   if (SIMULATED_CURRENT_ROLE !== 'doctor') {
-     return (
+    return (
       <div className="space-y-6">
         <Card className="shadow-lg">
           <CardHeader><CardTitle className="text-3xl">Acceso Denegado</CardTitle></CardHeader>
@@ -79,27 +75,29 @@ export default function UserManagementPage() {
     return map[status] || status;
   };
 
-
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <Card className="shadow-lg">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-                <Settings className="h-8 w-8 text-primary" />
-                <CardTitle className="text-3xl">Gestión de Usuarios Asistenciales</CardTitle>
-            </div>
-            <Button onClick={() => alert("Abrir modal para crear nuevo usuario asistencial (no implementado).")} disabled>
-              <UserPlus className="mr-2 h-5 w-5" />
-              Crear Usuario Asistencial
-            </Button>
+          <div className="flex items-center gap-3 mb-2">
+              <Settings className="h-8 w-8 text-primary" />
+              <CardTitle className="text-3xl">Gestión de Usuarios Asistenciales</CardTitle>
           </div>
           <CardDescription>
             Administre las cuentas y permisos del personal asistencial (secretarios/as).
           </CardDescription>
+          <Button 
+            onClick={() => alert("Abrir modal para crear nuevo usuario asistencial (no implementado).")} 
+            disabled 
+            className="w-full sm:w-auto mt-4"
+            size="lg"
+          >
+            <UserPlus className="mr-2 h-5 w-5" />
+            Crear Usuario Asistencial
+          </Button>
         </CardHeader>
         <CardContent>
-           <div className="mb-4">
+           <div className="mb-6">
             <Input
               placeholder="Buscar por nombre, usuario o email..."
               value={searchTerm}
@@ -107,98 +105,97 @@ export default function UserManagementPage() {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="max-w-sm"
+              className="max-w-md"
             />
           </div>
           {isLoading ? (
             <p>Cargando usuarios...</p>
           ) : paginatedAssistants.length > 0 ? (
-            <>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Usuario</TableHead>
-                    <TableHead>Nombre Completo</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead className="text-center">Estado</TableHead>
-                    <TableHead className="text-center">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedAssistants.map((assistant) => (
-                    <TableRow key={assistant.id}>
-                      <TableCell className="font-medium">{assistant.username}</TableCell>
-                      <TableCell>{assistant.nombreCompleto}</TableCell>
-                      <TableCell>{assistant.email}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={getStatusBadgeVariant(assistant.estado)}>{getStatusText(assistant.estado)}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0" disabled>
-                              <span className="sr-only">Abrir menú</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => alert(`Editar permisos de ${assistant.nombreCompleto} (no implementado).`)} disabled>
-                              <LockKeyhole className="mr-2 h-4 w-4" /> Editar Permisos
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => alert(`Cambiar estado de ${assistant.nombreCompleto} (no implementado).`)} disabled>
-                               {assistant.estado === 'activo' ? <ShieldOff className="mr-2 h-4 w-4" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
-                               {assistant.estado === 'activo' ? 'Desactivar' : 'Activar'}
-                               {assistant.estado === 'pendiente_aprobacion' && ' / Aprobar'}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => alert(`Restablecer contraseña de ${assistant.nombreCompleto} (no implementado).`)} disabled>
-                              <MailWarning className="mr-2 h-4 w-4" /> Restablecer Contraseña
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => alert(`Eliminar ${assistant.nombreCompleto} (no implementado).`)} disabled>
-                              <Trash2 className="mr-2 h-4 w-4" /> Eliminar Usuario
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedAssistants.map((assistant) => (
+                <Card key={assistant.id} className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-lg font-semibold text-primary">{assistant.nombreCompleto}</CardTitle>
+                       <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0 -mr-2 -mt-1" disabled>
+                            <span className="sr-only">Abrir menú</span>
+                            <MoreHorizontal className="h-5 w-5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => alert(`Editar permisos de ${assistant.nombreCompleto} (no implementado).`)} disabled>
+                            <UserCog className="mr-2 h-4 w-4" /> Editar Permisos
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => alert(`Cambiar estado de ${assistant.nombreCompleto} (no implementado).`)} disabled>
+                             {assistant.estado === 'activo' ? <ShieldOff className="mr-2 h-4 w-4" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+                             {assistant.estado === 'activo' ? 'Desactivar' : 'Activar'}
+                             {assistant.estado === 'pendiente_aprobacion' && ' / Aprobar'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => alert(`Restablecer contraseña de ${assistant.nombreCompleto} (no implementado).`)} disabled>
+                            <MailWarning className="mr-2 h-4 w-4" /> Restablecer Contraseña
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => alert(`Eliminar ${assistant.nombreCompleto} (no implementado).`)} disabled>
+                            <Trash2 className="mr-2 h-4 w-4" /> Eliminar Usuario
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                     <Badge variant={getStatusBadgeVariant(assistant.estado)} className="text-xs w-fit mt-1">
+                        {getStatusText(assistant.estado)}
+                      </Badge>
+                  </CardHeader>
+                  <CardContent className="space-y-1.5 text-sm flex-grow">
+                    <div className="flex items-center text-muted-foreground">
+                      <Fingerprint className="mr-2 h-4 w-4 " />
+                      <span>Usuario: {assistant.username}</span>
+                    </div>
+                    <div className="flex items-center text-muted-foreground">
+                      <AtSign className="mr-2 h-4 w-4 " />
+                      <span>Email: {assistant.email}</span>
+                    </div>
+                     <p className="text-xs text-muted-foreground/80 pt-2">Últ. Actividad: {assistant.lastActivity ? new Date(assistant.lastActivity).toLocaleDateString('es-ES') : 'N/A'}</p>
+                  </CardContent>
+                  {/* El footer podría usarse para un botón de acción principal si fuera necesario */}
+                </Card>
+              ))}
             </div>
-            {totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="mr-1 h-4 w-4" />
-                    Anterior
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Página {currentPage} de {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                  >
-                    Siguiente
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </>
           ) : (
-            <p className="text-muted-foreground text-center py-4">
+            <p className="text-muted-foreground text-center py-10">
               {searchTerm ? `No se encontraron usuarios para "${searchTerm}".` : "No hay usuarios asistenciales registrados."}
             </p>
           )}
-          <CardFooter className="pt-6">
+
+          {totalPages > 1 && paginatedAssistants.length > 0 && (
+            <div className="flex items-center justify-between pt-8 mt-6 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="mr-1 h-4 w-4" />
+                Anterior
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Página {currentPage} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+              >
+                Siguiente
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          
+          <CardFooter className="pt-8 mt-6 border-t">
             <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
                 <li>La creación de nuevos usuarios, edición de permisos y otras acciones se implementarán en futuras versiones.</li>
                 <li>La generación de nombres de usuario y contraseñas iniciales será automática.</li>
