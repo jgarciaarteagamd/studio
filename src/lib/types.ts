@@ -119,6 +119,8 @@ export interface InvoiceItem {
   total: number;
 }
 
+export type InvoiceStatus = 'borrador' | 'emitida' | 'pagada' | 'anulada' | 'vencida';
+
 export interface Invoice {
   id: string;
   invoiceNumber: string; // Ej. F001-0000123
@@ -131,10 +133,11 @@ export interface Invoice {
   taxRate?: number; // Ej. 0.12 para 12%
   taxAmount?: number;
   totalAmount: number;
-  status: 'borrador' | 'emitida' | 'pagada' | 'anulada' | 'vencida';
+  status: InvoiceStatus;
   notes?: string;
   // Referencia a datos fiscales del médico usados en esta factura
   doctorFiscalDetailsSnapshot: DoctorFiscalDetails;
+  updatedAt?: string; // Para rastrear cuándo se actualizó el estado, por ejemplo
 }
 
 // --- Tipos para Gestión de Usuarios Asistenciales ---
@@ -152,7 +155,7 @@ export interface AssistantPermissions {
     canDeleteAppointments: boolean;
   };
   billing: {
-    canAccess: boolean; // Acceso total o nulo a la sección
+    canAccess: boolean;
   };
 }
 

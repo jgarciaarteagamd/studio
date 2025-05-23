@@ -4,25 +4,38 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Receipt, FilePlus2, Edit3, Printer, Search, Banknote, Construction, ChevronLeft, ChevronRight } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Receipt, FilePlus2, Edit3, Printer, ChevronLeft, ChevronRight, FileText, CalendarDays, DollarSign, ListFilter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import type { Invoice } from "@/lib/types";
-import { getMockInvoices, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { Invoice, InvoiceStatus } from "@/lib/types";
+import { getMockInvoices, updateInvoiceStatus, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
+import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 6; // Ajustado para tarjetas
+
+const invoiceStatusOptions: { value: InvoiceStatus; label: string }[] = [
+  { value: 'borrador', label: 'Borrador' },
+  { value: 'emitida', label: 'Emitida' },
+  { value: 'pagada', label: 'Pagada' },
+  { value: 'anulada', label: 'Anulada' },
+  { value: 'vencida', label: 'Vencida' },
+];
 
 export default function BillingPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const { toast } = useToast();
   
   const canAccessBilling = SIMULATED_CURRENT_ROLE === 'doctor' || (SIMULATED_CURRENT_ROLE === 'secretary' && SIMULATED_SECRETARY_PERMISSIONS.billing.canAccess);
+  // Por ahora, asumimos que si puede acceder, puede cambiar estados. Esto se podría refinar con más permisos.
+  const canChangeInvoiceStatus = canAccessBilling;
+
 
   useEffect(() => {
     if (canAccessBilling) {
@@ -50,19 +63,19 @@ export default function BillingPage() {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
   
-  const getStatusBadgeVariant = (status: Invoice['status']): "default" | "secondary" | "destructive" | "outline" => {
+  const getStatusBadgeVariant = (status: InvoiceStatus): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
-      case 'pagada': return 'default'; // Primary color (green by default in theme)
+      case 'pagada': return 'default';
       case 'emitida': return 'secondary';
       case 'borrador': return 'outline';
       case 'anulada': return 'destructive';
-      case 'vencida': return 'destructive'; // Podría ser 'warning' si tuviéramos ese variant
+      case 'vencida': return 'destructive';
       default: return 'outline';
     }
   };
   
-  const getStatusText = (status: Invoice['status']): string => {
-    const map: Record<Invoice['status'], string> = {
+  const getStatusText = (status: InvoiceStatus): string => {
+    const map: Record<InvoiceStatus, string> = {
       borrador: "Borrador",
       emitida: "Emitida",
       pagada: "Pagada",
@@ -70,6 +83,25 @@ export default function BillingPage() {
       vencida: "Vencida",
     };
     return map[status] || status;
+  };
+
+  const handleInvoiceStatusChange = (invoiceId: string, newStatus: InvoiceStatus) => {
+    const updatedInvoice = updateInvoiceStatus(invoiceId, newStatus);
+    if (updatedInvoice) {
+      setInvoices(prevInvoices => 
+        prevInvoices.map(inv => inv.id === invoiceId ? updatedInvoice : inv)
+      );
+      toast({
+        title: "Estado de Factura Actualizado",
+        description: `La factura ${updatedInvoice.invoiceNumber} ahora está ${getStatusText(newStatus)}.`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado de la factura.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!canAccessBilling) {
@@ -87,27 +119,29 @@ export default function BillingPage() {
     );
   }
 
-
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <Card className="shadow-lg">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Receipt className="h-8 w-8 text-primary" />
-              <CardTitle className="text-3xl">Gestión de Facturación</CardTitle>
-            </div>
-            <Button onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")} disabled>
-              <FilePlus2 className="mr-2 h-5 w-5" />
-              Crear Nueva Factura
-            </Button>
+          <div className="flex items-center gap-3 mb-4">
+            <Receipt className="h-8 w-8 text-primary" />
+            <CardTitle className="text-3xl">Gestión de Facturación</CardTitle>
           </div>
           <CardDescription>
             Cree, gestione y realice el seguimiento de las facturas por los servicios médicos prestados.
           </CardDescription>
+           <Button 
+            onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")} 
+            disabled 
+            className="w-full sm:w-auto mt-4"
+            size="lg"
+           >
+            <FilePlus2 className="mr-2 h-5 w-5" />
+            Crear Nueva Factura
+          </Button>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
+          <div className="mb-6">
             <Input
               placeholder="Buscar por paciente o número de factura..."
               value={searchTerm}
@@ -115,82 +149,101 @@ export default function BillingPage() {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="max-w-sm"
+              className="max-w-md"
             />
           </div>
+
           {isLoading ? (
             <p>Cargando facturas...</p>
           ) : paginatedInvoices.length > 0 ? (
-            <>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nº Factura</TableHead>
-                    <TableHead>Paciente</TableHead>
-                    <TableHead>Fecha Emisión</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-center">Estado</TableHead>
-                    <TableHead className="text-center">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedInvoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                      <TableCell>{invoice.patientName}</TableCell>
-                      <TableCell>{format(new Date(invoice.dateIssued), "P", { locale: es })}</TableCell>
-                      <TableCell className="text-right">${invoice.totalAmount.toFixed(2)}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={getStatusBadgeVariant(invoice.status)}>{getStatusText(invoice.status)}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button variant="ghost" size="sm" onClick={() => alert(`Ver/Editar Factura ${invoice.invoiceNumber} (no implementado).`)} disabled>
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => alert(`Imprimir Factura ${invoice.invoiceNumber} (no implementado).`)} disabled>
-                          <Printer className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedInvoices.map((invoice) => (
+                <Card key={invoice.id} className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-lg font-semibold text-primary">{invoice.invoiceNumber}</CardTitle>
+                      <Badge variant={getStatusBadgeVariant(invoice.status)} className="text-xs">
+                        {getStatusText(invoice.status)}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground pt-1">{invoice.patientName}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm flex-grow">
+                    <div className="flex items-center">
+                      <CalendarDays className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <span>Emitida: {format(new Date(invoice.dateIssued), "P", { locale: es })}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <DollarSign className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">Total: ${invoice.totalAmount.toFixed(2)}</span>
+                    </div>
+                    {canChangeInvoiceStatus && (
+                      <div className="pt-2">
+                        <Select
+                          value={invoice.status}
+                          onValueChange={(newStatus) => handleInvoiceStatusChange(invoice.id, newStatus as InvoiceStatus)}
+                        >
+                          <SelectTrigger className="text-xs h-9">
+                             <ListFilter className="mr-2 h-3 w-3" />
+                             <span>Cambiar Estado</span>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {invoiceStatusOptions.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="border-t pt-4 flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => alert(`Ver/Editar Factura ${invoice.invoiceNumber} (no implementado).`)} disabled>
+                      <Edit3 className="h-4 w-4 mr-1 sm:mr-2" /> <span className="hidden sm:inline">Editar</span>
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => alert(`Imprimir Factura ${invoice.invoiceNumber} (no implementado).`)} disabled>
+                      <Printer className="h-4 w-4 mr-1 sm:mr-2" /> <span className="hidden sm:inline">Imprimir</span>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
             </div>
-            {totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="mr-1 h-4 w-4" />
-                    Anterior
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Página {currentPage} de {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                  >
-                    Siguiente
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </>
           ) : (
-            <p className="text-muted-foreground text-center py-4">
+            <p className="text-muted-foreground text-center py-10">
               {searchTerm ? `No se encontraron facturas para "${searchTerm}".` : "No hay facturas para mostrar."}
             </p>
           )}
-           <CardFooter className="pt-6">
+
+          {totalPages > 1 && paginatedInvoices.length > 0 && (
+            <div className="flex items-center justify-between pt-8 mt-6 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="mr-1 h-4 w-4" />
+                Anterior
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Página {currentPage} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+              >
+                Siguiente
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+           <CardFooter className="pt-8 mt-6 border-t">
             <p className="text-xs text-muted-foreground">
-                Funcionalidades como la creación detallada de facturas, edición, impresión a PDF, y cambios de estado se encuentran en desarrollo.
+                Funcionalidades como la creación detallada de facturas, edición, impresión a PDF, y conexión con sistemas de facturación electrónica se encuentran en desarrollo.
             </p>
            </CardFooter>
         </CardContent>

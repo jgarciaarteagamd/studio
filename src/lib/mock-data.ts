@@ -2,7 +2,7 @@
 import type {
   PatientRecord, PersonalDetails, BackgroundInformation, MedicalEncounter, Attachment, Appointment, DatosFacturacion, Recipe, MedicationItem,
   DoctorProfile, DoctorContactDetails, DoctorProfessionalDetails, DoctorFiscalDetails,
-  Invoice, InvoiceItem,
+  Invoice, InvoiceItem, InvoiceStatus,
   AssistantUser, AssistantPermissions
 } from './types';
 import { parseISO, setHours, setMinutes, format, differenceInYears } from 'date-fns';
@@ -20,7 +20,7 @@ const oneMonthAgo = new Date(new Date().setMonth(new Date().getMonth() - 1)).toI
 
 
 // --- SIMULACIÓN DE ROLES Y PERMISOS ---
-export let SIMULATED_CURRENT_ROLE: 'doctor' | 'secretary' = 'doctor';
+export let SIMULATED_CURRENT_ROLE: 'doctor' | 'secretary' = 'doctor'; // o 'secretary'
 
 export const SIMULATED_SECRETARY_PERMISSIONS: AssistantPermissions = {
   patients: {
@@ -181,7 +181,7 @@ export const addPatient = (
     id: String(mockPatients.length + 1 + Math.random()),
     personalDetails: data.personalDetails,
     datosFacturacion: data.datosFacturacion || null,
-    backgroundInformation: data.backgroundInformation || null,
+    backgroundInformation: data.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' }, // Default to empty object
     medicalEncounters: [],
     recipes: [],
     attachments: [],
@@ -237,14 +237,16 @@ export const addMedicalEncounterToPatient = (patientId: string, consultationData
   };
 
   const currentPatient = mockPatients[patientIndex];
+  const updatedEncounters = [newEncounter, ...currentPatient.medicalEncounters].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  
   const updatedPatientData: PatientRecord = {
     ...currentPatient,
-    medicalEncounters: [newEncounter, ...currentPatient.medicalEncounters].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    medicalEncounters: updatedEncounters,
     updatedAt: new Date().toISOString(),
   };
   mockPatients[patientIndex] = updatedPatientData;
 
-  return { ...updatedPatientData };
+  return { ...updatedPatientData }; // Return a new object reference
 };
 
 export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, 'id' | 'patientId' | 'date'>): PatientRecord | undefined => {
@@ -262,15 +264,17 @@ export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, '
   };
 
   const currentPatient = mockPatients[patientIndex];
+  const updatedRecipes = [newRecipe, ...currentPatient.recipes].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  
   const updatedPatientData: PatientRecord = {
     ...currentPatient,
-    recipes: [newRecipe, ...currentPatient.recipes].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    recipes: updatedRecipes,
     updatedAt: new Date().toISOString(),
   };
 
   mockPatients[patientIndex] = updatedPatientData;
 
-  return { ...updatedPatientData };
+  return { ...updatedPatientData }; // Return a new object reference
 };
 
 
@@ -365,10 +369,10 @@ export const deleteAppointment = (appointmentId: string): boolean => {
 
 export const getPatientFullName = (patient: PatientRecord | PersonalDetails | undefined | null): string => {
   if (!patient) return 'Nombre no disponible';
-  if ('personalDetails' in patient && patient.personalDetails) {
+  if ('personalDetails' in patient && patient.personalDetails) { // PatientRecord
     return `${patient.personalDetails.nombres || ''} ${patient.personalDetails.apellidos || ''}`.trim() || 'Nombre no disponible';
   }
-  if ('nombres' in patient && 'apellidos' in patient) {
+  if ('nombres' in patient && 'apellidos' in patient) { // PersonalDetails
      return `${patient.nombres || ''} ${patient.apellidos || ''}`.trim() || 'Nombre no disponible';
   }
   return 'Nombre no disponible';
@@ -407,6 +411,7 @@ let mockDoctorProfileData: DoctorProfile = {
     otrasEspecialidades: 'Endocrinología (en formación)',
     numeroMatricula: 'MSP-12345',
     otrosRegistros: ' Colegio Médico Pichincha: 6789',
+    logotipoUrl: "", // Anteriormente en branding
   },
   fiscalDetails: {
     razonSocialFacturacion: 'Admin Médico Servicios Profesionales S.A.S.',
@@ -455,6 +460,7 @@ export let mockInvoices: Invoice[] = [
     totalAmount: 72.80,
     status: 'emitida',
     doctorFiscalDetailsSnapshot: mockDoctorProfileData.fiscalDetails, // Tomar una instantánea
+    updatedAt: oneWeekAgo,
   },
   {
     id: 'inv-002',
@@ -472,12 +478,24 @@ export let mockInvoices: Invoice[] = [
     totalAmount: 44.80,
     status: 'pagada',
     doctorFiscalDetailsSnapshot: mockDoctorProfileData.fiscalDetails,
+    updatedAt: oneMonthAgo,
   }
 ];
 
 export const getMockInvoices = (): Invoice[] => {
   return [...mockInvoices].sort((a,b) => new Date(b.dateIssued).getTime() - new Date(a.dateIssued).getTime());
 };
+
+export const updateInvoiceStatus = (invoiceId: string, newStatus: InvoiceStatus): Invoice | undefined => {
+  const invoiceIndex = mockInvoices.findIndex(inv => inv.id === invoiceId);
+  if (invoiceIndex !== -1) {
+    mockInvoices[invoiceIndex].status = newStatus;
+    mockInvoices[invoiceIndex].updatedAt = new Date().toISOString();
+    return { ...mockInvoices[invoiceIndex] }; // Return a new object reference
+  }
+  return undefined;
+};
+
 
 // --- Datos para Gestión de Usuarios Asistenciales ---
 export let mockAssistants: AssistantUser[] = [
