@@ -146,7 +146,7 @@ export default function ProfilePage() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Tabs defaultValue="contact" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 mb-4">
               <TabsTrigger value="contact"><Edit3 className="mr-2 h-4 w-4" />Contacto</TabsTrigger>
               <TabsTrigger value="professional"><Briefcase className="mr-2 h-4 w-4" />Profesional</TabsTrigger>
               <TabsTrigger value="fiscal"><Building className="mr-2 h-4 w-4" />Fiscal</TabsTrigger>
