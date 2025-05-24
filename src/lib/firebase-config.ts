@@ -2,17 +2,15 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 
-// TODO: Reemplaza esto con tu configuración de Firebase del proyecto
-// Estas son claves PÚBLICAS y está bien tenerlas en el lado del cliente.
-// Para mayor seguridad en el futuro, puedes moverlas a variables de entorno.
+// Configuración para el proyecto "endocloud-notes"
 const firebaseConfig = {
-  apiKey: "AIzaSyAUp4mLtVBLHLIBv03TX_u8dI7ySmW4XJk", // POR FAVOR, VERIFICA ESTA CLAVE CUIDADOSAMENTE
-  authDomain: "medlog-cloud.firebaseapp.com",
-  projectId: "medlog-cloud",
-  storageBucket: "medlog-cloud.appspot.com", // CORREGIDO
-  messagingSenderId: "801327813101",
-  appId: "1:801327813101:web:60b2e7f3cabb0cb236d7e4",
-  measurementId: "G-44J30MMRQY"
+  apiKey: "AIzaSyC-7cWhzO7AS0smYySv6MG-m8qw95FzzVE",
+  authDomain: "endocloud-notes.firebaseapp.com",
+  projectId: "endocloud-notes",
+  storageBucket: "endocloud-notes.appspot.com", // Corregido al formato .appspot.com
+  messagingSenderId: "1017914719571",
+  appId: "1:1017914719571:web:2c1ce14415c1d184be35a6",
+  // measurementId es opcional y no estaba en tu última configuración, lo omito.
 };
 
 let app: FirebaseApp;
