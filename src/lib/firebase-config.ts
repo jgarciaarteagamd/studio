@@ -6,13 +6,13 @@ import { getAuth, type Auth } from "firebase/auth";
 // Estas son claves PÚBLICAS y está bien tenerlas en el lado del cliente.
 // Para mayor seguridad en el futuro, puedes moverlas a variables de entorno.
 const firebaseConfig = {
-  apiKey: "TU_API_KEY_AQUI", // Reemplaza con tu apiKey
-  authDomain: "TU_PROYECTO_ID.firebaseapp.com", // Reemplaza con tu authDomain
-  projectId: "TU_PROYECTO_ID", // Reemplaza con tu projectId
-  storageBucket: "TU_PROYECTO_ID.appspot.com", // Reemplaza con tu storageBucket
-  messagingSenderId: "TU_MESSAGING_SENDER_ID", // Reemplaza con tu messagingSenderId
-  appId: "TU_APP_ID", // Reemplaza con tu appId
-  // measurementId: "G-TU_MEASUREMENT_ID" // Opcional, si usas Analytics
+  apiKey: "AIzaSyAUp4mLtVBLHLIBv03TX_u8dI7ySmW4XJk", // POR FAVOR, VERIFICA ESTA CLAVE CUIDADOSAMENTE
+  authDomain: "medlog-cloud.firebaseapp.com",
+  projectId: "medlog-cloud",
+  storageBucket: "medlog-cloud.appspot.com", // CORREGIDO
+  messagingSenderId: "801327813101",
+  appId: "1:801327813101:web:60b2e7f3cabb0cb236d7e4",
+  measurementId: "G-44J30MMRQY"
 };
 
 let app: FirebaseApp;
