@@ -11,7 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ActivitySquare, LogIn } from "lucide-react";
 import Image from 'next/image';
-import { SIMULATED_CURRENT_ROLE, setSimulatedRole } from '@/lib/mock-data'; // Asumimos que mock-data exportará esto
+import { setSimulatedRole } from '@/lib/mock-data';
+import { auth } from '@/lib/firebase-config'; // Importar auth de Firebase
+import { GoogleAuthProvider, signInWithPopup, type UserCredential } from "firebase/auth"; // Importar funciones de autenticación
+import { useToast } from '@/hooks/use-toast';
+
 
 // SVG for Google G Logo
 const GoogleIcon = () => (
@@ -38,19 +42,36 @@ const GoogleIcon = () => (
 
 export default function LoginPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [isLoadingSecretary, setIsLoadingSecretary] = useState(false);
   const [secretaryUser, setSecretaryUser] = useState('');
   const [secretaryPassword, setSecretaryPassword] = useState('');
 
-  const handleDoctorLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+  const handleDoctorLogin = async () => {
     setIsLoadingGoogle(true);
-    // Simulación de login de médico
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setSimulatedRole('doctor'); // Actualiza el rol simulado
-    setIsLoadingGoogle(false);
-    router.push('/dashboard');
+    const provider = new GoogleAuthProvider();
+    try {
+      const result: UserCredential = await signInWithPopup(auth, provider);
+      // Inicio de sesión exitoso
+      const user = result.user;
+      console.log("Usuario de Google autenticado:", user);
+      toast({
+        title: "Inicio de Sesión Exitoso",
+        description: `Bienvenido Dr(a). ${user.displayName || user.email}`,
+      });
+      setSimulatedRole('doctor'); // Aún simulamos el rol para la UI
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error("Error en inicio de sesión con Google:", error);
+      toast({
+        title: "Error de Inicio de Sesión",
+        description: error.message || "No se pudo iniciar sesión con Google.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingGoogle(false);
+    }
   };
 
   const handleSecretaryLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -72,7 +93,7 @@ export default function LoginPage() {
         <Image
           src="https://placehold.co/1920x1080.png?text=."
           alt="Fondo abstracto medico"
-          fill // Reemplaza layout="fill" objectFit="cover"
+          fill
           objectFit="cover"
           quality={80}
           className="opacity-20 blur-sm"
