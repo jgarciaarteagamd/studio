@@ -1,13 +1,13 @@
-
 // src/app/dashboard/patients/new/page.tsx
 "use client";
 
 import { PatientForm, type PatientFormValues } from "@/components/patients/PatientForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { addPatient, getPatientFullName, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
-import type { PatientRecord, PersonalDetails, BackgroundInformation, DatosFacturacion } from "@/lib/types";
+import { SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS, getPatientFullName } from "@/lib/mock-data";
+import type { PersonalDetails, BackgroundInformation, DatosFacturacion } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { createPatientRecord } from "@/app/actions/patient-actions"; // Import Server Action
 
 export default function NewPatientPage() {
   const router = useRouter();
@@ -16,25 +16,38 @@ export default function NewPatientPage() {
   const isDoctor = SIMULATED_CURRENT_ROLE === 'doctor';
   const canSecretaryCreate = SIMULATED_CURRENT_ROLE === 'secretary' && SIMULATED_SECRETARY_PERMISSIONS.patients.canCreate;
 
-  const handleSubmit = (data: PatientFormValues) => {
+  const handleSubmit = async (data: PatientFormValues) => { // Make async
     const patientDataForCreation: {
       personalDetails: PersonalDetails;
-      datosFacturacion?: DatosFacturacion;
-      backgroundInformation?: BackgroundInformation;
+      datosFacturacion?: DatosFacturacion | null;
+      backgroundInformation?: BackgroundInformation | null;
     } = {
       personalDetails: data.personalDetails,
-      datosFacturacion: data.datosFacturacion, 
-      backgroundInformation: isDoctor ? data.backgroundInformation : undefined,
+      // Ensure optional fields are passed correctly, even if empty objects from form
+      datosFacturacion: (data.datosFacturacion && Object.values(data.datosFacturacion).some(val => val && val !== '')) 
+        ? data.datosFacturacion 
+        : null,
+      backgroundInformation: (isDoctor && data.backgroundInformation && Object.values(data.backgroundInformation).some(val => val && val !== ''))
+        ? data.backgroundInformation 
+        : null,
     };
 
-    const newPatient = addPatient(patientDataForCreation);
+    const newPatient = await createPatientRecord(patientDataForCreation); // Call Server Action
 
-    toast({
-      title: "Paciente Agregado",
-      description: `El historial de ${getPatientFullName(newPatient)} ha sido creado exitosamente.`,
-      variant: "default",
-    });
-    router.push(`/dashboard/patients/${newPatient.id}`);
+    if (newPatient) {
+      toast({
+        title: "Paciente Agregado",
+        description: `El historial de ${getPatientFullName(newPatient)} ha sido creado exitosamente.`,
+        variant: "default",
+      });
+      router.push(`/dashboard/patients/${newPatient.id}`);
+    } else {
+      toast({
+        title: "Error al Agregar Paciente",
+        description: "No se pudo crear el paciente. Intente nuevamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   const initialValues: PatientFormValues = {
@@ -97,7 +110,7 @@ export default function NewPatientPage() {
             submitButtonText="Agregar Paciente"
             showPersonalDetailsSection={true}
             showDatosFacturacionSection={true}
-            showBackgroundInformationSection={isDoctor} // Solo el médico ve esta sección al crear
+            showBackgroundInformationSection={isDoctor}
             allowEditFacturacionInfo={isDoctor || (SIMULATED_CURRENT_ROLE === 'secretary' && SIMULATED_SECRETARY_PERMISSIONS.patients.canModifyPersonalAndBilling)}
             allowEditBackgroundInfo={isDoctor}
           />
@@ -106,4 +119,3 @@ export default function NewPatientPage() {
     </div>
   );
 }
-

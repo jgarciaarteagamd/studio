@@ -1,4 +1,3 @@
-
 // src/app/dashboard/patients/[id]/page.tsx
 "use client";
 
@@ -8,8 +7,8 @@ import { PatientForm, type PatientFormValues } from "@/components/patients/Patie
 import { FileUploadSection } from "@/components/patients/FileUploadSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { getPatientById, updatePatient, getPatientFullName, calculateAge, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"; // Added DialogDescription, DialogTrigger
+import { getPatientById, updatePatient as mockUpdatePatient, getPatientFullName, calculateAge, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays, ClipboardList, FolderOpen } from "lucide-react";
@@ -21,7 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-
+import { updatePatientRecord } from "@/app/actions/patient-actions"; // Import Server Action
 
 export default function PatientDetailPage() {
   const params = useParams();
@@ -57,18 +56,31 @@ export default function PatientDetailPage() {
     }
   }, [patientId, router, toast]);
 
-  const handleFormSubmit = useCallback((data: Partial<PatientFormValues>) => {
+  const handleFormSubmit = useCallback(async (data: Partial<PatientFormValues>) => { // Make async
     if (patient) {
+      // Prepare only the data that was actually shown and editable in the form instance
       const updatedPatientData: Partial<Omit<PatientRecord, 'id' | 'createdAt'>> = {
-        personalDetails: data.personalDetails !== undefined ? data.personalDetails : patient.personalDetails,
-        datosFacturacion: data.datosFacturacion !== undefined ? data.datosFacturacion : patient.datosFacturacion,
-        backgroundInformation: data.backgroundInformation !== undefined ? data.backgroundInformation : patient.backgroundInformation,
         updatedAt: new Date().toISOString(),
       };
 
-      const updatedRecord = updatePatient(patient.id, updatedPatientData);
+      if (data.personalDetails !== undefined) {
+        updatedPatientData.personalDetails = data.personalDetails;
+      }
+      if (data.datosFacturacion !== undefined) {
+         updatedPatientData.datosFacturacion = (data.datosFacturacion && Object.values(data.datosFacturacion).some(val => val && val !== '')) 
+            ? data.datosFacturacion 
+            : null;
+      }
+      if (data.backgroundInformation !== undefined) {
+         updatedPatientData.backgroundInformation = (data.backgroundInformation && Object.values(data.backgroundInformation).some(val => val && val !== ''))
+            ? data.backgroundInformation
+            : null;
+      }
+      
+      const updatedRecord = await updatePatientRecord(patient.id, updatedPatientData); // Call Server Action
+
       if (updatedRecord) {
-        setPatient({...updatedRecord});
+        setPatient({...updatedRecord}); // Important: use spread for new reference
         setPatientAge(calculateAge(updatedRecord.personalDetails.fechaNacimiento));
          toast({
           title: "Historial Actualizado",
@@ -76,8 +88,8 @@ export default function PatientDetailPage() {
         });
       } else {
         toast({
-          title: "Error",
-          description: "No se pudo actualizar el historial.",
+          title: "Error al Actualizar",
+          description: "No se pudo actualizar el historial. Intente nuevamente.",
           variant: "destructive",
         });
       }
@@ -91,17 +103,20 @@ export default function PatientDetailPage() {
         id: `attach-${Date.now()}`,
         name: file.name,
         type: file.type.startsWith('image/') ? 'image' : (file.type === 'application/pdf' ? 'pdf' : 'other'),
-        driveLink: '#',
+        driveLink: '#', // Placeholder for Google Drive link
         uploadedAt: new Date().toISOString(),
       };
       const updatedAttachments = [...patient.attachments, newAttachment];
-      const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
+      // For file uploads, we'll still use the mock update for now,
+      // as full Drive integration is a larger step.
+      // Or, this could also become a server action `addAttachmentToPatientRecord(patientId, fileData)`
+      const updatedRecord = mockUpdatePatient(patient.id, { attachments: updatedAttachments });
       if (updatedRecord) {
         setPatient({...updatedRecord}); 
       }
       toast({
         title: "Archivo Adjuntado",
-        description: `${file.name} ha sido adjuntado.`,
+        description: `${file.name} ha sido adjuntado (simulado).`,
       });
     }
   };
@@ -112,7 +127,9 @@ export default function PatientDetailPage() {
       const updatedAttachments = currentAttachments.filter(
         (att) => !attachmentIdsToDelete.includes(att.id)
       );
-      const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
+      // Similar to file upload, this part still uses mock for simplicity for now.
+      // Could become a server action: `deleteAttachmentsFromPatientRecord(patientId, attachmentIdsToDelete)`
+      const updatedRecord = mockUpdatePatient(patient.id, { attachments: updatedAttachments });
       if (updatedRecord) {
         setPatient({ ...updatedRecord }); 
         toast({
@@ -171,6 +188,23 @@ export default function PatientDetailPage() {
   
   const canSecretaryModifyPatientData = SIMULATED_CURRENT_ROLE === 'secretary' && secretaryPermissions.patients.canModifyPersonalAndBilling;
   const canSecretaryManageAttachments = SIMULATED_CURRENT_ROLE === 'secretary' && secretaryPermissions.patients.canAddAttachments;
+  const showPatientDataTab = true; // Always visible
+  const showBackgroundTab = isDoctor;
+  const showHistoryTab = isDoctor;
+  const showAttachmentsTab = isDoctor || canSecretaryManageAttachments;
+
+  let tabCount = 0;
+  if (showPatientDataTab) tabCount++;
+  if (showBackgroundTab) tabCount++;
+  if (showHistoryTab) tabCount++;
+  if (showAttachmentsTab) tabCount++;
+  
+  const tabsListGridColsClass = () => {
+    if (tabCount <= 2) return "md:grid-cols-2";
+    if (tabCount === 3) return "md:grid-cols-3";
+    return "md:grid-cols-4"; // Default for 4 or more tabs
+  };
+
 
   return (
     <div className="space-y-6">
@@ -216,44 +250,40 @@ export default function PatientDetailPage() {
          <TabsList className={cn(
             "w-full h-auto mb-4 p-1 bg-muted rounded-md",
             "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
-             isDoctor ? "md:grid-cols-4" : (canSecretaryManageAttachments ? "md:grid-cols-2" : "md:grid-cols-1")
+            tabsListGridColsClass()
             )}>
-          <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos</TabsTrigger>
-          {isDoctor && (
-            <>
-              <TabsTrigger value="backgroundInfo" className="flex-grow md:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2"/> Antecedentes</TabsTrigger>
-              <TabsTrigger value="encounters" className="flex-grow md:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Historial</TabsTrigger>
-            </>
-          )}
-          {(isDoctor || canSecretaryManageAttachments) && (
-              <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>
-          )}
+          {showPatientDataTab && <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos</TabsTrigger>}
+          {showBackgroundTab && <TabsTrigger value="backgroundInfo" className="flex-grow md:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2"/> Antecedentes</TabsTrigger>}
+          {showHistoryTab && <TabsTrigger value="encounters" className="flex-grow md:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Historial</TabsTrigger>}
+          {showAttachmentsTab && <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="personalData">
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>Información Personal y de Facturación</CardTitle>
-              <CardDescription>
-                Actualice los datos personales, de contacto y facturación del paciente.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PatientForm
-                onSubmit={handleFormSubmit}
-                initialData={patientFormInitialData}
-                submitButtonText="Guardar Cambios"
-                showPersonalDetailsSection={true}
-                showDatosFacturacionSection={true}
-                allowEditFacturacionInfo={isDoctor || canSecretaryModifyPatientData}
-                showBackgroundInformationSection={false} 
-                allowEditBackgroundInfo={false}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {isDoctor && (
+        {showPatientDataTab && (
+          <TabsContent value="personalData">
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle>Información Personal y de Facturación</CardTitle>
+                <CardDescription>
+                  Actualice los datos personales, de contacto y facturación del paciente.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PatientForm
+                  onSubmit={handleFormSubmit}
+                  initialData={patientFormInitialData}
+                  submitButtonText="Guardar Cambios"
+                  showPersonalDetailsSection={true}
+                  showDatosFacturacionSection={true}
+                  allowEditFacturacionInfo={isDoctor || canSecretaryModifyPatientData}
+                  showBackgroundInformationSection={false} 
+                  allowEditBackgroundInfo={false} // Antecedentes se editan en su propia pestaña
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+        
+        {showBackgroundTab && (
            <TabsContent value="backgroundInfo">
              <Card className="w-full">
                <CardHeader>
@@ -268,15 +298,14 @@ export default function PatientDetailPage() {
                    showPersonalDetailsSection={false}
                    showDatosFacturacionSection={false}
                    showBackgroundInformationSection={true}
-                   allowEditBackgroundInfo={true} 
+                   allowEditBackgroundInfo={isDoctor} // Solo el médico edita antecedentes
                  />
                </CardContent>
              </Card>
            </TabsContent>
         )}
 
-
-        {isDoctor && (
+        {showHistoryTab && (
             <TabsContent value="encounters">
               <Card className="w-full">
                 <CardHeader>
@@ -335,14 +364,14 @@ export default function PatientDetailPage() {
             </TabsContent>
         )}
 
-        {(isDoctor || canSecretaryManageAttachments) && (
+        {showAttachmentsTab && (
             <TabsContent value="attachments">
               <Card className="w-full">
                 <CardHeader>
                   <CardTitle>Archivos Adjuntos</CardTitle>
                   <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
                 </CardHeader>
-                <CardContent className="overflow-hidden">
+                <CardContent className="overflow-hidden"> {/* Mantener overflow-hidden aquí es importante */}
                   <Dialog open={isAttachmentDialogOpen} onOpenChange={setIsAttachmentDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline">
@@ -353,9 +382,10 @@ export default function PatientDetailPage() {
                       <DialogHeader>
                         <DialogTitle>Archivos Adjuntos de {getPatientFullName(patient)}</DialogTitle>
                         <DialogDescription>
-                          Suba nuevos archivos o elimine existentes. Los archivos se guardarán en su Google Drive.
+                          Suba nuevos archivos o elimine existentes. Los archivos se guardarán en su Google Drive (simulado).
                         </DialogDescription>
                       </DialogHeader>
+                       {/* Este div es el que maneja el scroll interno del diálogo */}
                       <div className="flex-1 overflow-y-auto min-h-0">
                         <FileUploadSection
                           attachments={patient.attachments}
@@ -373,4 +403,3 @@ export default function PatientDetailPage() {
     </div>
   );
 }
-
