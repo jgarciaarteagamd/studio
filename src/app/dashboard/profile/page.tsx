@@ -1,4 +1,3 @@
-
 // src/app/dashboard/profile/page.tsx
 "use client";
 
@@ -29,22 +28,20 @@ const professionalDetailsSchema = z.object({
   otrasEspecialidades: z.string().optional(),
   numeroMatricula: z.string().min(3, "Matrícula es requerida."),
   otrosRegistros: z.string().optional(),
-  logotipoUrl: z.string().url("URL de logotipo inválida").optional().or(z.literal('')), // Moved from branding
+  logotipoUrl: z.string().url("URL de logotipo inválida").optional().or(z.literal('')),
 });
 
 const fiscalDetailsSchema = z.object({
   razonSocialFacturacion: z.string().min(3, "Razón social es requerida."),
-  identificacionTributaria: z.string().min(10, "Identificación tributaria es requerida (ej. RUC)."), // RUC Ecuador usualmente 13 o 10 dígitos
+  identificacionTributaria: z.string().min(10, "Identificación tributaria es requerida (ej. RUC)."),
   domicilioFiscalCompleto: z.string().min(10, "Domicilio fiscal es requerido."),
   condicionIVA: z.string().optional(),
 });
 
-// Union de esquemas para el formulario completo
 const profileFormSchema = z.object({
   contactDetails: contactDetailsSchema,
   professionalDetails: professionalDetailsSchema,
   fiscalDetails: fiscalDetailsSchema,
-  // logotipoUrl is now part of professionalDetails
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -71,7 +68,7 @@ export default function ProfilePage() {
         otrasEspecialidades: "",
         numeroMatricula: "",
         otrosRegistros: "",
-        logotipoUrl: "", // Moved
+        logotipoUrl: "",
       },
       fiscalDetails: {
         razonSocialFacturacion: "",
@@ -90,31 +87,34 @@ export default function ProfilePage() {
         contactDetails: profileData.contactDetails,
         professionalDetails: {
             ...profileData.professionalDetails,
-            logotipoUrl: profileData.logotipoUrl || "" // Ensure it's set here
+            logotipoUrl: profileData.professionalDetails.logotipoUrl || "" 
         },
         fiscalDetails: profileData.fiscalDetails,
       });
-      setPreviewLogo(profileData.logotipoUrl);
+      setPreviewLogo(profileData.professionalDetails.logotipoUrl);
     }
     setIsLoading(false);
   }, [form]);
 
   const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    
+    // Ensure we are passing logotipoUrl correctly with professionalDetails
+    const professionalDetailsToSave = {
+      ...data.professionalDetails,
+      logotipoUrl: data.professionalDetails.logotipoUrl || undefined,
+    };
+
     const updatedProfile = updateDoctorProfile({
       contactDetails: data.contactDetails,
-      professionalDetails: { // Ensure we extract only professional details, not the whole data.professionalDetails which includes logo
-        especialidadPrincipal: data.professionalDetails.especialidadPrincipal,
-        otrasEspecialidades: data.professionalDetails.otrasEspecialidades,
-        numeroMatricula: data.professionalDetails.numeroMatricula,
-        otrosRegistros: data.professionalDetails.otrosRegistros,
-      },
+      professionalDetails: professionalDetailsToSave,
       fiscalDetails: data.fiscalDetails,
-      logotipoUrl: data.professionalDetails.logotipoUrl || undefined,
+      // logotipoUrl is now part of professionalDetails, so not needed at top level here
     });
+
     setCurrentProfile(updatedProfile);
-    setPreviewLogo(updatedProfile.logotipoUrl);
+    setPreviewLogo(updatedProfile.professionalDetails.logotipoUrl); // Access it from professionalDetails
     setIsSaving(false);
     toast({
       title: "Perfil Actualizado",
@@ -126,7 +126,7 @@ export default function ProfilePage() {
     const url = event.target.value;
     form.setValue("professionalDetails.logotipoUrl", url, { shouldValidate: true });
     if (form.getFieldState("professionalDetails.logotipoUrl").invalid || !url) {
-       setPreviewLogo(getDoctorProfile().logotipoUrl); 
+       setPreviewLogo(currentProfile?.professionalDetails?.logotipoUrl); // Use currentProfile for fallback
     } else {
        setPreviewLogo(url);
     }
@@ -298,7 +298,7 @@ export default function ProfilePage() {
                        <p className="text-destructive text-sm mt-2 hidden"><AlertTriangle className="inline mr-1 h-4 w-4"/> No se pudo cargar la imagen. Verifique la URL.</p>
                     </div>
                   )}
-                  {!previewLogo && currentProfile?.logotipoUrl && (
+                  {!previewLogo && currentProfile?.professionalDetails?.logotipoUrl && (
                      <p className="text-muted-foreground text-sm">Actualmente no hay un logotipo configurado o la URL es inválida.</p>
                   )}
                    <p className="text-xs text-muted-foreground">
@@ -373,13 +373,6 @@ export default function ProfilePage() {
                     <p className="text-sm text-muted-foreground mb-2">(Configuración futura para notificaciones por email o dentro de la app).</p>
                     <Button variant="outline" disabled>Configurar Notificaciones (Próximamente)</Button>
                   </div>
-                  <div>
-                    <h4 className="font-medium mb-1">Integración con Google Drive</h4>
-                    <p className="text-sm text-muted-foreground mb-2">Estado: {currentProfile?.driveFolderId ? `Conectado (Carpeta ID: ${currentProfile.driveFolderId})` : 'No conectado'}</p>
-                    <Button variant="outline" disabled>
-                      {currentProfile?.driveFolderId ? 'Verificar/Reconectar Google Drive' : 'Conectar Google Drive'} (Próximamente)
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -396,6 +389,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-    
-
-    

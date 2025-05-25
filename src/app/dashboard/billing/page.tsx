@@ -1,7 +1,7 @@
 // src/app/dashboard/billing/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Receipt, FilePlus2, Edit3, Printer, ChevronLeft, ChevronRight, FileText, CalendarDays, DollarSign, ListFilter } from "lucide-react";
@@ -9,13 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Invoice, InvoiceStatus } from "@/lib/types";
-import { getMockInvoices, updateInvoiceStatus, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
+import { getMockInvoices, updateInvoiceStatus, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS, getPatientFullName, getDoctorProfile } from "@/lib/mock-data";
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-const ITEMS_PER_PAGE = 6; // Ajustado para tarjetas
+const ITEMS_PER_PAGE = 6; 
 
 const invoiceStatusOptions: { value: InvoiceStatus; label: string }[] = [
   { value: 'borrador', label: 'Borrador' },
@@ -33,9 +33,7 @@ export default function BillingPage() {
   const { toast } = useToast();
   
   const canAccessBilling = SIMULATED_CURRENT_ROLE === 'doctor' || (SIMULATED_CURRENT_ROLE === 'secretary' && SIMULATED_SECRETARY_PERMISSIONS.billing.canAccess);
-  // Por ahora, asumimos que si puede acceder, puede cambiar estados. Esto se podría refinar con más permisos.
-  const canChangeInvoiceStatus = canAccessBilling;
-
+  const canChangeInvoiceStatus = canAccessBilling; // Simplified for now
 
   useEffect(() => {
     if (canAccessBilling) {
@@ -104,6 +102,62 @@ export default function BillingPage() {
     }
   };
 
+  const handlePrintInvoicePdf = (invoice: Invoice) => {
+    const doctorProfile = getDoctorProfile(); // Usar el perfil del médico actual para los datos fiscales
+    let pdfContent = `== FACTURA ==\n\n`;
+    pdfContent += `Número de Factura: ${invoice.invoiceNumber}\n`;
+    pdfContent += `Fecha de Emisión: ${format(new Date(invoice.dateIssued), "P", { locale: es })}\n`;
+    if (invoice.dateDue) {
+      pdfContent += `Fecha de Vencimiento: ${format(new Date(invoice.dateDue), "P", { locale: es })}\n`;
+    }
+    pdfContent += `\n-- Datos del Emisor --\n`;
+    pdfContent += `Razón Social: ${doctorProfile.fiscalDetails.razonSocialFacturacion}\n`;
+    pdfContent += `Identificación Tributaria: ${doctorProfile.fiscalDetails.identificacionTributaria}\n`;
+    pdfContent += `Domicilio Fiscal: ${doctorProfile.fiscalDetails.domicilioFiscalCompleto}\n`;
+    if (doctorProfile.contactDetails.telefonoPrincipal) {
+      pdfContent += `Teléfono: ${doctorProfile.contactDetails.telefonoPrincipal}\n`;
+    }
+    if (doctorProfile.contactDetails.emailContacto) {
+       pdfContent += `Email: ${doctorProfile.contactDetails.emailContacto}\n`;
+    }
+
+
+    pdfContent += `\n-- Datos del Cliente --\n`;
+    pdfContent += `Paciente: ${invoice.patientName}\n`;
+    // Aquí se podrían buscar y añadir más datos del paciente si fuera necesario (ej. RUC/CI, Dirección)
+    
+    pdfContent += `\n-- Detalles de la Factura --\n`;
+    invoice.items.forEach(item => {
+      pdfContent += `- ${item.description} (Cant: ${item.quantity}, P.Unit: $${item.unitPrice.toFixed(2)}): $${item.total.toFixed(2)}\n`;
+    });
+    pdfContent += `\nSubtotal: $${invoice.subtotal.toFixed(2)}\n`;
+    if (invoice.taxAmount) {
+      pdfContent += `IVA (${(invoice.taxRate || 0) * 100}%): $${invoice.taxAmount.toFixed(2)}\n`;
+    }
+    pdfContent += `Total: $${invoice.totalAmount.toFixed(2)}\n`;
+    pdfContent += `Estado: ${getStatusText(invoice.status)}\n`;
+
+    if (invoice.notes) {
+      pdfContent += `\nNotas Adicionales:\n${invoice.notes}\n`;
+    }
+
+    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-fs8' });
+    const link = document.createElement('a');
+    const safePatientName = invoice.patientName.replace(/\s+/g, '_');
+    link.download = `Factura_${invoice.invoiceNumber}_${safePatientName}.pdf`;
+    link.href = URL.createObjectURL(blob);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    toast({
+      title: "Descarga de Factura (Simulada)",
+      description: `La factura ${invoice.invoiceNumber} se está descargando como un archivo de texto con extensión .pdf.`,
+    });
+  };
+
+
   if (!canAccessBilling) {
     return (
       <div className="space-y-6">
@@ -129,6 +183,7 @@ export default function BillingPage() {
           </div>
           <CardDescription>
             Cree, gestione y realice el seguimiento de las facturas por los servicios médicos prestados.
+            La generación de facturas electrónicas (SRI) no está implementada.
           </CardDescription>
            <Button 
             onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")} 
@@ -202,8 +257,8 @@ export default function BillingPage() {
                     <Button variant="ghost" size="sm" onClick={() => alert(`Ver/Editar Factura ${invoice.invoiceNumber} (no implementado).`)} disabled>
                       <Edit3 className="h-4 w-4 mr-1 sm:mr-2" /> <span className="hidden sm:inline">Editar</span>
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => alert(`Imprimir Factura ${invoice.invoiceNumber} (no implementado).`)} disabled>
-                      <Printer className="h-4 w-4 mr-1 sm:mr-2" /> <span className="hidden sm:inline">Imprimir</span>
+                    <Button variant="ghost" size="sm" onClick={() => handlePrintInvoicePdf(invoice)}>
+                      <Printer className="h-4 w-4 mr-1 sm:mr-2" /> <span className="hidden sm:inline">Imprimir PDF</span>
                     </Button>
                   </CardFooter>
                 </Card>
@@ -243,7 +298,8 @@ export default function BillingPage() {
 
            <CardFooter className="pt-8 mt-6 border-t">
             <p className="text-xs text-muted-foreground">
-                Funcionalidades como la creación detallada de facturas, edición, impresión a PDF, y conexión con sistemas de facturación electrónica se encuentran en desarrollo.
+                Funcionalidades como la creación detallada de facturas y edición se encuentran en desarrollo. 
+                La impresión genera un archivo de texto con formato PDF (simulado).
             </p>
            </CardFooter>
         </CardContent>

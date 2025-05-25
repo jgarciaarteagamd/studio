@@ -3,7 +3,7 @@ export interface Attachment {
   id: string;
   name: string;
   type: 'pdf' | 'image' | 'other';
-  driveLink: string; // Mock link to Google Drive
+  driveLink: string; // Mock link, no longer for Google Drive, but Cloud Storage or similar
   uploadedAt: string; // ISO date string
   encounterId?: string; // Optional: to link attachment to a specific encounter
 }
@@ -91,6 +91,7 @@ export interface DoctorProfessionalDetails {
   otrasEspecialidades?: string;
   numeroMatricula: string;
   otrosRegistros?: string;
+  logotipoUrl?: string; // URL del logotipo
 }
 
 export interface DoctorFiscalDetails {
@@ -101,12 +102,11 @@ export interface DoctorFiscalDetails {
 }
 
 export interface DoctorProfile {
-  id: string; // Podría ser el ID de usuario de Google
+  id: string; 
   contactDetails: DoctorContactDetails;
   professionalDetails: DoctorProfessionalDetails;
   fiscalDetails: DoctorFiscalDetails;
-  logotipoUrl?: string; // URL del logotipo subido
-  driveFolderId?: string; // ID de la carpeta "MedLog" en Drive
+  // logotipoUrl fue movido a DoctorProfessionalDetails
   updatedAt: string;
 }
 
@@ -125,7 +125,7 @@ export interface Invoice {
   id: string;
   invoiceNumber: string; // Ej. F001-0000123
   patientId: string;
-  patientName: string; // Denormalizado para fácil visualización
+  patientName: string; 
   dateIssued: string; // ISO date string
   dateDue?: string; // ISO date string
   items: InvoiceItem[];
@@ -135,17 +135,15 @@ export interface Invoice {
   totalAmount: number;
   status: InvoiceStatus;
   notes?: string;
-  // Referencia a datos fiscales del médico usados en esta factura
   doctorFiscalDetailsSnapshot: DoctorFiscalDetails;
-  updatedAt?: string; // Para rastrear cuándo se actualizó el estado, por ejemplo
+  updatedAt?: string; 
 }
 
 // --- Tipos para Gestión de Usuarios Asistenciales ---
 export interface AssistantPermissions {
    patients: {
     canCreate: boolean;
-    canModifyPersonalAndBilling: boolean; // Modificar datos personales y de facturación
-    // canModifyBackground: boolean; // Antecedentes solo médico
+    canModifyPersonalAndBilling: boolean; 
     canAddAttachments: boolean;
   };
   schedule: {
@@ -161,9 +159,9 @@ export interface AssistantPermissions {
 
 export interface AssistantUser {
   id: string;
-  username: string; // ej. gonmar08
+  username: string; 
   nombreCompleto: string;
-  email: string; // Email para notificaciones / restablecimiento
+  email: string; 
   estado: 'activo' | 'inactivo' | 'pendiente_aprobacion';
   permissions: AssistantPermissions;
   createdAt: string;

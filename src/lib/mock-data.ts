@@ -167,7 +167,7 @@ export let mockPatients: PatientRecord[] = [
 
 export const getPatientById = (id: string): PatientRecord | undefined => {
   const patient = mockPatients.find(p => p.id === id);
-  return patient ? { ...patient } : undefined; // Return a copy
+  return patient ? { ...patient, medicalEncounters: [...patient.medicalEncounters], recipes: [...patient.recipes], attachments: [...patient.attachments] } : undefined;
 };
 
 export const addPatient = (
@@ -178,10 +178,10 @@ export const addPatient = (
   }
 ): PatientRecord => {
   const newPatient: PatientRecord = {
-    id: String(mockPatients.length + 1 + Math.random()),
+    id: String(mockPatients.length + 1 + Math.random().toString(36).substring(2,7)),
     personalDetails: data.personalDetails,
     datosFacturacion: data.datosFacturacion || null,
-    backgroundInformation: data.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' }, // Default to empty object
+    backgroundInformation: data.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' },
     medicalEncounters: [],
     recipes: [],
     attachments: [],
@@ -202,9 +202,9 @@ export const updatePatient = (id: string, updates: Partial<Omit<PatientRecord, '
       personalDetails: updates.personalDetails || currentPatient.personalDetails,
       datosFacturacion: updates.datosFacturacion !== undefined ? updates.datosFacturacion : currentPatient.datosFacturacion,
       backgroundInformation: updates.backgroundInformation !== undefined ? updates.backgroundInformation : currentPatient.backgroundInformation,
-      medicalEncounters: updates.medicalEncounters || currentPatient.medicalEncounters,
-      recipes: updates.recipes || currentPatient.recipes,
-      attachments: updates.attachments || currentPatient.attachments,
+      medicalEncounters: updates.medicalEncounters ? [...updates.medicalEncounters] : [...currentPatient.medicalEncounters],
+      recipes: updates.recipes ? [...updates.recipes] : [...currentPatient.recipes],
+      attachments: updates.attachments ? [...updates.attachments] : [...currentPatient.attachments],
       updatedAt: new Date().toISOString(),
     };
     mockPatients[patientIndex] = updatedPatientData;
@@ -246,7 +246,7 @@ export const addMedicalEncounterToPatient = (patientId: string, consultationData
   };
   mockPatients[patientIndex] = updatedPatientData;
 
-  return { ...updatedPatientData }; // Return a new object reference
+  return { ...updatedPatientData, medicalEncounters: [...updatedPatientData.medicalEncounters], recipes: [...updatedPatientData.recipes], attachments: [...updatedPatientData.attachments] };
 };
 
 export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, 'id' | 'patientId' | 'date'>): PatientRecord | undefined => {
@@ -274,7 +274,7 @@ export const addRecipeToPatient = (patientId: string, recipeData: Omit<Recipe, '
 
   mockPatients[patientIndex] = updatedPatientData;
 
-  return { ...updatedPatientData }; // Return a new object reference
+  return { ...updatedPatientData, medicalEncounters: [...updatedPatientData.medicalEncounters], recipes: [...updatedPatientData.recipes], attachments: [...updatedPatientData.attachments] };
 };
 
 
@@ -369,10 +369,10 @@ export const deleteAppointment = (appointmentId: string): boolean => {
 
 export const getPatientFullName = (patient: PatientRecord | PersonalDetails | undefined | null): string => {
   if (!patient) return 'Nombre no disponible';
-  if ('personalDetails' in patient && patient.personalDetails) { // PatientRecord
+  if ('personalDetails' in patient && patient.personalDetails) { 
     return `${patient.personalDetails.nombres || ''} ${patient.personalDetails.apellidos || ''}`.trim() || 'Nombre no disponible';
   }
-  if ('nombres' in patient && 'apellidos' in patient) { // PersonalDetails
+  if ('nombres' in patient && 'apellidos' in patient) { 
      return `${patient.nombres || ''} ${patient.apellidos || ''}`.trim() || 'Nombre no disponible';
   }
   return 'Nombre no disponible';
@@ -399,7 +399,7 @@ export const getLastConsultationDate = (patient: PatientRecord): string => {
 
 // --- Datos para Perfil del Médico ---
 let mockDoctorProfileData: DoctorProfile = {
-  id: 'doc123', // Ejemplo
+  id: 'doc123', 
   contactDetails: {
     nombreCompleto: 'Dr. Admin Médico',
     emailContacto: 'admin@medlog.cloud',
@@ -411,7 +411,7 @@ let mockDoctorProfileData: DoctorProfile = {
     otrasEspecialidades: 'Endocrinología (en formación)',
     numeroMatricula: 'MSP-12345',
     otrosRegistros: ' Colegio Médico Pichincha: 6789',
-    logotipoUrl: "", // Anteriormente en branding
+    logotipoUrl: "", 
   },
   fiscalDetails: {
     razonSocialFacturacion: 'Admin Médico Servicios Profesionales S.A.S.',
@@ -419,16 +419,19 @@ let mockDoctorProfileData: DoctorProfile = {
     domicilioFiscalCompleto: 'Av. Amazonas N20-30 y Patria, Edificio MedCenter, Of. 101, Quito, Pichincha, Ecuador',
     condicionIVA: 'Agente de Retención',
   },
-  logotipoUrl: undefined, // 'https://placehold.co/200x80.png?text=Mi+Logo', // Placeholder
-  driveFolderId: undefined,
   updatedAt: new Date().toISOString(),
 };
 
 export const getDoctorProfile = (): DoctorProfile => {
-  return { ...mockDoctorProfileData }; // Devuelve una copia
+  return { 
+    ...mockDoctorProfileData,
+    contactDetails: {...mockDoctorProfileData.contactDetails},
+    professionalDetails: {...mockDoctorProfileData.professionalDetails},
+    fiscalDetails: {...mockDoctorProfileData.fiscalDetails}
+  };
 };
 
-export const updateDoctorProfile = (updates: Partial<DoctorProfile>): DoctorProfile => {
+export const updateDoctorProfile = (updates: Partial<Omit<DoctorProfile, 'id' | 'updatedAt'>>): DoctorProfile => {
   mockDoctorProfileData = {
     ...mockDoctorProfileData,
     ...updates,
@@ -437,7 +440,11 @@ export const updateDoctorProfile = (updates: Partial<DoctorProfile>): DoctorProf
     fiscalDetails: updates.fiscalDetails ? { ...mockDoctorProfileData.fiscalDetails, ...updates.fiscalDetails } : mockDoctorProfileData.fiscalDetails,
     updatedAt: new Date().toISOString(),
   };
-  return { ...mockDoctorProfileData };
+  return { ...mockDoctorProfileData, 
+    contactDetails: {...mockDoctorProfileData.contactDetails},
+    professionalDetails: {...mockDoctorProfileData.professionalDetails},
+    fiscalDetails: {...mockDoctorProfileData.fiscalDetails}
+  };
 };
 
 
@@ -455,11 +462,11 @@ export let mockInvoices: Invoice[] = [
       { id: 'item2', description: 'Examen de Glucosa', quantity: 1, unitPrice: 15, total: 15 },
     ],
     subtotal: 65,
-    taxRate: 0.12, // 12% IVA Ecuador (ejemplo)
+    taxRate: 0.12, 
     taxAmount: 7.80,
     totalAmount: 72.80,
     status: 'emitida',
-    doctorFiscalDetailsSnapshot: mockDoctorProfileData.fiscalDetails, // Tomar una instantánea
+    doctorFiscalDetailsSnapshot: mockDoctorProfileData.fiscalDetails, 
     updatedAt: oneWeekAgo,
   },
   {
@@ -483,7 +490,7 @@ export let mockInvoices: Invoice[] = [
 ];
 
 export const getMockInvoices = (): Invoice[] => {
-  return [...mockInvoices].sort((a,b) => new Date(b.dateIssued).getTime() - new Date(a.dateIssued).getTime());
+  return [...mockInvoices].map(inv => ({...inv, items: [...inv.items], doctorFiscalDetailsSnapshot: {...inv.doctorFiscalDetailsSnapshot} })).sort((a,b) => new Date(b.dateIssued).getTime() - new Date(a.dateIssued).getTime());
 };
 
 export const updateInvoiceStatus = (invoiceId: string, newStatus: InvoiceStatus): Invoice | undefined => {
@@ -491,7 +498,8 @@ export const updateInvoiceStatus = (invoiceId: string, newStatus: InvoiceStatus)
   if (invoiceIndex !== -1) {
     mockInvoices[invoiceIndex].status = newStatus;
     mockInvoices[invoiceIndex].updatedAt = new Date().toISOString();
-    return { ...mockInvoices[invoiceIndex] }; // Return a new object reference
+    const updatedInvoice = mockInvoices[invoiceIndex];
+    return { ...updatedInvoice, items: [...updatedInvoice.items], doctorFiscalDetailsSnapshot: {...updatedInvoice.doctorFiscalDetailsSnapshot} };
   }
   return undefined;
 };
@@ -501,7 +509,7 @@ export const updateInvoiceStatus = (invoiceId: string, newStatus: InvoiceStatus)
 export let mockAssistants: AssistantUser[] = [
   {
     id: 'assist-001',
-    username: 'perros01', // perez.rosa
+    username: 'perros01', 
     nombreCompleto: 'Rosa Pérez',
     email: 'rosa.perez@example.com',
     estado: 'activo',
@@ -515,11 +523,11 @@ export let mockAssistants: AssistantUser[] = [
   },
   {
     id: 'assist-002',
-    username: 'lopjua07', // lopez.juan
+    username: 'lopjua07', 
     nombreCompleto: 'Juan López',
     email: 'juan.lopez@example.com',
     estado: 'pendiente_aprobacion',
-    permissions: { // Permisos por defecto más restrictivos
+    permissions: { 
       patients: { canCreate: false, canModifyPersonalAndBilling: false, canAddAttachments: false },
       schedule: { canProgramAppointments: false, canBlockTime: false, canChangeStatus: false, canDeleteAppointments: false },
       billing: { canAccess: false },
@@ -528,7 +536,7 @@ export let mockAssistants: AssistantUser[] = [
   },
    {
     id: 'assist-003',
-    username: 'sanana03', // sanchez.ana
+    username: 'sanana03', 
     nombreCompleto: 'Ana Sánchez',
     email: 'ana.sanchez@example.com',
     estado: 'inactivo',
@@ -543,5 +551,5 @@ export let mockAssistants: AssistantUser[] = [
 ];
 
 export const getMockAssistants = (): AssistantUser[] => {
-  return [...mockAssistants];
+  return [...mockAssistants].map(as => ({...as, permissions: {...as.permissions, patients: {...as.permissions.patients}, schedule: {...as.permissions.schedule}, billing: {...as.permissions.billing}}}));
 };

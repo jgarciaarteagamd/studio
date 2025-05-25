@@ -45,13 +45,11 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <p className="mb-4">
-            Gestiona eficientemente los historiales de los pacientes, genera informes detallados y optimiza tu flujo de trabajo.
-            Todos tus datos pueden almacenarse y gestionarse de forma segura en tu Google Drive.
+            Gestiona eficientemente los historiales de los pacientes y genera informes detallados.
+            Los datos se almacenan de forma segura en la nube utilizando servicios de Google.
           </p>
-          <Button onClick={() => alert("Acción Conectar a Google Drive (no implementada)")}>
-            <AlertTriangle className="mr-2 h-4 w-4" />
-            Conectar a Google Drive
-          </Button>
+          {/* El botón "Conectar a Google Drive" se ha eliminado de aquí. 
+              La funcionalidad de "Nueva Consulta" está en AppHeader y SidebarNav. */}
         </CardContent>
       </Card>
 
@@ -88,16 +86,16 @@ export default function DashboardPage() {
         </Card>
         <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Almacenamiento en Drive</CardTitle>
+            <CardTitle className="text-sm font-medium">Conexión a Servicios</CardTitle>
             <BarChart3 className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">N/A</div>
             <p className="text-xs text-muted-foreground">
-              Conecta Google Drive para ver el uso
+              Estado de conexión a servicios en la nube (ej. Firestore)
             </p>
-            <Button size="sm" className="mt-4 w-full" variant="outline" onClick={() => alert("Acción Conectar a Google Drive (no implementada)")}>
-              Verificar Almacenamiento
+            <Button size="sm" className="mt-4 w-full" variant="outline" onClick={() => alert("Verificar estado de servicios (no implementado)")}>
+              Verificar Conexión
             </Button>
           </CardContent>
         </Card>

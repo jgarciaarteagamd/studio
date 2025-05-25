@@ -1,4 +1,3 @@
-
 // src/components/patients/FileUploadSection.tsx
 "use client";
 
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { Attachment } from "@/lib/types";
 import { UploadCloud, Trash2, FileArchive, FileText, Image as ImageIcon, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,7 +17,7 @@ interface FileUploadSectionProps {
   attachments: Attachment[];
   onFileUpload: (file: File) => void;
   onDeleteAttachments: (attachmentIdsToDelete: string[]) => void;
-  className?: string;
+  // className prop was removed as FileUploadSection handles its own internal layout
 }
 
 const getFileIcon = (type: Attachment['type']) => {
@@ -32,7 +31,7 @@ const getFileIcon = (type: Attachment['type']) => {
   }
 };
 
-export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachments, className }: FileUploadSectionProps) {
+export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachments }: FileUploadSectionProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const hiddenFileInputRef = useRef<HTMLInputElement>(null);
   const [currentLocale, setCurrentLocale] = useState('es-ES');
@@ -71,7 +70,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
   };
 
   const handleOpenFile = (driveLink: string) => {
-    alert(`Abriendo/Descargando archivo (simulado): ${driveLink}. En una aplicación real, esto abriría o descargaría el archivo de Google Drive.`);
+    alert(`Abriendo/Descargando archivo (simulado): ${driveLink}. En una aplicación real, esto podría abrir o descargar el archivo de Cloud Storage.`);
   };
 
   const handleSelectAttachment = (attachmentId: string) => {
@@ -106,13 +105,13 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
   
 
   return (
-    <div className={cn("space-y-4 w-full", className)}>
+    <div className="space-y-4 w-full">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Subir Nuevo Adjunto</CardTitle>
           <CardDescription>Seleccione un archivo (PDF, imagen, etc.).</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col sm:flex-row items-center gap-4">
+        <CardContent className="flex flex-col sm:flex-row items-start gap-4">
           <div className="flex flex-col items-start gap-1 flex-grow">
             <p className="text-sm text-muted-foreground h-6 flex items-center">
               {selectedFile ? selectedFile.name : "Nada seleccionado"}
@@ -142,7 +141,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
 
       <Card className="w-full">
         <CardHeader className="flex flex-col p-6 gap-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <CardTitle>Archivos Adjuntos</CardTitle>
             {attachments.length > 0 && (
               <Button
@@ -201,7 +200,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
                         className="font-medium text-primary hover:underline text-left block w-full truncate cursor-pointer"
                         title={attachment.name}
                       >
-                        {attachment.name}
+                       {attachment.name}
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Subido: {new Date(attachment.uploadedAt).toLocaleDateString(currentLocale)}
@@ -224,7 +223,7 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
           <AlertDialogHeader>
             <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción eliminará los archivos seleccionados de forma simulada. En una aplicación real, esto podría ser irreversible.
+              Esta acción eliminará los metadatos de los archivos seleccionados. En una aplicación real, esto podría ser irreversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -238,4 +237,3 @@ export function FileUploadSection({ attachments, onFileUpload, onDeleteAttachmen
     </div>
   );
 }
-
