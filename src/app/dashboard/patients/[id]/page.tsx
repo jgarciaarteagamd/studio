@@ -67,8 +67,8 @@ export default function PatientDetailPage() {
         updatedPatientData.personalDetails = data.personalDetails;
       }
       if (data.datosFacturacion !== undefined) {
-         updatedPatientData.datosFacturacion = (data.datosFacturacion && Object.values(data.datosFacturacion).some(val => val && val !== '')) 
-            ? data.datosFacturacion 
+         updatedPatientData.datosFacturacion = (data.datosFacturacion && Object.values(data.datosFacturacion).some(val => val && val !== ''))
+            ? data.datosFacturacion
             : null;
       }
       if (data.backgroundInformation !== undefined) {
@@ -76,7 +76,7 @@ export default function PatientDetailPage() {
             ? data.backgroundInformation
             : null;
       }
-      
+
       const updatedRecord = await updatePatientRecord(patient.id, updatedPatientData);
 
       if (updatedRecord) {
@@ -105,9 +105,9 @@ export default function PatientDetailPage() {
         driveLink: '#', // Placeholder for Google Drive link
         uploadedAt: new Date().toISOString(),
       };
-      
+
       const updatedRecord = await addPatientAttachment(patient.id, attachmentData);
-      
+
       if (updatedRecord) {
         setPatient({...updatedRecord}); // Important: use spread for new reference
         toast({
@@ -155,7 +155,22 @@ export default function PatientDetailPage() {
     pdfContent += `Fecha de Consulta: ${format(new Date(encounter.date), "PPP", { locale: es })}\n\n`;
     pdfContent += `Detalles de la Consulta:\n${encounter.details}\n\n`;
     pdfContent += `\n\nFirma del Médico:\n_________________________`;
-    alert("Descarga de Consulta Específica (simulada):\n\n" + pdfContent);
+
+    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    const encounterDateFormatted = format(new Date(encounter.date), "yyyy-MM-dd");
+    const safePatientName = patientName.replace(/\s+/g, '_');
+    link.download = `Consulta_${safePatientName}_${encounterDateFormatted}.pdf`;
+    link.href = URL.createObjectURL(blob);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    toast({
+      title: "Descarga Iniciada",
+      description: `El informe de la consulta de ${patientName} se está descargando como PDF (simulado).`,
+    });
   };
 
 
@@ -183,11 +198,11 @@ export default function PatientDetailPage() {
     datosFacturacion: patient.datosFacturacion || { ruc: '', direccionFiscal: '', telefonoFacturacion: '', emailFacturacion: '' },
     backgroundInformation: patient.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' },
   };
-  
+
   const canSecretaryModifyPatientData = SIMULATED_CURRENT_ROLE === 'secretary' && secretaryPermissions.patients.canModifyPersonalAndBilling;
   const canSecretaryManageAttachments = SIMULATED_CURRENT_ROLE === 'secretary' && secretaryPermissions.patients.canAddAttachments;
-  
-  const showPatientDataTab = true; 
+
+  const showPatientDataTab = true;
   const showBackgroundTab = isDoctor;
   const showHistoryTab = isDoctor;
   const showAttachmentsTab = isDoctor || canSecretaryManageAttachments;
@@ -197,12 +212,11 @@ export default function PatientDetailPage() {
   if (showBackgroundTab) tabCount++;
   if (showHistoryTab) tabCount++;
   if (showAttachmentsTab) tabCount++;
-  
+
   const tabsListGridColsClass = () => {
-    if (isDoctor) return "md:grid-cols-4"; // Médico tiene 4 pestañas (Datos, Antecedentes, Historial, Adjuntos)
-    // Secretaria: Datos + Adjuntos (si tiene permiso)
-    if (canSecretaryManageAttachments) return "md:grid-cols-2"; // Datos, Adjuntos
-    return "md:grid-cols-1"; // Solo Datos
+    if (isDoctor) return "md:grid-cols-4";
+    if (canSecretaryManageAttachments) return "md:grid-cols-2";
+    return "md:grid-cols-1";
   };
 
 
@@ -240,7 +254,7 @@ export default function PatientDetailPage() {
               </div>
             </>
           )}
-           <Badge variant="secondary" className="w-fit mt-4 mb-3">
+           <Badge variant="secondary" className="w-fit mt-4">
             Última actualización general: {new Date(patient.updatedAt).toLocaleDateString(currentLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
           </Badge>
         </CardHeader>
@@ -275,14 +289,14 @@ export default function PatientDetailPage() {
                   showPersonalDetailsSection={true}
                   showDatosFacturacionSection={true}
                   allowEditFacturacionInfo={isDoctor || canSecretaryModifyPatientData}
-                  showBackgroundInformationSection={false} 
+                  showBackgroundInformationSection={false}
                   allowEditBackgroundInfo={false}
                 />
               </CardContent>
             </Card>
           </TabsContent>
         )}
-        
+
         {showBackgroundTab && (
            <TabsContent value="backgroundInfo">
              <Card className="w-full">
@@ -371,7 +385,7 @@ export default function PatientDetailPage() {
                   <CardTitle>Archivos Adjuntos</CardTitle>
                   <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
                 </CardHeader>
-                <CardContent className="overflow-hidden">
+                <CardContent className="overflow-hidden"> {/* Added overflow-hidden here */}
                   <Dialog open={isAttachmentDialogOpen} onOpenChange={setIsAttachmentDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline">
@@ -385,7 +399,7 @@ export default function PatientDetailPage() {
                           Suba nuevos archivos o elimine existentes. Los archivos se guardarán en su Google Drive (simulado).
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="flex-1 overflow-y-auto min-h-0">
+                      <div className="flex-1 overflow-y-auto min-h-0"> {/* This div handles scrolling for FileUploadSection */}
                         <FileUploadSection
                           attachments={patient.attachments}
                           onFileUpload={handleFileUpload}
@@ -402,3 +416,5 @@ export default function PatientDetailPage() {
     </div>
   );
 }
+
+    
