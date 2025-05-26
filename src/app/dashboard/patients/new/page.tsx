@@ -1,3 +1,4 @@
+
 // src/app/dashboard/patients/new/page.tsx
 "use client";
 
@@ -14,7 +15,10 @@ export default function NewPatientPage() {
   const { toast } = useToast();
 
   const isDoctor = SIMULATED_CURRENT_ROLE === 'doctor';
-  const canSecretaryCreate = SIMULATED_CURRENT_ROLE === 'secretary' && SIMULATED_SECRETARY_PERMISSIONS.patients.canCreate;
+  const isSecretary = SIMULATED_CURRENT_ROLE === 'secretary';
+  const canSecretaryCreate = isSecretary && SIMULATED_SECRETARY_PERMISSIONS.patients.canCreate;
+  const canSecretaryEditBilling = isSecretary && SIMULATED_SECRETARY_PERMISSIONS.patients.canModifyPersonalAndBilling;
+
 
   const handleSubmit = async (data: PatientFormValues) => { // Make async
     const patientDataForCreation: {
@@ -23,7 +27,6 @@ export default function NewPatientPage() {
       backgroundInformation?: BackgroundInformation | null;
     } = {
       personalDetails: data.personalDetails,
-      // Ensure optional fields are passed correctly, even if empty objects from form
       datosFacturacion: (data.datosFacturacion && Object.values(data.datosFacturacion).some(val => val && val !== '')) 
         ? data.datosFacturacion 
         : null,
@@ -75,8 +78,8 @@ export default function NewPatientPage() {
 
   if (!isDoctor && !canSecretaryCreate) {
     return (
-      <div className="space-y-6">
-        <Card className="max-w-4xl mx-auto shadow-lg">
+      <div className="space-y-6 max-w-5xl mx-auto w-full">
+        <Card className="w-full shadow-lg">
           <CardHeader>
             <CardTitle className="text-3xl">Acceso Denegado</CardTitle>
           </CardHeader>
@@ -89,15 +92,15 @@ export default function NewPatientPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="max-w-4xl mx-auto shadow-lg">
+    <div className="space-y-6 max-w-5xl mx-auto w-full">
+      <Card className="w-full shadow-lg">
         <CardHeader>
           <CardTitle className="text-3xl">Agregar Nuevo Paciente</CardTitle>
           {isDoctor ? (
             <CardDescription>
               Complete todos los detalles del paciente. El historial de consultas y recetas se gestionará por separado.
             </CardDescription>
-          ) : ( // Secretaria
+          ) : ( 
             <CardDescription>
               Complete los datos personales, de contacto y (opcionalmente) de facturación del paciente. Los antecedentes médicos y el historial clínico serán gestionados por el personal médico.
             </CardDescription>
@@ -110,9 +113,9 @@ export default function NewPatientPage() {
             submitButtonText="Agregar Paciente"
             showPersonalDetailsSection={true}
             showDatosFacturacionSection={true}
-            showBackgroundInformationSection={isDoctor}
-            allowEditFacturacionInfo={isDoctor || (SIMULATED_CURRENT_ROLE === 'secretary' && SIMULATED_SECRETARY_PERMISSIONS.patients.canModifyPersonalAndBilling)}
-            allowEditBackgroundInfo={isDoctor}
+            showBackgroundInformationSection={isDoctor} // Solo el médico ve y edita antecedentes al crear
+            allowEditFacturacionInfo={isDoctor || canSecretaryEditBilling} // Médico y secretaria (con permiso) pueden editar facturación
+            allowEditBackgroundInfo={isDoctor} // Solo el médico edita antecedentes
           />
         </CardContent>
       </Card>

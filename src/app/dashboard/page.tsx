@@ -1,9 +1,10 @@
+
 // src/app/dashboard/page.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockPatients, getPatientFullName } from "@/lib/mock-data";
+import { mockPatients, getPatientFullName, SIMULATED_CURRENT_ROLE, getDoctorProfile } from "@/lib/mock-data";
 import { FileText, Users, BarChart3, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import Image from 'next/image';
@@ -35,21 +36,21 @@ export default function DashboardPage() {
   const recentPatients = [...mockPatients]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 3); 
+  
+  const doctorName = SIMULATED_CURRENT_ROLE === 'doctor' ? getDoctorProfile().contactDetails.nombreCompleto : "Usuario";
+
 
   return (
-    <div className="space-y-6">
-      <Card className="shadow-lg">
+    <div className="space-y-6 max-w-5xl mx-auto w-full">
+      <Card className="shadow-lg w-full">
         <CardHeader>
-          <CardTitle className="text-3xl">Bienvenido a MedLog</CardTitle>
+          <CardTitle className="text-3xl">Bienvenido a MedLog, {doctorName}</CardTitle>
           <CardDescription>Tu centro de gestión de pacientes e historiales médicos.</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="mb-4">
             Gestiona eficientemente los historiales de los pacientes y genera informes detallados.
-            Los datos se almacenan de forma segura en la nube utilizando servicios de Google.
           </p>
-          {/* El botón "Conectar a Google Drive" se ha eliminado de aquí. 
-              La funcionalidad de "Nueva Consulta" está en AppHeader y SidebarNav. */}
         </CardContent>
       </Card>
 
@@ -79,7 +80,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">
               Informes creados con IA
             </p>
-             <Button size="sm" className="mt-4 w-full" variant="outline" onClick={() => alert("Funcionalidad no implementada completamente. Ve a un paciente específico para generar informes.")}>
+             <Button size="sm" className="mt-4 w-full" variant="outline" onClick={() => alert("Funcionalidad no implementada completamente. Ve a un paciente específico para generar informes.")} disabled={SIMULATED_CURRENT_ROLE !== 'doctor'}>
               Generar Nuevo Informe
             </Button>
           </CardContent>
@@ -101,7 +102,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="shadow-lg">
+      <Card className="shadow-lg w-full">
         <CardHeader>
           <CardTitle>Pacientes Recientemente Accedidos</CardTitle>
         </CardHeader>
@@ -127,14 +128,14 @@ export default function DashboardPage() {
           )}
         </CardContent>
       </Card>
-       <div className="mt-8 p-6 bg-card rounded-lg shadow-md">
+       <div className="mt-8 p-6 bg-card rounded-lg shadow-md w-full">
         <h3 className="text-xl font-semibold mb-4">Placeholder Visual de la App</h3>
         <Image 
           src="https://placehold.co/800x300.png" 
           alt="Placeholder Visual de la App" 
           width={800} 
           height={300} 
-          className="rounded-md object-cover"
+          className="rounded-md object-cover w-full"
           data-ai-hint="medical dashboard" 
         />
         <p className="text-sm text-muted-foreground mt-2">Esta es una imagen de marcador de posición que representa una posible interfaz de usuario o visualización de datos dentro de la aplicación.</p>

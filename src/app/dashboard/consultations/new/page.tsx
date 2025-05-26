@@ -125,8 +125,20 @@ export default function NewConsultationPage() {
     pdfContent += `Plan:\n${formData.plan || 'No registrado.'}\n\n`;
     pdfContent += `\n\nFirma del Médico:\n_________________________`;
     
-    alert("Generación de PDF de Consulta (simulada):\n\n" + pdfContent);
-    console.log("Datos para PDF de Consulta:", {patient: selectedPatient, consultation: formData});
+    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    const safePatientName = getPatientFullName(selectedPatient).replace(/\s+/g, '_');
+    link.download = `Consulta_${safePatientName}_${new Date().toISOString().split('T')[0]}.pdf`;
+    link.href = URL.createObjectURL(blob);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+    
+    toast({
+      title: "Descarga de Consulta (Simulada)",
+      description: `El PDF de la consulta para ${getPatientFullName(selectedPatient)} se está descargando.`,
+    });
   };
 
   const handleDownloadSpecificConsultationPdf = (encounter: MedicalEncounter) => {
@@ -136,7 +148,22 @@ export default function NewConsultationPage() {
     pdfContent += `Fecha de Consulta: ${format(new Date(encounter.date), "PPP", { locale: es })}\n\n`;
     pdfContent += `Detalles de la Consulta:\n${encounter.details}\n\n`; 
     pdfContent += `\n\nFirma del Médico:\n_________________________`;
-    alert("Descarga de Consulta Específica (simulada):\n\n" + pdfContent);
+    
+    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    const encounterDateFormatted = format(new Date(encounter.date), "yyyy-MM-dd");
+    const safePatientName = getPatientFullName(selectedPatient).replace(/\s+/g, '_');
+    link.download = `Consulta_${safePatientName}_${encounterDateFormatted}.pdf`;
+    link.href = URL.createObjectURL(blob);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    toast({
+      title: "Descarga de Consulta (Simulada)",
+      description: `El PDF de la consulta de ${format(new Date(encounter.date), "P", { locale: es })} se está descargando.`,
+    });
   };
 
   const recentEncounters = useMemo(() => {
@@ -148,7 +175,7 @@ export default function NewConsultationPage() {
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-3xl flex items-center">
@@ -204,9 +231,9 @@ export default function NewConsultationPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1 space-y-4">
                 <div className="mb-4">
-                  <Button variant="outline" size="sm" onClick={() => setSelectedPatient(null)} className="w-full sm:w-auto">
-                    <Search className="mr-2 h-4 w-4" /> Cambiar Paciente
-                  </Button>
+                    <Button variant="outline" size="sm" onClick={() => setSelectedPatient(null)} className="w-full sm:w-auto">
+                        <Search className="mr-2 h-4 w-4" /> Cambiar Paciente
+                    </Button>
                 </div>
                 <Card>
                   <CardHeader>
