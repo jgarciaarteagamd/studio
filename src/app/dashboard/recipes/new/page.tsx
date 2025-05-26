@@ -1,4 +1,3 @@
-
 // src/app/dashboard/recipes/new/page.tsx
 "use client";
 
@@ -116,8 +115,8 @@ export default function NewRecipePage() {
         title: "Receta Guardada",
         description: `Nueva receta para ${getPatientFullName(updatedPatient)} guardada exitosamente.`,
       });
-      setSelectedPatient(updatedPatient); // Actualizar paciente para reflejar nueva receta en historial
-      setCurrentRecipeHistoryPage(1); // Volver a la primera página del historial
+      setSelectedPatient(updatedPatient); 
+      setCurrentRecipeHistoryPage(1); 
       form.reset({ 
         medications: [{ drugName: '', presentation: '', indications: '' }],
         preventiveMeasures: '',
@@ -155,8 +154,20 @@ export default function NewRecipePage() {
     }
     pdfContent += `\n\nFirma del Médico:\n_________________________`;
     
-    alert("Generación de PDF (simulada):\n\n" + pdfContent);
-    console.log("Datos para PDF:", {patient: selectedPatient, recipe: formData});
+    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    const safePatientName = getPatientFullName(selectedPatient).replace(/\s+/g, '_');
+    link.download = `Receta_${safePatientName}_${new Date().toISOString().split('T')[0]}.pdf`;
+    link.href = URL.createObjectURL(blob);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    toast({
+      title: "Descarga de Receta (Simulada)",
+      description: `El PDF de la receta para ${getPatientFullName(selectedPatient)} se está descargando como archivo de texto.`,
+    });
   };
 
   const handleDownloadSpecificRecipe = (recipe: Recipe) => {
@@ -176,7 +187,22 @@ export default function NewRecipePage() {
       pdfContent += `Observaciones:\n${recipe.observations}\n\n`;
     }
     pdfContent += `\n\nFirma del Médico:\n_________________________`;
-    alert("Descarga de Receta Específica (simulada):\n\n" + pdfContent);
+    
+    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    const recipeDateFormatted = format(new Date(recipe.date), "yyyy-MM-dd");
+    const safePatientName = getPatientFullName(selectedPatient).replace(/\s+/g, '_');
+    link.download = `Receta_${safePatientName}_${recipeDateFormatted}.pdf`;
+    link.href = URL.createObjectURL(blob);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    toast({
+      title: "Descarga de Receta (Simulada)",
+      description: `El PDF de la receta de ${format(new Date(recipe.date), "P", { locale: es })} se está descargando como archivo de texto.`,
+    });
   };
 
   const sortedRecipeHistory = useMemo(() => {
@@ -204,13 +230,13 @@ export default function NewRecipePage() {
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="shadow-lg">
+    <div className="space-y-6 max-w-5xl mx-auto w-full">
+      <Card className="shadow-lg w-full">
         <CardHeader>
-          <CardTitle className="text-3xl flex items-center">
-            <PlusCircle className="mr-3 h-8 w-8 text-primary" />
-            Crear Nueva Receta
-          </CardTitle>
+          <div className="flex items-center gap-3 mb-2">
+            <PlusCircle className="mr-1 h-8 w-8 text-primary" /> {/* Adjusted icon for consistency */}
+            <CardTitle className="text-3xl">Crear Nueva Receta</CardTitle>
+          </div>
           <CardDescription>
             Busque y seleccione un paciente para crear una nueva receta.
           </CardDescription>
@@ -340,7 +366,7 @@ export default function NewRecipePage() {
               </div>
 
               <div className="lg:col-span-2">
-                <Card>
+                <Card className="w-full">
                   <CardHeader>
                     <CardTitle className="flex items-center text-xl">
                       <ClipboardEdit className="mr-2 h-5 w-5 text-primary" />

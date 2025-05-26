@@ -1,4 +1,3 @@
-
 // src/app/dashboard/schedule/page.tsx
 "use client";
 
@@ -18,7 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord, getPatientFullName, updateAppointmentStatus as apiUpdateAppointmentStatus, deleteAppointment as apiDeleteAppointment, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Calendar, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff } from "lucide-react";
+import { PlusCircle, Calendar as CalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff, CalendarDays } from "lucide-react";
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
 import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
@@ -261,29 +260,31 @@ export default function SchedulePage() {
   return (
     <div className="max-w-5xl mx-auto w-full">
       <div className="space-y-6 w-full">
-
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Agenda de Citas</h1>
-            <p className="text-muted-foreground">
+        <Card className="shadow-lg w-full">
+          <CardHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <CalendarDays className="h-8 w-8 text-primary" />
+              <CardTitle className="text-3xl">Agenda de Citas</CardTitle>
+            </div>
+            <CardDescription className="mb-4">
               Ver y programar citas o bloqueos de horario.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            {canProgramAppointments && (
-              <Button size="lg" onClick={() => openFormDialog(false)} className="w-full sm:w-auto">
-                <PlusCircle className="mr-2 h-5 w-5" />
-                Programar Cita
-              </Button>
-            )}
-            {canBlockTime && (
-              <Button size="lg" variant="outline" onClick={() => openFormDialog(true)} className="w-full sm:w-auto">
-                <ShieldOff className="mr-2 h-5 w-5" />
-                Bloquear Horario
-              </Button>
-            )}
-          </div>
-        </div>
+            </CardDescription>
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              {canProgramAppointments && (
+                <Button size="lg" onClick={() => openFormDialog(false)} className="w-full sm:w-auto">
+                  <PlusCircle className="mr-2 h-5 w-5" />
+                  Programar Cita
+                </Button>
+              )}
+              {canBlockTime && (
+                <Button size="lg" variant="outline" onClick={() => openFormDialog(true)} className="w-full sm:w-auto">
+                  <ShieldOff className="mr-2 h-5 w-5" />
+                  Bloquear Horario
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+        </Card>
 
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -343,7 +344,7 @@ export default function SchedulePage() {
                                 ) : (
                                   <span>Seleccione una fecha</span>
                                 )}
-                                <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
@@ -468,8 +469,8 @@ export default function SchedulePage() {
 
         <Card className="shadow-lg w-full overflow-hidden">
            <CardHeader>
-            <CardTitle>Calendario de Citas</CardTitle>
-            <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
+            <CardTitle>Calendario</CardTitle>
+            <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas.</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
             <div className="max-w-xl mx-auto">
@@ -487,18 +488,13 @@ export default function SchedulePage() {
                   caption_label: "text-lg font-medium",
                   head_cell: cn("text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-xs sm:text-sm p-0 text-center", "h-8 sm:h-10 md:h-12"),
                   cell: cn("flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", "h-8 sm:h-10 md:h-12"),
-                  day: (date, modifiers) => {
+                  day: (date, modifiers, dayProps) => {
                     let klasses = cn(
                       buttonVariants({ variant: "ghost" }),
-                      "h-full w-full p-0 font-normal flex items-center justify-center",
-                      "text-xs sm:text-sm text-foreground" 
+                      "h-full w-full p-0 font-normal flex items-center justify-center text-foreground"
                     );
-                    // Apply base styles for all days first
-                    klasses = cn(klasses, "text-foreground"); // Ensure numbers are dark
-
-                    if (modifiers.outside) {
-                      klasses = cn(klasses, "text-muted-foreground opacity-50");
-                    } else if (modifiers.disabled) {
+                  
+                    if (modifiers.outside || modifiers.disabled) {
                       klasses = cn(klasses, "text-muted-foreground opacity-50");
                     } else {
                       // Active days
@@ -506,8 +502,8 @@ export default function SchedulePage() {
                         klasses = cn(klasses, "bg-primary/70 !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full text-foreground"); 
                       } else if (modifiers.today) {
                         klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
-                      } else {
-                        klasses = cn(klasses, "hover:bg-muted hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full text-foreground");
+                      } else if (dayProps.onPointerEnter) { // Check if hover is applicable
+                        klasses = cn(klasses, "hover:bg-muted hover:text-foreground hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full");
                       }
                     }
                     return klasses;
@@ -525,8 +521,8 @@ export default function SchedulePage() {
           appointmentsForDay={appointmentsOnSelectedDay}
           onStatusChange={handleStatusChange}
           requestDeleteBlocker={openDeleteBlockerDialog}
-          canChangeStatus={canChangeStatus}
-          canDeleteAppointmentsOrBlockers={canDeleteAppointmentsOrBlockers}
+          canChangeStatus={canChangeStatus && isDoctor}
+          canDeleteAppointmentsOrBlockers={canDeleteAppointmentsOrBlockers && isDoctor}
         />
 
         <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !open && setAppointmentToDelete(null)}>
@@ -634,18 +630,7 @@ export default function SchedulePage() {
                                       <Trash2 className="mr-2 h-4 w-4" /> Eliminar Bloqueo
                                     </Button>
                                   </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Esta acción no se puede deshacer. Esto eliminará permanentemente la entrada.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction onClick={handleDeleteConfirm}>Continuar</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
+                                  {/* AlertDialogContent for delete confirmation moved to main page scope */}
                                 </AlertDialog>
                             )}
                           </div>
