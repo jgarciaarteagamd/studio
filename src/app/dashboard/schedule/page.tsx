@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -43,7 +43,7 @@ const appointmentFormSchema = z.object({
   return true;
 }, {
   message: "Si es un bloqueo, debe indicar un motivo. Si es una cita, debe seleccionar un paciente.",
-  path: ["isBlocker"], // This path might need to be more specific if it's causing issues, e.g. ["blockerReason"] or ["patientId"]
+  path: ["isBlocker"], 
 });
 
 
@@ -94,7 +94,7 @@ export default function SchedulePage() {
   const isBlockerWatch = form.watch("isBlocker");
 
   const openFormDialog = (blockerMode: boolean) => {
-    const defaultDate = selectedCalendarDay && !isPast(selectedCalendarDay) || (selectedCalendarDay && isToday(selectedCalendarDay)) ? selectedCalendarDay : new Date();
+    const defaultDate = selectedCalendarDay && (!isPast(selectedCalendarDay) || isToday(selectedCalendarDay)) ? selectedCalendarDay : new Date();
     form.reset({
       patientId: "",
       date: defaultDate,
@@ -466,8 +466,8 @@ export default function SchedulePage() {
           </DialogContent>
         </Dialog>
 
-        <Card className="shadow-lg w-full overflow-hidden max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
-          <CardHeader>
+        <Card className="shadow-lg w-full overflow-hidden">
+           <CardHeader>
             <CardTitle>Calendario de Citas</CardTitle>
             <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas. Use los botones superiores para agendar.</CardDescription>
           </CardHeader>
@@ -490,16 +490,25 @@ export default function SchedulePage() {
                   day: (date, modifiers) => {
                     let klasses = cn(
                       buttonVariants({ variant: "ghost" }),
-                      "h-full w-full p-0 font-normal flex items-center justify-center text-foreground text-xs sm:text-sm"
+                      "h-full w-full p-0 font-normal flex items-center justify-center",
+                      "text-xs sm:text-sm text-foreground" 
                     );
-                    if (modifiers.outside || modifiers.disabled) {
+                    // Apply base styles for all days first
+                    klasses = cn(klasses, "text-foreground"); // Ensure numbers are dark
+
+                    if (modifiers.outside) {
                       klasses = cn(klasses, "text-muted-foreground opacity-50");
-                    } else if (modifiers.selected) {
-                       klasses = cn(klasses, "bg-primary/70 text-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full");
-                    } else if (modifiers.today) {
-                       klasses = cn(klasses, "ring-1 ring-primary text-foreground rounded-full");
+                    } else if (modifiers.disabled) {
+                      klasses = cn(klasses, "text-muted-foreground opacity-50");
                     } else {
-                      klasses = cn(klasses, "hover:bg-muted hover:text-foreground hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full");
+                      // Active days
+                      if (modifiers.selected) {
+                        klasses = cn(klasses, "bg-primary/70 !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full text-foreground"); 
+                      } else if (modifiers.today) {
+                        klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
+                      } else {
+                        klasses = cn(klasses, "hover:bg-muted hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full text-foreground");
+                      }
                     }
                     return klasses;
                   },
@@ -620,6 +629,7 @@ export default function SchedulePage() {
                                       size="sm"
                                       className="w-full sm:w-auto text-destructive hover:bg-destructive/10"
                                       disabled={!canDeleteAppointmentsOrBlockers}
+                                      onClick={(e) => { e.stopPropagation(); openDeleteBlockerDialog(appointment.id); }}
                                     >
                                       <Trash2 className="mr-2 h-4 w-4" /> Eliminar Bloqueo
                                     </Button>
@@ -633,7 +643,7 @@ export default function SchedulePage() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => openDeleteBlockerDialog(appointment.id)}>Continuar</AlertDialogAction>
+                                      <AlertDialogAction onClick={handleDeleteConfirm}>Continuar</AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
                                 </AlertDialog>
@@ -664,4 +674,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-

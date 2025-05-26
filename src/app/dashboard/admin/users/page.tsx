@@ -1,8 +1,7 @@
-
 // src/app/dashboard/admin/users/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,7 +12,7 @@ import type { AssistantUser } from "@/lib/types";
 import { getMockAssistants, SIMULATED_CURRENT_ROLE } from "@/lib/mock-data";
 import { cn } from '@/lib/utils';
 
-const ITEMS_PER_PAGE = 6; // Ajustado para tarjetas
+const ITEMS_PER_PAGE = 6; 
 
 export default function UserManagementPage() {
   const [assistants, setAssistants] = useState<AssistantUser[]>([]);
@@ -23,8 +22,8 @@ export default function UserManagementPage() {
 
   if (SIMULATED_CURRENT_ROLE !== 'doctor') {
     return (
-      <div className="space-y-6">
-        <Card className="shadow-lg">
+      <div className="space-y-6 max-w-5xl mx-auto w-full">
+        <Card className="shadow-lg w-full">
           <CardHeader><CardTitle className="text-3xl">Acceso Denegado</CardTitle></CardHeader>
           <CardContent><p>Esta sección es exclusiva para el médico administrador.</p></CardContent>
         </Card>
@@ -37,17 +36,17 @@ export default function UserManagementPage() {
     setIsLoading(false);
   }, []);
 
-  const filteredAssistants = assistants.filter(assistant =>
+  const filteredAssistants = useMemo(() => assistants.filter(assistant =>
     assistant.nombreCompleto.toLowerCase().includes(searchTerm.toLowerCase()) ||
     assistant.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     assistant.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ), [assistants, searchTerm]);
 
   const totalPages = Math.ceil(filteredAssistants.length / ITEMS_PER_PAGE);
-  const paginatedAssistants = filteredAssistants.slice(
+  const paginatedAssistants = useMemo(() => filteredAssistants.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
-  );
+  ), [filteredAssistants, currentPage]);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
@@ -76,20 +75,20 @@ export default function UserManagementPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <Card className="shadow-lg">
+    <div className="space-y-6 max-w-5xl mx-auto w-full">
+      <Card className="shadow-lg w-full">
         <CardHeader>
           <div className="flex items-center gap-3 mb-2">
               <Settings className="h-8 w-8 text-primary" />
               <CardTitle className="text-3xl">Gestión de Usuarios Asistenciales</CardTitle>
           </div>
-          <CardDescription>
+          <CardDescription className="mb-4">
             Administre las cuentas y permisos del personal asistencial (secretarios/as).
           </CardDescription>
           <Button 
             onClick={() => alert("Abrir modal para crear nuevo usuario asistencial (no implementado).")} 
             disabled 
-            className="w-full sm:w-auto mt-4"
+            className="w-full sm:w-auto"
             size="lg"
           >
             <UserPlus className="mr-2 h-5 w-5" />
@@ -159,7 +158,6 @@ export default function UserManagementPage() {
                     </div>
                      <p className="text-xs text-muted-foreground/80 pt-2">Últ. Actividad: {assistant.lastActivity ? new Date(assistant.lastActivity).toLocaleDateString('es-ES') : 'N/A'}</p>
                   </CardContent>
-                  {/* El footer podría usarse para un botón de acción principal si fuera necesario */}
                 </Card>
               ))}
             </div>

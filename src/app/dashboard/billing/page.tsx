@@ -1,3 +1,4 @@
+
 // src/app/dashboard/billing/page.tsx
 "use client";
 
@@ -42,16 +43,16 @@ export default function BillingPage() {
     setIsLoading(false);
   }, [canAccessBilling]);
 
-  const filteredInvoices = invoices.filter(invoice =>
+  const filteredInvoices = useMemo(() => invoices.filter(invoice =>
     invoice.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ), [invoices, searchTerm]);
 
   const totalPages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE);
-  const paginatedInvoices = filteredInvoices.slice(
+  const paginatedInvoices = useMemo(() => filteredInvoices.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
-  );
+  ), [filteredInvoices, currentPage]);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
@@ -103,7 +104,7 @@ export default function BillingPage() {
   };
 
   const handlePrintInvoicePdf = (invoice: Invoice) => {
-    const doctorProfile = getDoctorProfile(); // Usar el perfil del médico actual para los datos fiscales
+    const doctorProfile = getDoctorProfile(); 
     let pdfContent = `== FACTURA ==\n\n`;
     pdfContent += `Número de Factura: ${invoice.invoiceNumber}\n`;
     pdfContent += `Fecha de Emisión: ${format(new Date(invoice.dateIssued), "P", { locale: es })}\n`;
@@ -124,7 +125,6 @@ export default function BillingPage() {
 
     pdfContent += `\n-- Datos del Cliente --\n`;
     pdfContent += `Paciente: ${invoice.patientName}\n`;
-    // Aquí se podrían buscar y añadir más datos del paciente si fuera necesario (ej. RUC/CI, Dirección)
     
     pdfContent += `\n-- Detalles de la Factura --\n`;
     invoice.items.forEach(item => {
@@ -141,7 +141,7 @@ export default function BillingPage() {
       pdfContent += `\nNotas Adicionales:\n${invoice.notes}\n`;
     }
 
-    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-fs8' });
+    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
     const link = document.createElement('a');
     const safePatientName = invoice.patientName.replace(/\s+/g, '_');
     link.download = `Factura_${invoice.invoiceNumber}_${safePatientName}.pdf`;
@@ -160,7 +160,7 @@ export default function BillingPage() {
 
   if (!canAccessBilling) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-5xl mx-auto w-full">
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-3xl">Acceso Denegado</CardTitle>
@@ -174,21 +174,21 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <Card className="shadow-lg">
+    <div className="space-y-6 max-w-5xl mx-auto w-full">
+      <Card className="shadow-lg w-full">
         <CardHeader>
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-2">
             <Receipt className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Gestión de Facturación</CardTitle>
           </div>
-          <CardDescription>
+          <CardDescription className="mb-4">
             Cree, gestione y realice el seguimiento de las facturas por los servicios médicos prestados.
             La generación de facturas electrónicas (SRI) no está implementada.
           </CardDescription>
            <Button 
             onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")} 
             disabled 
-            className="w-full sm:w-auto mt-4"
+            className="w-full sm:w-auto"
             size="lg"
            >
             <FilePlus2 className="mr-2 h-5 w-5" />

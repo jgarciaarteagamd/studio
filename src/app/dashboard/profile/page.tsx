@@ -1,3 +1,4 @@
+
 // src/app/dashboard/profile/page.tsx
 "use client";
 
@@ -98,9 +99,8 @@ export default function ProfilePage() {
 
   const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000)); 
     
-    // Ensure we are passing logotipoUrl correctly with professionalDetails
     const professionalDetailsToSave = {
       ...data.professionalDetails,
       logotipoUrl: data.professionalDetails.logotipoUrl || undefined,
@@ -110,11 +110,10 @@ export default function ProfilePage() {
       contactDetails: data.contactDetails,
       professionalDetails: professionalDetailsToSave,
       fiscalDetails: data.fiscalDetails,
-      // logotipoUrl is now part of professionalDetails, so not needed at top level here
     });
 
     setCurrentProfile(updatedProfile);
-    setPreviewLogo(updatedProfile.professionalDetails.logotipoUrl); // Access it from professionalDetails
+    setPreviewLogo(updatedProfile.professionalDetails.logotipoUrl); 
     setIsSaving(false);
     toast({
       title: "Perfil Actualizado",
@@ -126,7 +125,7 @@ export default function ProfilePage() {
     const url = event.target.value;
     form.setValue("professionalDetails.logotipoUrl", url, { shouldValidate: true });
     if (form.getFieldState("professionalDetails.logotipoUrl").invalid || !url) {
-       setPreviewLogo(currentProfile?.professionalDetails?.logotipoUrl); // Use currentProfile for fallback
+       setPreviewLogo(currentProfile?.professionalDetails?.logotipoUrl); 
     } else {
        setPreviewLogo(url);
     }
@@ -138,8 +137,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <Card className="shadow-lg">
+    <div className="space-y-6 max-w-5xl mx-auto w-full">
+      <Card className="shadow-lg w-full">
         <CardHeader>
           <div className="flex items-center gap-3">
             <UserCircle className="h-8 w-8 text-primary" />
@@ -162,7 +161,7 @@ export default function ProfilePage() {
             </TabsList>
 
             <TabsContent value="contact" className="mt-6">
-              <Card>
+              <Card className="w-full">
                 <CardHeader><CardTitle>Datos Personales y de Contacto</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -214,7 +213,7 @@ export default function ProfilePage() {
             </TabsContent>
 
             <TabsContent value="professional" className="mt-6">
-              <Card>
+              <Card className="w-full">
                 <CardHeader><CardTitle>Datos Profesionales y Logotipo</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -309,7 +308,7 @@ export default function ProfilePage() {
             </TabsContent>
 
             <TabsContent value="fiscal" className="mt-6">
-              <Card>
+              <Card className="w-full">
                 <CardHeader><CardTitle>Datos Fiscales y de Facturación</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                    <FormField
@@ -361,7 +360,7 @@ export default function ProfilePage() {
             </TabsContent>
 
             <TabsContent value="security" className="mt-6">
-              <Card>
+              <Card className="w-full">
                 <CardHeader><CardTitle>Seguridad y Configuración</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   <div>

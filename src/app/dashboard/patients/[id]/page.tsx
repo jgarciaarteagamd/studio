@@ -9,7 +9,7 @@ import { FileUploadSection } from "@/components/patients/FileUploadSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { getPatientById, getPatientFullName, calculateAge, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
+import { getPatientById, getPatientFullName, calculateAge, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS, updatePatient as mockUpdatePatient } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays, ClipboardList, FolderOpen } from "lucide-react";
@@ -99,20 +99,22 @@ export default function PatientDetailPage() {
 
   const handleFileUpload = async (file: File) => {
     if (patient) {
+      // Simular la carga del archivo y obtener un nuevo objeto Attachment
+      // En una app real, esto implicaría subir a un servicio de almacenamiento y obtener una URL.
       const attachmentData: Omit<Attachment, 'id'> = {
         name: file.name,
         type: file.type.startsWith('image/') ? 'image' : (file.type === 'application/pdf' ? 'pdf' : 'other'),
-        driveLink: '#', // Placeholder for Google Drive link
+        driveLink: '#', // Placeholder para la URL del archivo (ej. Cloud Storage)
         uploadedAt: new Date().toISOString(),
       };
-
+  
       const updatedRecord = await addPatientAttachment(patient.id, attachmentData);
-
+  
       if (updatedRecord) {
-        setPatient({...updatedRecord}); // Important: use spread for new reference
+        setPatient({...updatedRecord});
         toast({
           title: "Archivo Adjuntado",
-          description: `${file.name} ha sido adjuntado (simulado via Server Action).`,
+          description: `${file.name} ha sido adjuntado (simulado).`,
         });
       } else {
         toast({
@@ -123,16 +125,16 @@ export default function PatientDetailPage() {
       }
     }
   };
-
+  
   const handleDeleteAttachments = async (attachmentIdsToDelete: string[]) => {
     if (patient) {
       const updatedRecord = await deletePatientAttachments(patient.id, attachmentIdsToDelete);
-
+  
       if (updatedRecord) {
-        setPatient({ ...updatedRecord }); // Important: use spread for new reference
+        setPatient({ ...updatedRecord });
         toast({
           title: "Adjuntos Eliminados",
-          description: `${attachmentIdsToDelete.length} archivo(s) ha(n) sido eliminado(s) (simulado via Server Action).`,
+          description: `${attachmentIdsToDelete.length} archivo(s) ha(n) sido eliminado(s) (simulado).`,
         });
       } else {
          toast({
@@ -214,21 +216,21 @@ export default function PatientDetailPage() {
   if (showAttachmentsTab) tabCount++;
 
   const tabsListGridColsClass = () => {
-    if (isDoctor) return "md:grid-cols-4";
-    if (canSecretaryManageAttachments) return "md:grid-cols-2";
-    return "md:grid-cols-1";
+    if (isDoctor) return "md:grid-cols-4"; // Datos, Antecedentes, Historial, Adjuntos
+    if (canSecretaryManageAttachments) return "md:grid-cols-2"; // Datos, Adjuntos
+    return "md:grid-cols-1"; // Solo Datos
   };
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl mx-auto w-full">
        <Button variant="outline" size="sm" asChild className="mb-4">
         <Link href="/dashboard/patients">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Volver a Pacientes
         </Link>
       </Button>
-      <Card className="shadow-lg">
+      <Card className="shadow-lg w-full">
         <CardHeader>
           <CardTitle className="text-3xl">{getPatientFullName(patient)}</CardTitle>
           <div className="text-sm text-muted-foreground space-y-1 mt-1">
@@ -260,7 +262,7 @@ export default function PatientDetailPage() {
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="personalData" className="w-full max-w-5xl mx-auto">
+      <Tabs defaultValue="personalData" className="w-full">
          <TabsList className={cn(
             "w-full h-auto mb-4 p-1 bg-muted rounded-md",
             "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
@@ -322,15 +324,15 @@ export default function PatientDetailPage() {
         {showHistoryTab && (
             <TabsContent value="encounters">
               <Card className="w-full">
-                <CardHeader>
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <div className="flex-1">
                     <CardTitle>Historial</CardTitle>
-                    <Button onClick={handleNavigateToNewConsultation} size="sm">
-                      <Stethoscope className="mr-2 h-4 w-4" />
-                      Nueva Consulta
-                    </Button>
+                    <CardDescription>Revise las consultas anteriores del paciente. La más reciente primero.</CardDescription>
                   </div>
-                  <CardDescription>Revise las consultas anteriores del paciente. La más reciente primero.</CardDescription>
+                  <Button onClick={handleNavigateToNewConsultation} size="sm">
+                    <Stethoscope className="mr-2 h-4 w-4" />
+                    Nueva Consulta
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   {patient.medicalEncounters && patient.medicalEncounters.length > 0 ? (
@@ -385,7 +387,7 @@ export default function PatientDetailPage() {
                   <CardTitle>Archivos Adjuntos</CardTitle>
                   <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
                 </CardHeader>
-                <CardContent className="overflow-hidden"> {/* Added overflow-hidden here */}
+                <CardContent className="overflow-hidden">
                   <Dialog open={isAttachmentDialogOpen} onOpenChange={setIsAttachmentDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline">
@@ -396,10 +398,10 @@ export default function PatientDetailPage() {
                       <DialogHeader>
                         <DialogTitle>Archivos Adjuntos de {getPatientFullName(patient)}</DialogTitle>
                         <DialogDescription>
-                          Suba nuevos archivos o elimine existentes. Los archivos se guardarán en su Google Drive (simulado).
+                          Suba nuevos archivos o elimine existentes. Los metadatos se guardarán en Firestore (simulado).
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="flex-1 overflow-y-auto min-h-0"> {/* This div handles scrolling for FileUploadSection */}
+                      <div className="flex-1 overflow-y-auto min-h-0">
                         <FileUploadSection
                           attachments={patient.attachments}
                           onFileUpload={handleFileUpload}
@@ -416,5 +418,3 @@ export default function PatientDetailPage() {
     </div>
   );
 }
-
-    
