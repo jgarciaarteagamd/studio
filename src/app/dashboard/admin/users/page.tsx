@@ -82,12 +82,11 @@ export default function UserManagementPage() {
               <Settings className="h-8 w-8 text-primary" />
               <CardTitle className="text-3xl">Gestión de Usuarios Asistenciales</CardTitle>
           </div>
-          {/* CardDescription eliminada */}
           <div className="pt-4 space-y-4">
             <Button
               onClick={() => alert("Abrir modal para crear nuevo usuario asistencial (no implementado).")}
               disabled
-              className="w-full" // Modificado para ancho completo
+              className="w-full"
               size="lg"
             >
               <UserPlus className="mr-2 h-5 w-5" />
@@ -100,7 +99,7 @@ export default function UserManagementPage() {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="max-w-md"
+              className="w-full"
             />
           </div>
         </CardHeader>
