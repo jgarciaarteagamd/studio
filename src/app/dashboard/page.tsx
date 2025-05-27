@@ -42,13 +42,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
-        <CardHeader className="space-y-4"> {/* Ajustado space-y para el nuevo contenido */}
-          <div className="mb-2"> {/* Se mantiene el mb-2 para el título y descripción si se quisiera añadir de nuevo */}
+        <CardHeader className="p-6 space-y-6"> {/* Ajustado space-y para el nuevo contenido */}
+          <div className="mb-2"> 
             <CardTitle className="text-3xl">Bienvenido a MedLog, {doctorName}</CardTitle>
           </div>
-          {/* CardDescription y CardContent principal eliminados de aquí */}
-
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pt-2"> {/* Grid de tarjetas de resumen movido aquí */}
+          
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"> {/* Grid de tarjetas de resumen movido aquí */}
             <Card className="shadow-md hover:shadow-lg transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Pacientes Totales</CardTitle>
