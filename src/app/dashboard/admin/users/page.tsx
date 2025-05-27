@@ -77,34 +77,34 @@ export default function UserManagementPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
-        <CardHeader>
+        <CardHeader className="space-y-1.5 p-6 pt-4">
           <div className="flex items-center gap-3 mb-2">
               <Settings className="h-8 w-8 text-primary" />
               <CardTitle className="text-3xl">Gestión de Usuarios Asistenciales</CardTitle>
           </div>
+          {/* CardDescription eliminada */}
+          <div className="pt-4 space-y-4">
+            <Button
+              onClick={() => alert("Abrir modal para crear nuevo usuario asistencial (no implementado).")}
+              disabled
+              className="w-full" // Modificado para ancho completo
+              size="lg"
+            >
+              <UserPlus className="mr-2 h-5 w-5" />
+              Crear Usuario Asistencial
+            </Button>
+            <Input
+              placeholder="Buscar por nombre, usuario o email..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="max-w-md"
+            />
+          </div>
         </CardHeader>
-        <CardContent className="space-y-6 p-6 pt-0">
-          <CardDescription>
-            Administre las cuentas y permisos del personal asistencial (secretarios/as).
-          </CardDescription>
-          <Button
-            onClick={() => alert("Abrir modal para crear nuevo usuario asistencial (no implementado).")}
-            disabled
-            className="w-full sm:w-auto"
-            size="lg"
-          >
-            <UserPlus className="mr-2 h-5 w-5" />
-            Crear Usuario Asistencial
-          </Button>
-          <Input
-            placeholder="Buscar por nombre, usuario o email..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="max-w-md"
-          />
+        <CardContent className="p-6 pt-0">
           {isLoading ? (
             <p>Cargando usuarios...</p>
           ) : paginatedAssistants.length > 0 ? (
