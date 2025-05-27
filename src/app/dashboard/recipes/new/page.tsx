@@ -241,7 +241,7 @@ export default function NewRecipePage() {
         <CardContent className="space-y-6">
           {!selectedPatient ? (
             <>
-              <Label htmlFor="patientSearchRecipe" className="mb-2 block">Buscar Paciente</Label>
+              
               <div className="flex items-center space-x-2 mb-4">
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <Input
@@ -481,4 +481,3 @@ export default function NewRecipePage() {
     </div>
   );
 }
-
