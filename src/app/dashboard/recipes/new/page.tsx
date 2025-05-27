@@ -234,12 +234,11 @@ export default function NewRecipePage() {
       <Card className="shadow-lg w-full">
         <CardHeader>
           <div className="flex items-center gap-3 mb-2">
-            <PlusCircle className="mr-1 h-8 w-8 text-primary" /> {/* Adjusted icon for consistency */}
+            <PlusCircle className="mr-1 h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Crear Nueva Receta</CardTitle>
           </div>
-          {/* CardDescription eliminada */}
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           {!selectedPatient ? (
             <>
               <Label htmlFor="patientSearchRecipe" className="mb-2 block">Buscar Paciente</Label>
@@ -281,13 +280,14 @@ export default function NewRecipePage() {
               )}
             </>
           ) : (
+            <>
+            <div className="mb-4">
+              <Button variant="outline" size="sm" onClick={() => setSelectedPatient(null)} className="w-full sm:w-auto">
+                  <Search className="mr-2 h-4 w-4" /> Cambiar Paciente
+              </Button>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1 space-y-4">
-                 <div className="mb-4">
-                    <Button variant="outline" size="sm" onClick={() => setSelectedPatient(null)} className="w-full sm:w-auto">
-                        <Search className="mr-2 h-4 w-4" /> Cambiar Paciente
-                    </Button>
-                </div>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center text-xl">
@@ -474,9 +474,11 @@ export default function NewRecipePage() {
                 </Card>
               </div>
             </div>
+            </>
           )}
         </CardContent>
       </Card>
     </div>
   );
 }
+
