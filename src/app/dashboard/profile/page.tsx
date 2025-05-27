@@ -100,11 +100,11 @@ export default function ProfilePage() {
 
   const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
 
     const professionalDetailsToSave = {
       ...data.professionalDetails,
-      logotipoUrl: data.professionalDetails.logotipoUrl || undefined,
+      logotipoUrl: data.professionalDetails.logotipoUrl || undefined, // Store empty string as undefined
     };
 
     const updatedProfile = updateDoctorProfile({
@@ -149,28 +149,27 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto w-full">
-      <Card className="shadow-lg w-full">
-        <CardHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <UserCircle className="h-8 w-8 text-primary" />
-            <CardTitle className="text-3xl">Perfil del Médico</CardTitle>
-          </div>
-          <CardDescription>
-            Gestione su información personal, profesional, fiscal y de marca.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Tabs defaultValue="contact" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-8 h-auto">
-              <TabsTrigger value="contact"><Edit3 className="mr-2 h-4 w-4" />Contacto</TabsTrigger>
-              <TabsTrigger value="professional"><Briefcase className="mr-2 h-4 w-4" />Profesional</TabsTrigger>
-              <TabsTrigger value="fiscal"><Building className="mr-2 h-4 w-4" />Fiscal</TabsTrigger>
-              <TabsTrigger value="security"><ShieldCheck className="mr-2 h-4 w-4" />Seguridad</TabsTrigger>
-            </TabsList>
+            <Card className="shadow-lg w-full">
+              <CardHeader className="space-y-1.5 p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <UserCircle className="h-8 w-8 text-primary" />
+                  <CardTitle className="text-3xl">Perfil del Médico</CardTitle>
+                </div>
+                {/* CardDescription eliminada */}
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto pt-4">
+                  <TabsTrigger value="contact"><Edit3 className="mr-2 h-4 w-4" />Contacto</TabsTrigger>
+                  <TabsTrigger value="professional"><Briefcase className="mr-2 h-4 w-4" />Profesional</TabsTrigger>
+                  <TabsTrigger value="fiscal"><Building className="mr-2 h-4 w-4" />Fiscal</TabsTrigger>
+                  <TabsTrigger value="security"><ShieldCheck className="mr-2 h-4 w-4" />Seguridad</TabsTrigger>
+                </TabsList>
+              </CardHeader>
+            </Card>
 
+            {/* El CardContent ya no es necesario aquí para TabsList, se mueve a cada TabsContent */}
+            
             <TabsContent value="contact" className="mt-6">
               <Card className="w-full">
                 <CardHeader><CardTitle>Datos Personales y de Contacto</CardTitle></CardHeader>
@@ -281,8 +280,8 @@ export default function ProfilePage() {
                           <Input
                             placeholder="https://ejemplo.com/logo.png"
                             {...field}
-                            onChange={handleLogoUrlChange}
-                            value={field.value || ""}
+                            onChange={handleLogoUrlChange} // Use custom handler to update preview
+                            value={field.value || ""} // Ensure controlled component
                           />
                         </FormControl>
                         <FormDescription>
@@ -300,6 +299,7 @@ export default function ProfilePage() {
                         alt="Vista previa del logotipo"
                         className="max-w-xs max-h-24 object-contain rounded"
                         onError={(e) => {
+                          // Hide image and show error if URL is invalid or image fails to load
                           (e.target as HTMLImageElement).style.display = 'none';
                           const nextSibling = (e.target as HTMLImageElement).nextElementSibling;
                           if (nextSibling) nextSibling.classList.remove('hidden');
@@ -309,6 +309,7 @@ export default function ProfilePage() {
                     </div>
                   )}
                   {!previewLogo && currentProfile?.professionalDetails?.logotipoUrl && (
+                    // This case might not be hit often if previewLogo is synced with form value
                     <p className="text-muted-foreground text-sm">Actualmente no hay un logotipo configurado o la URL es inválida.</p>
                   )}
                   <p className="text-xs text-muted-foreground">
