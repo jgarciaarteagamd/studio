@@ -237,9 +237,7 @@ export default function NewRecipePage() {
             <PlusCircle className="mr-1 h-8 w-8 text-primary" /> {/* Adjusted icon for consistency */}
             <CardTitle className="text-3xl">Crear Nueva Receta</CardTitle>
           </div>
-          <CardDescription>
-            Busque y seleccione un paciente para crear una nueva receta.
-          </CardDescription>
+          {/* CardDescription eliminada */}
         </CardHeader>
         <CardContent>
           {!selectedPatient ? (
