@@ -14,7 +14,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserCircle, Edit3, Briefcase, Building, Image as ImageIcon, ShieldCheck, Save, Loader2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getDoctorProfile, updateDoctorProfile, type DoctorProfile, type DoctorContactDetails, type DoctorProfessionalDetails, type DoctorFiscalDetails } from "@/lib/mock-data";
+import { getDoctorProfile, updateDoctorProfile, type DoctorProfile, type DoctorContactDetails, type DoctorProfessionalDetails, type DoctorFiscalDetails, SIMULATED_CURRENT_ROLE } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const contactDetailsSchema = z.object({
@@ -54,7 +54,6 @@ export default function ProfilePage() {
   const [currentProfile, setCurrentProfile] = useState<DoctorProfile | null>(null);
   const [previewLogo, setPreviewLogo] = useState<string | undefined>(undefined);
 
-
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -79,28 +78,30 @@ export default function ProfilePage() {
       },
     }
   });
-  
+
   useEffect(() => {
-    const profileData = getDoctorProfile();
-    if (profileData) {
-      setCurrentProfile(profileData);
-      form.reset({
-        contactDetails: profileData.contactDetails,
-        professionalDetails: {
+    if (SIMULATED_CURRENT_ROLE === 'doctor') {
+      const profileData = getDoctorProfile();
+      if (profileData) {
+        setCurrentProfile(profileData);
+        form.reset({
+          contactDetails: profileData.contactDetails,
+          professionalDetails: {
             ...profileData.professionalDetails,
-            logotipoUrl: profileData.professionalDetails.logotipoUrl || "" 
-        },
-        fiscalDetails: profileData.fiscalDetails,
-      });
-      setPreviewLogo(profileData.professionalDetails.logotipoUrl);
+            logotipoUrl: profileData.professionalDetails.logotipoUrl || ""
+          },
+          fiscalDetails: profileData.fiscalDetails,
+        });
+        setPreviewLogo(profileData.professionalDetails.logotipoUrl);
+      }
     }
     setIsLoading(false);
   }, [form]);
 
   const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1000)); 
-    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     const professionalDetailsToSave = {
       ...data.professionalDetails,
       logotipoUrl: data.professionalDetails.logotipoUrl || undefined,
@@ -113,7 +114,7 @@ export default function ProfilePage() {
     });
 
     setCurrentProfile(updatedProfile);
-    setPreviewLogo(updatedProfile.professionalDetails.logotipoUrl); 
+    setPreviewLogo(updatedProfile.professionalDetails.logotipoUrl);
     setIsSaving(false);
     toast({
       title: "Perfil Actualizado",
@@ -125,12 +126,22 @@ export default function ProfilePage() {
     const url = event.target.value;
     form.setValue("professionalDetails.logotipoUrl", url, { shouldValidate: true });
     if (form.getFieldState("professionalDetails.logotipoUrl").invalid || !url) {
-       setPreviewLogo(currentProfile?.professionalDetails?.logotipoUrl); 
+      setPreviewLogo(currentProfile?.professionalDetails?.logotipoUrl);
     } else {
-       setPreviewLogo(url);
+      setPreviewLogo(url);
     }
   };
 
+  if (SIMULATED_CURRENT_ROLE !== 'doctor') {
+    return (
+      <div className="space-y-6 max-w-5xl mx-auto w-full">
+        <Card className="shadow-lg w-full">
+          <CardHeader><CardTitle className="text-3xl">Acceso Denegado</CardTitle></CardHeader>
+          <CardContent><p>Esta sección es exclusiva para el médico administrador.</p></CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /> Cargando perfil...</div>;
@@ -140,7 +151,7 @@ export default function ProfilePage() {
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
         <CardHeader>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-2">
             <UserCircle className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Perfil del Médico</CardTitle>
           </div>
@@ -267,10 +278,10 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel className="flex items-center"><ImageIcon className="mr-2 h-4 w-4" />URL del Logotipo</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="https://ejemplo.com/logo.png" 
-                            {...field} 
-                            onChange={handleLogoUrlChange} 
+                          <Input
+                            placeholder="https://ejemplo.com/logo.png"
+                            {...field}
+                            onChange={handleLogoUrlChange}
                             value={field.value || ""}
                           />
                         </FormControl>
@@ -284,23 +295,23 @@ export default function ProfilePage() {
                   {previewLogo && (
                     <div className="mt-4 p-4 border rounded-md bg-muted/50 flex flex-col items-center">
                       <FormLabel className="mb-2">Vista Previa del Logotipo:</FormLabel>
-                      <img 
-                        src={previewLogo} 
-                        alt="Vista previa del logotipo" 
+                      <img
+                        src={previewLogo}
+                        alt="Vista previa del logotipo"
                         className="max-w-xs max-h-24 object-contain rounded"
                         onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none'; 
-                            const nextSibling = (e.target as HTMLImageElement).nextElementSibling;
-                            if (nextSibling) nextSibling.classList.remove('hidden');
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          const nextSibling = (e.target as HTMLImageElement).nextElementSibling;
+                          if (nextSibling) nextSibling.classList.remove('hidden');
                         }}
-                       />
-                       <p className="text-destructive text-sm mt-2 hidden"><AlertTriangle className="inline mr-1 h-4 w-4"/> No se pudo cargar la imagen. Verifique la URL.</p>
+                      />
+                      <p className="text-destructive text-sm mt-2 hidden"><AlertTriangle className="inline mr-1 h-4 w-4" /> No se pudo cargar la imagen. Verifique la URL.</p>
                     </div>
                   )}
                   {!previewLogo && currentProfile?.professionalDetails?.logotipoUrl && (
-                     <p className="text-muted-foreground text-sm">Actualmente no hay un logotipo configurado o la URL es inválida.</p>
+                    <p className="text-muted-foreground text-sm">Actualmente no hay un logotipo configurado o la URL es inválida.</p>
                   )}
-                   <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Idealmente, use una imagen optimizada para la web. El logotipo se usará en recetas, informes y facturas.
                   </p>
                 </CardContent>
@@ -311,7 +322,7 @@ export default function ProfilePage() {
               <Card className="w-full">
                 <CardHeader><CardTitle>Datos Fiscales y de Facturación</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                   <FormField
+                  <FormField
                     control={form.control}
                     name="fiscalDetails.razonSocialFacturacion"
                     render={({ field }) => (
@@ -344,7 +355,7 @@ export default function ProfilePage() {
                       </FormItem>
                     )}
                   />
-                   <FormField
+                  <FormField
                     control={form.control}
                     name="fiscalDetails.condicionIVA"
                     render={({ field }) => (

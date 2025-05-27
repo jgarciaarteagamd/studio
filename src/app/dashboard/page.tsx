@@ -8,7 +8,7 @@ import { mockPatients, getPatientFullName, SIMULATED_CURRENT_ROLE, getDoctorProf
 import { FileText, Users, BarChart3, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import Image from 'next/image';
-import { useState, useEffect } from 'react'; 
+import { useState, useEffect } from 'react';
 
 // Helper component to render date on client-side to avoid hydration mismatch
 const PatientLastUpdatedDisplay = ({ updatedAt }: { updatedAt: string }) => {
@@ -35,8 +35,8 @@ export default function DashboardPage() {
   // Ordenar pacientes por updatedAt para obtener los más recientes primero
   const recentPatients = [...mockPatients]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    .slice(0, 3); 
-  
+    .slice(0, 3);
+
   const doctorName = SIMULATED_CURRENT_ROLE === 'doctor' ? getDoctorProfile().contactDetails.nombreCompleto : "Usuario";
 
 
@@ -44,7 +44,9 @@ export default function DashboardPage() {
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
         <CardHeader>
-          <CardTitle className="text-3xl">Bienvenido a MedLog, {doctorName}</CardTitle>
+          <div className="mb-2">
+            <CardTitle className="text-3xl">Bienvenido a MedLog, {doctorName}</CardTitle>
+          </div>
           <CardDescription>Tu centro de gestión de pacientes e historiales médicos.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -87,13 +89,13 @@ export default function DashboardPage() {
         </Card>
         <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conexión a Servicios</CardTitle>
+            <CardTitle className="text-sm font-medium">Estado de Servicios</CardTitle>
             <BarChart3 className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">N/A</div>
             <p className="text-xs text-muted-foreground">
-              Estado de conexión a servicios en la nube (ej. Firestore)
+              Conexión a Firestore y otros servicios en la nube.
             </p>
             <Button size="sm" className="mt-4 w-full" variant="outline" onClick={() => alert("Verificar estado de servicios (no implementado)")}>
               Verificar Conexión
@@ -130,13 +132,13 @@ export default function DashboardPage() {
       </Card>
        <div className="mt-8 p-6 bg-card rounded-lg shadow-md w-full">
         <h3 className="text-xl font-semibold mb-4">Placeholder Visual de la App</h3>
-        <Image 
-          src="https://placehold.co/800x300.png" 
-          alt="Placeholder Visual de la App" 
-          width={800} 
-          height={300} 
+        <Image
+          src="https://placehold.co/800x300.png"
+          alt="Placeholder Visual de la App"
+          width={800}
+          height={300}
           className="rounded-md object-cover w-full"
-          data-ai-hint="medical dashboard" 
+          data-ai-hint="medical dashboard"
         />
         <p className="text-sm text-muted-foreground mt-2">Esta es una imagen de marcador de posición que representa una posible interfaz de usuario o visualización de datos dentro de la aplicación.</p>
       </div>
