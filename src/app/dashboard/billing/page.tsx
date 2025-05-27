@@ -158,7 +158,7 @@ export default function BillingPage() {
   if (!canAccessBilling) {
     return (
       <div className="space-y-6 max-w-5xl mx-auto w-full">
-        <Card className="shadow-lg">
+        <Card className="shadow-lg w-full">
           <CardHeader>
             <CardTitle className="text-3xl">Acceso Denegado</CardTitle>
           </CardHeader>
@@ -174,16 +174,16 @@ export default function BillingPage() {
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
         <CardHeader>
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3"> {/* Eliminado mb-2 */}
             <Receipt className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Gestión de Facturación</CardTitle>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-6 p-6 pt-0">
           <CardDescription>
             Cree, gestione y realice el seguimiento de las facturas por los servicios médicos prestados.
             La generación de facturas electrónicas (SRI) no está implementada.
           </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6 p-6 pt-0">
           <Button
             onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")}
             disabled
