@@ -1,4 +1,3 @@
-
 // src/app/dashboard/page.tsx
 "use client";
 
@@ -43,66 +42,62 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
-        <CardHeader>
-          <div className="mb-2">
+        <CardHeader className="space-y-4"> {/* Ajustado space-y para el nuevo contenido */}
+          <div className="mb-2"> {/* Se mantiene el mb-2 para el título y descripción si se quisiera añadir de nuevo */}
             <CardTitle className="text-3xl">Bienvenido a MedLog, {doctorName}</CardTitle>
           </div>
-          <CardDescription>Tu centro de gestión de pacientes e historiales médicos.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4">
-            Gestiona eficientemente los historiales de los pacientes y genera informes detallados.
-          </p>
-        </CardContent>
-      </Card>
+          {/* CardDescription y CardContent principal eliminados de aquí */}
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pacientes Totales</CardTitle>
-            <Users className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockPatients.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Historiales de pacientes gestionados actualmente
-            </p>
-            <Button asChild size="sm" className="mt-4 w-full">
-              <Link href="/dashboard/patients">Ver Todos los Pacientes</Link>
-            </Button>
-          </CardContent>
-        </Card>
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Informes Generados</CardTitle>
-            <FileText className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0 <span className="text-sm text-muted-foreground">(Ejemplo)</span></div>
-            <p className="text-xs text-muted-foreground">
-              Informes creados con IA
-            </p>
-             <Button size="sm" className="mt-4 w-full" variant="outline" onClick={() => alert("Funcionalidad no implementada completamente. Ve a un paciente específico para generar informes.")} disabled={SIMULATED_CURRENT_ROLE !== 'doctor'}>
-              Generar Nuevo Informe
-            </Button>
-          </CardContent>
-        </Card>
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Estado de Servicios</CardTitle>
-            <BarChart3 className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">N/A</div>
-            <p className="text-xs text-muted-foreground">
-              Conexión a Firestore y otros servicios en la nube.
-            </p>
-            <Button size="sm" className="mt-4 w-full" variant="outline" onClick={() => alert("Verificar estado de servicios (no implementado)")}>
-              Verificar Conexión
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pt-2"> {/* Grid de tarjetas de resumen movido aquí */}
+            <Card className="shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pacientes Totales</CardTitle>
+                <Users className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{mockPatients.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  Historiales de pacientes gestionados actualmente
+                </p>
+                <Button asChild size="sm" className="mt-4 w-full">
+                  <Link href="/dashboard/patients">Ver Todos los Pacientes</Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card className="shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Informes Generados</CardTitle>
+                <FileText className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">0 <span className="text-sm text-muted-foreground">(Ejemplo)</span></div>
+                <p className="text-xs text-muted-foreground">
+                  Informes creados con IA
+                </p>
+                <Button size="sm" className="mt-4 w-full" variant="outline" onClick={() => alert("Funcionalidad no implementada completamente. Ve a un paciente específico para generar informes.")} disabled={SIMULATED_CURRENT_ROLE !== 'doctor'}>
+                  Generar Nuevo Informe
+                </Button>
+              </CardContent>
+            </Card>
+            <Card className="shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Estado de Servicios</CardTitle>
+                <BarChart3 className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">N/A</div>
+                <p className="text-xs text-muted-foreground">
+                  Conexión a Firestore y otros servicios en la nube.
+                </p>
+                <Button size="sm" className="mt-4 w-full" variant="outline" onClick={() => alert("Verificar estado de servicios (no implementado)")}>
+                  Verificar Conexión
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </CardHeader>
+        {/* El CardContent que contenía el párrafo "Gestiona eficientemente..." se ha eliminado */}
+      </Card>
 
       <Card className="shadow-lg w-full">
         <CardHeader>
@@ -130,18 +125,22 @@ export default function DashboardPage() {
           )}
         </CardContent>
       </Card>
-       <div className="mt-8 p-6 bg-card rounded-lg shadow-md w-full">
-        <h3 className="text-xl font-semibold mb-4">Placeholder Visual de la App</h3>
-        <Image
-          src="https://placehold.co/800x300.png"
-          alt="Placeholder Visual de la App"
-          width={800}
-          height={300}
-          className="rounded-md object-cover w-full"
-          data-ai-hint="medical dashboard"
-        />
-        <p className="text-sm text-muted-foreground mt-2">Esta es una imagen de marcador de posición que representa una posible interfaz de usuario o visualización de datos dentro de la aplicación.</p>
-      </div>
+       <Card className="shadow-lg w-full"> {/* Card para la imagen placeholder */}
+        <CardHeader>
+            <CardTitle>Placeholder Visual de la App</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <Image
+              src="https://placehold.co/800x300.png"
+              alt="Placeholder Visual de la App"
+              width={800}
+              height={300}
+              className="rounded-md object-cover w-full"
+              data-ai-hint="medical dashboard"
+            />
+            <p className="text-sm text-muted-foreground mt-2">Esta es una imagen de marcador de posición que representa una posible interfaz de usuario o visualización de datos dentro de la aplicación.</p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
