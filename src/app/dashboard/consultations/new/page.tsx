@@ -18,7 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { mockPatients, getPatientById, addMedicalEncounterToPatient, getPatientFullName, type NewConsultationData, calculateAge } from '@/lib/mock-data';
 import type { PatientRecord, MedicalEncounter } from '@/lib/types';
-import { User, FileText, History, PlusCircle, Search, ListChecks, Activity, Microscope, Stethoscope as StethoscopeIcon, Brain, Printer, Download, ClipboardList, FileEditIcon as FileEdit } from 'lucide-react'; // Renamed FileEdit to FileEditIcon
+import { User, FileText, History, PlusCircle, Search, ListChecks, Activity, Microscope, Stethoscope as StethoscopeIcon, Brain, Printer, Download, ClipboardList, FileEdit as FileEditIcon } from 'lucide-react'; // Renamed FileEdit to FileEditIcon
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Link from 'next/link';
@@ -182,13 +182,12 @@ export default function NewConsultationPage() {
             <PlusCircle className="mr-1 h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Registrar Nueva Consulta</CardTitle>
           </div>
-          
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           {!selectedPatient ? (
             <>
               <Label htmlFor="patientSearch" className="mb-2 block">Buscar Paciente</Label>
-              <div className="flex items-center space-x-2 mb-4">
+              <div className="flex items-center space-x-2">
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <Input
                   id="patientSearch"
@@ -261,7 +260,7 @@ export default function NewConsultationPage() {
                         </CardTitle>
                         <Button variant="outline" size="sm" asChild className="mt-2 text-xs">
                           <Link href={`/dashboard/patients/${selectedPatient.id}?tab=backgroundInfo`}>
-                            <FileEdit className="mr-2 h-3 w-3" /> Modificar Antecedentes
+                            <FileEditIcon className="mr-2 h-3 w-3" /> Modificar Antecedentes
                           </Link>
                         </Button>
                       </CardHeader>
