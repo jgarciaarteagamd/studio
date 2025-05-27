@@ -77,33 +77,31 @@ export default function UserManagementPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
-        <CardHeader className="space-y-1.5 p-6 pt-4">
-          <div className="flex items-center gap-3 mb-2">
+        <CardHeader className="p-6 space-y-6"> {/* Increased spacing for header items */}
+          <div className="flex items-center gap-3">
               <Settings className="h-8 w-8 text-primary" />
               <CardTitle className="text-3xl">Gestión de Usuarios Asistenciales</CardTitle>
           </div>
-          <div className="pt-4 space-y-4">
-            <Button
-              onClick={() => alert("Abrir modal para crear nuevo usuario asistencial (no implementado).")}
-              disabled
-              className="w-full"
-              size="lg"
-            >
-              <UserPlus className="mr-2 h-5 w-5" />
-              Crear Usuario Asistencial
-            </Button>
-            <Input
-              placeholder="Buscar por nombre, usuario o email..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full"
-            />
-          </div>
+          <Button
+            onClick={() => alert("Abrir modal para crear nuevo usuario asistencial (no implementado).")}
+            disabled
+            className="w-full"
+            size="lg"
+          >
+            <UserPlus className="mr-2 h-5 w-5" />
+            Crear Usuario Asistencial
+          </Button>
+          <Input
+            placeholder="Buscar por nombre, usuario o email..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full"
+          />
         </CardHeader>
-        <CardContent className="p-6 pt-0">
+        <CardContent className="p-6 pt-0 space-y-6"> {/* Added space-y-6 for content items */}
           {isLoading ? (
             <p>Cargando usuarios...</p>
           ) : paginatedAssistants.length > 0 ? (
@@ -165,7 +163,7 @@ export default function UserManagementPage() {
           )}
 
           {totalPages > 1 && paginatedAssistants.length > 0 && (
-            <div className="flex items-center justify-between pt-8 mt-6 border-t">
+            <div className="flex items-center justify-between pt-8"> {/* Removed mt-6 border-t, spacing handled by CardContent space-y */}
               <Button
                 variant="outline"
                 size="sm"
@@ -189,15 +187,14 @@ export default function UserManagementPage() {
               </Button>
             </div>
           )}
-
-          <CardFooter className="pt-8 mt-6 border-t">
-            <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                <li>La creación de nuevos usuarios, edición de permisos y otras acciones se implementarán en futuras versiones.</li>
-                <li>La generación de nombres de usuario y contraseñas iniciales será automática.</li>
-                <li>Los permisos detallados permitirán controlar el acceso a: creación y modificación de pacientes, gestión de adjuntos, programación en agenda, cambio de estado de citas, y acceso a la facturación.</li>
-            </ul>
-           </CardFooter>
         </CardContent>
+        <CardFooter className="p-6 pt-0"> {/* Adjusted padding */}
+          <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
+              <li>La creación de nuevos usuarios, edición de permisos y otras acciones se implementarán en futuras versiones.</li>
+              <li>La generación de nombres de usuario y contraseñas iniciales será automática.</li>
+              <li>Los permisos detallados permitirán controlar el acceso a: creación y modificación de pacientes, gestión de adjuntos, programación en agenda, cambio de estado de citas, y acceso a la facturación.</li>
+          </ul>
+        </CardFooter>
       </Card>
     </div>
   );
