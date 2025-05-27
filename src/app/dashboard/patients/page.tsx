@@ -45,7 +45,7 @@ export default function PatientsPage() {
             <Button asChild size="lg" className="w-full">
               <Link href="/dashboard/patients/new" legacyBehavior passHref>
                 <a> {/* Explicit a tag for legacyBehavior */}
-                  <PlusCircle className="mr-2 h-5 w-5" />
+                  <PlusCircle className="h-4 w-4" /> {/* Changed: Removed mr-2, changed size to h-4 w-4 */}
                   Agregar Nuevo Paciente
                 </a>
               </Link>
