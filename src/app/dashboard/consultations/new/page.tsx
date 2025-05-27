@@ -182,9 +182,7 @@ export default function NewConsultationPage() {
             <PlusCircle className="mr-1 h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Registrar Nueva Consulta</CardTitle>
           </div>
-          <CardDescription>
-            Busque y seleccione un paciente para añadir una nueva entrada a su historial de consultas.
-          </CardDescription>
+          
         </CardHeader>
         <CardContent>
           {!selectedPatient ? (
