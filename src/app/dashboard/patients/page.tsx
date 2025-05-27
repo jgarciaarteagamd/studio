@@ -15,6 +15,7 @@ export default function PatientsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Sort patients by updatedAt to get the most recent first
     setPatients(mockPatients.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()));
     setIsLoading(false);
   }, []);
@@ -27,10 +28,10 @@ export default function PatientsPage() {
             <Users className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Historiales de Pacientes</CardTitle>
           </div>
-          <CardDescription className="mb-4">
+          <CardDescription>
             Ver, buscar, gestionar y crear historiales de pacientes.
           </CardDescription>
-          <Button asChild size="lg" className="w-full sm:w-auto">
+          <Button asChild size="lg" className="w-full sm:w-auto mt-4">
             <Link href="/dashboard/patients/new">
               <PlusCircle className="mr-2 h-5 w-5" />
               Agregar Nuevo Paciente
