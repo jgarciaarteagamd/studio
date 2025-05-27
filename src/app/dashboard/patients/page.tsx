@@ -28,10 +28,10 @@ export default function PatientsPage() {
             <Users className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Historiales de Pacientes</CardTitle>
           </div>
-          <CardDescription>
+          <CardDescription className="mb-6">
             Ver, buscar, gestionar y crear historiales de pacientes.
           </CardDescription>
-          <Button asChild size="lg" className="w-full sm:w-auto mt-6">
+          <Button asChild size="lg" className="w-full sm:w-auto">
             <Link href="/dashboard/patients/new">
               <PlusCircle className="mr-2 h-5 w-5" />
               Agregar Nuevo Paciente

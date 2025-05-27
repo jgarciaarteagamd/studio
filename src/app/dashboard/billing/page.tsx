@@ -1,4 +1,3 @@
-
 // src/app/dashboard/billing/page.tsx
 "use client";
 
@@ -34,7 +33,7 @@ export default function BillingPage() {
   const { toast } = useToast();
   
   const canAccessBilling = SIMULATED_CURRENT_ROLE === 'doctor' || (SIMULATED_CURRENT_ROLE === 'secretary' && SIMULATED_SECRETARY_PERMISSIONS.billing.canAccess);
-  const canChangeInvoiceStatus = canAccessBilling; // Simplified for now
+  const canChangeInvoiceStatus = canAccessBilling; 
 
   useEffect(() => {
     if (canAccessBilling) {
@@ -181,14 +180,14 @@ export default function BillingPage() {
             <Receipt className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Gestión de Facturación</CardTitle>
           </div>
-          <CardDescription className="mb-4">
+          <CardDescription className="mb-6">
             Cree, gestione y realice el seguimiento de las facturas por los servicios médicos prestados.
             La generación de facturas electrónicas (SRI) no está implementada.
           </CardDescription>
            <Button 
             onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")} 
             disabled 
-            className="w-full sm:w-auto mt-6"
+            className="w-full sm:w-auto"
             size="lg"
            >
             <FilePlus2 className="mr-2 h-5 w-5" />
