@@ -35,16 +35,19 @@ export default function PatientsPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
-        <CardHeader className="space-y-4">
+        <CardHeader className="space-y-1.5">
           <div className="flex items-center gap-3 mb-2">
             <Users className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Historiales de Pacientes</CardTitle>
           </div>
-          <div className="pt-2 space-y-4"> {/* Adjusted padding-top */}
-            <Button asChild size="lg" className="w-full"> {/* Changed sm:w-auto to w-full */}
-              <Link href="/dashboard/patients/new">
-                <PlusCircle className="mr-2 h-5 w-5" />
-                Agregar Nuevo Paciente
+          {/* CardDescription fue eliminada según solicitud previa */}
+          <div className="pt-4 space-y-4">
+            <Button asChild size="lg" className="w-full">
+              <Link href="/dashboard/patients/new" legacyBehavior passHref>
+                <a> {/* Explicit a tag for legacyBehavior */}
+                  <PlusCircle className="mr-2 h-5 w-5" />
+                  Agregar Nuevo Paciente
+                </a>
               </Link>
             </Button>
             <Input
@@ -55,7 +58,7 @@ export default function PatientsPage() {
             />
           </div>
         </CardHeader>
-        <CardContent className="p-6 pt-0"> {/* Adjusted padding-top to 0 as header now has more content */}
+        <CardContent className="p-6 pt-0">
           {isLoading ? (
             <p>Cargando datos de pacientes...</p>
           ) : (
