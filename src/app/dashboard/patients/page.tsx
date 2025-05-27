@@ -34,16 +34,13 @@ export default function PatientsPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
-        <CardHeader>
+        <CardHeader className="space-y-4">
           <div className="flex items-center gap-3">
             <Users className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Historiales de Pacientes</CardTitle>
           </div>
-          <CardDescription>
-            Ver, buscar, gestionar y crear historiales de pacientes.
-          </CardDescription>
-          {/* Botón y campo de búsqueda movidos aquí */}
-          <div className="pt-4 space-y-4"> {/* pt-4 para espacio después de la descripción. space-y-4 entre botón e input */}
+          {/* CardDescription eliminada */}
+          <div className="pt-2 space-y-4"> {/* Ajustado el padding-top a pt-2 para mantener algo de espacio si se elimina la descripción */}
             <Button asChild size="lg" className="w-full sm:w-auto">
               <Link href="/dashboard/patients/new">
                 <PlusCircle className="mr-2 h-5 w-5" />
@@ -58,7 +55,7 @@ export default function PatientsPage() {
             />
           </div>
         </CardHeader>
-        <CardContent className="p-6"> {/* Mantenemos padding para la tabla */}
+        <CardContent className="p-6">
           {isLoading ? (
             <p>Cargando datos de pacientes...</p>
           ) : (
