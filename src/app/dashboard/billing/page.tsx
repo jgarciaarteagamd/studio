@@ -2,9 +2,9 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Receipt, FilePlus2, Edit3, Printer, ChevronLeft, ChevronRight, FileText, CalendarDays, DollarSign, ListFilter } from "lucide-react";
+import { Receipt, FilePlus2, Edit3, Printer, ChevronLeft, ChevronRight, ListFilter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -173,34 +173,31 @@ export default function BillingPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
-        <CardHeader className="space-y-1.5 p-6 pt-4">
+        <CardHeader className="p-6 space-y-6">
            <div className="flex items-center gap-3">
             <Receipt className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Gestión de Facturación</CardTitle>
           </div>
-          {/* CardDescription eliminada */}
-          <div className="pt-4 space-y-4">
-            <Button
-              onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")}
-              disabled
-              className="w-full" // Modificado para ancho completo
-              size="lg"
-            >
-              <FilePlus2 className="mr-2 h-5 w-5" />
-              Crear Nueva Factura
-            </Button>
-            <Input
-              placeholder="Buscar por paciente o número de factura..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full"
-            />
-          </div>
+          <Button
+            onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")}
+            disabled
+            className="w-full"
+            size="lg"
+          >
+            <FilePlus2 className="mr-2 h-5 w-5" />
+            Crear Nueva Factura
+          </Button>
+          <Input
+            placeholder="Buscar por paciente o número de factura..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full"
+          />
         </CardHeader>
-        <CardContent className="p-6 pt-0">
+        <CardContent className="p-6 pt-0 space-y-6">
           {isLoading ? (
             <p>Cargando facturas...</p>
           ) : paginatedInvoices.length > 0 ? (
@@ -218,11 +215,11 @@ export default function BillingPage() {
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm flex-grow">
                     <div className="flex items-center">
-                      <CalendarDays className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <ListFilter className="mr-2 h-4 w-4 text-muted-foreground" /> 
                       <span>Emitida: {format(new Date(invoice.dateIssued), "P", { locale: es })}</span>
                     </div>
                     <div className="flex items-center">
-                      <DollarSign className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <ListFilter className="mr-2 h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Total: ${invoice.totalAmount.toFixed(2)}</span>
                     </div>
                     {canChangeInvoiceStatus && (
@@ -264,7 +261,7 @@ export default function BillingPage() {
           )}
 
           {totalPages > 1 && paginatedInvoices.length > 0 && (
-            <div className="flex items-center justify-between pt-8 mt-6 border-t">
+            <div className="flex items-center justify-between pt-8"> {/* Removed mt-6 border-t, spacing handled by CardContent space-y */}
               <Button
                 variant="outline"
                 size="sm"
@@ -288,14 +285,13 @@ export default function BillingPage() {
               </Button>
             </div>
           )}
-
-           <CardFooter className="pt-8 mt-6 border-t">
+        </CardContent>
+         <CardFooter className="p-6 pt-0"> {/* Adjusted padding */}
             <p className="text-xs text-muted-foreground">
                 Funcionalidades como la creación detallada de facturas y edición se encuentran en desarrollo.
                 La impresión genera un archivo de texto con formato PDF (simulado).
             </p>
-           </CardFooter>
-        </CardContent>
+        </CardFooter>
       </Card>
     </div>
   );
