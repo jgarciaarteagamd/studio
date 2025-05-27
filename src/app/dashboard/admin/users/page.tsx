@@ -88,7 +88,7 @@ export default function UserManagementPage() {
           <Button 
             onClick={() => alert("Abrir modal para crear nuevo usuario asistencial (no implementado).")} 
             disabled 
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto mt-4" // Added mt-4 for spacing
             size="lg"
           >
             <UserPlus className="mr-2 h-5 w-5" />
