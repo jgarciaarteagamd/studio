@@ -36,15 +36,15 @@ export default function PatientsPage() {
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
         <CardHeader>
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3"> {/* mb-2 removed to rely on CardHeader's space-y */}
             <Users className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Historiales de Pacientes</CardTitle>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-6 p-6 pt-0">
           <CardDescription>
             Ver, buscar, gestionar y crear historiales de pacientes.
           </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6 p-6 pt-0">
           <Button asChild size="lg" className="w-full sm:w-auto">
             <Link href="/dashboard/patients/new">
               <PlusCircle className="mr-2 h-5 w-5" />
