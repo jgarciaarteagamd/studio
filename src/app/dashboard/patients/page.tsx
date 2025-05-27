@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PatientTable } from "@/components/patients/PatientTable";
 import { mockPatients, getPatientFullName } from "@/lib/mock-data";
@@ -17,6 +17,7 @@ export default function PatientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    // Sort patients by updatedAt to get the most recent ones first
     setPatients(mockPatients.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()));
     setIsLoading(false);
   }, []);
@@ -35,13 +36,12 @@ export default function PatientsPage() {
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
         <CardHeader className="space-y-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-2">
             <Users className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Historiales de Pacientes</CardTitle>
           </div>
-          {/* CardDescription eliminada */}
-          <div className="pt-2 space-y-4"> {/* Ajustado el padding-top a pt-2 para mantener algo de espacio si se elimina la descripción */}
-            <Button asChild size="lg" className="w-full sm:w-auto">
+          <div className="pt-2 space-y-4"> {/* Adjusted padding-top */}
+            <Button asChild size="lg" className="w-full"> {/* Changed sm:w-auto to w-full */}
               <Link href="/dashboard/patients/new">
                 <PlusCircle className="mr-2 h-5 w-5" />
                 Agregar Nuevo Paciente
@@ -51,11 +51,11 @@ export default function PatientsPage() {
               placeholder="Buscar por nombre, apellidos o documento..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:max-w-md"
+              className="w-full"
             />
           </div>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-6 pt-0"> {/* Adjusted padding-top to 0 as header now has more content */}
           {isLoading ? (
             <p>Cargando datos de pacientes...</p>
           ) : (
