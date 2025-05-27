@@ -17,7 +17,6 @@ export default function PatientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // Sort patients by updatedAt to get the most recent first
     setPatients(mockPatients.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()));
     setIsLoading(false);
   }, []);
@@ -36,27 +35,30 @@ export default function PatientsPage() {
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
         <CardHeader>
-          <div className="flex items-center gap-3 mb-2"> {/* Added mb-2 here */}
+          <div className="flex items-center gap-3">
             <Users className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Historiales de Pacientes</CardTitle>
           </div>
           <CardDescription>
             Ver, buscar, gestionar y crear historiales de pacientes.
           </CardDescription>
+          {/* Botón y campo de búsqueda movidos aquí */}
+          <div className="pt-4 space-y-4"> {/* pt-4 para espacio después de la descripción. space-y-4 entre botón e input */}
+            <Button asChild size="lg" className="w-full sm:w-auto">
+              <Link href="/dashboard/patients/new">
+                <PlusCircle className="mr-2 h-5 w-5" />
+                Agregar Nuevo Paciente
+              </Link>
+            </Button>
+            <Input
+              placeholder="Buscar por nombre, apellidos o documento..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full sm:max-w-md"
+            />
+          </div>
         </CardHeader>
-        <CardContent className="space-y-6 p-6 pt-0">
-          <Button asChild size="lg" className="w-full sm:w-auto">
-            <Link href="/dashboard/patients/new">
-              <PlusCircle className="mr-2 h-5 w-5" />
-              Agregar Nuevo Paciente
-            </Link>
-          </Button>
-          <Input
-            placeholder="Buscar por nombre, apellidos o documento..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md"
-          />
+        <CardContent className="p-6"> {/* Mantenemos padding para la tabla */}
           {isLoading ? (
             <p>Cargando datos de pacientes...</p>
           ) : (
