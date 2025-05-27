@@ -173,36 +173,34 @@ export default function BillingPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
-        <CardHeader>
-          <div className="flex items-center gap-3"> {/* Eliminado mb-2 */}
+        <CardHeader className="space-y-1.5 p-6 pt-4">
+           <div className="flex items-center gap-3">
             <Receipt className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Gestión de Facturación</CardTitle>
           </div>
-          <CardDescription>
-            Cree, gestione y realice el seguimiento de las facturas por los servicios médicos prestados.
-            La generación de facturas electrónicas (SRI) no está implementada.
-          </CardDescription>
+          {/* CardDescription eliminada */}
+          <div className="pt-4 space-y-4">
+            <Button
+              onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")}
+              disabled
+              className="w-full" // Modificado para ancho completo
+              size="lg"
+            >
+              <FilePlus2 className="mr-2 h-5 w-5" />
+              Crear Nueva Factura
+            </Button>
+            <Input
+              placeholder="Buscar por paciente o número de factura..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full"
+            />
+          </div>
         </CardHeader>
-        <CardContent className="space-y-6 p-6 pt-0">
-          <Button
-            onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")}
-            disabled
-            className="w-full sm:w-auto"
-            size="lg"
-          >
-            <FilePlus2 className="mr-2 h-5 w-5" />
-            Crear Nueva Factura
-          </Button>
-          <Input
-            placeholder="Buscar por paciente o número de factura..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="max-w-md"
-          />
-
+        <CardContent className="p-6 pt-0">
           {isLoading ? (
             <p>Cargando facturas...</p>
           ) : paginatedInvoices.length > 0 ? (
