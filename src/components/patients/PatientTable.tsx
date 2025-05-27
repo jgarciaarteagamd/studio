@@ -1,4 +1,3 @@
-
 // src/components/patients/PatientTable.tsx
 "use client";
 
@@ -7,9 +6,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-// DropdownMenu components are no longer needed if actions column is removed
-// import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+// Input no longer needed here
 import type { PatientRecord } from "@/lib/types";
 import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { useRouter } from 'next/navigation';
@@ -17,37 +14,25 @@ import { getPatientFullName, calculateAge, getLastConsultationDate } from "@/lib
 
 
 interface PatientTableProps {
-  patients: PatientRecord[];
+  patients: PatientRecord[]; // Expects already filtered patients
 }
 
 const ITEMS_PER_PAGE = 10;
 
-export function PatientTable({ patients: initialPatients }: PatientTableProps) {
+export function PatientTable({ patients }: PatientTableProps) {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [patients, setPatients] = useState<PatientRecord[]>(initialPatients);
 
-
+  // Reset to page 1 when patients data changes (e.g., due to search)
   useEffect(() => {
-    setPatients(initialPatients); 
-  }, [initialPatients]);
+    setCurrentPage(1);
+  }, [patients]);
 
-  const filteredPatients = useMemo(() => {
-    if (!searchTerm) return patients;
-    return patients.filter(patient => {
-      const fullName = `${patient.personalDetails.nombres} ${patient.personalDetails.apellidos}`.toLowerCase();
-      const doc = patient.personalDetails.documentoIdentidad?.toLowerCase() || '';
-      const term = searchTerm.toLowerCase();
-      return fullName.includes(term) || doc.includes(term);
-    });
-  }, [searchTerm, patients]);
-
-  const totalPages = Math.ceil(filteredPatients.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(patients.length / ITEMS_PER_PAGE);
   const paginatedPatients = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredPatients.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredPatients, currentPage]);
+    return patients.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [patients, currentPage]);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -61,14 +46,11 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
     }
   };
 
-  if (!patients.length && !searchTerm) {
+  if (!patients.length) {
     return (
         <div className="text-center py-10">
           <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-          <p className="mt-4 text-lg text-muted-foreground">No hay pacientes registrados.</p>
-          <Button asChild className="mt-6">
-            <Link href="/dashboard/patients/new">Crear Primer Historial de Paciente</Link>
-          </Button>
+          <p className="mt-4 text-lg text-muted-foreground">No se encontraron pacientes con los criterios de búsqueda.</p>
         </div>
       );
   }
@@ -76,18 +58,7 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
 
   return (
     <div className="space-y-4">
-      <Input
-        placeholder="Buscar por nombre, apellidos o documento..."
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1); 
-        }}
-        className="max-w-sm"
-      />
-      {paginatedPatients.length === 0 && searchTerm && (
-        <p className="text-muted-foreground text-center py-4">No se encontraron pacientes con "{searchTerm}".</p>
-      )}
+      {/* Search Input moved to the parent page component */}
       {paginatedPatients.length > 0 && (
         <div className="rounded-md border">
           <Table>
@@ -96,7 +67,6 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
                 <TableHead>Nombre Completo</TableHead>
                 <TableHead>Edad</TableHead>
                 <TableHead>Última Consulta</TableHead>
-                {/* Actions column removed */}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -109,7 +79,6 @@ export function PatientTable({ patients: initialPatients }: PatientTableProps) {
                   </TableCell>
                   <TableCell>{calculateAge(patient.personalDetails.fechaNacimiento)}</TableCell>
                   <TableCell>{getLastConsultationDate(patient)}</TableCell>
-                  {/* Actions cell removed */}
                 </TableRow>
               ))}
             </TableBody>

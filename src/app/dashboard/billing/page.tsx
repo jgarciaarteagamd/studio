@@ -9,13 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Invoice, InvoiceStatus } from "@/lib/types";
-import { getMockInvoices, updateInvoiceStatus, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS, getPatientFullName, getDoctorProfile } from "@/lib/mock-data";
+import { getMockInvoices, updateInvoiceStatus, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS, getDoctorProfile } from "@/lib/mock-data";
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 
-const ITEMS_PER_PAGE = 6; 
+const ITEMS_PER_PAGE = 6;
 
 const invoiceStatusOptions: { value: InvoiceStatus; label: string }[] = [
   { value: 'borrador', label: 'Borrador' },
@@ -31,9 +30,9 @@ export default function BillingPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
-  
+
   const canAccessBilling = SIMULATED_CURRENT_ROLE === 'doctor' || (SIMULATED_CURRENT_ROLE === 'secretary' && SIMULATED_SECRETARY_PERMISSIONS.billing.canAccess);
-  const canChangeInvoiceStatus = canAccessBilling; 
+  const canChangeInvoiceStatus = canAccessBilling;
 
   useEffect(() => {
     if (canAccessBilling) {
@@ -60,7 +59,7 @@ export default function BillingPage() {
   const handlePreviousPage = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
-  
+
   const getStatusBadgeVariant = (status: InvoiceStatus): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
       case 'pagada': return 'default';
@@ -71,7 +70,7 @@ export default function BillingPage() {
       default: return 'outline';
     }
   };
-  
+
   const getStatusText = (status: InvoiceStatus): string => {
     const map: Record<InvoiceStatus, string> = {
       borrador: "Borrador",
@@ -86,7 +85,7 @@ export default function BillingPage() {
   const handleInvoiceStatusChange = (invoiceId: string, newStatus: InvoiceStatus) => {
     const updatedInvoice = updateInvoiceStatus(invoiceId, newStatus);
     if (updatedInvoice) {
-      setInvoices(prevInvoices => 
+      setInvoices(prevInvoices =>
         prevInvoices.map(inv => inv.id === invoiceId ? updatedInvoice : inv)
       );
       toast({
@@ -101,9 +100,9 @@ export default function BillingPage() {
       });
     }
   };
-
+  
   const handlePrintInvoicePdf = (invoice: Invoice) => {
-    const doctorProfile = getDoctorProfile(); 
+    const doctorProfile = getDoctorProfile();
     let pdfContent = `== FACTURA ==\n\n`;
     pdfContent += `Número de Factura: ${invoice.invoiceNumber}\n`;
     pdfContent += `Fecha de Emisión: ${format(new Date(invoice.dateIssued), "P", { locale: es })}\n`;
@@ -121,10 +120,9 @@ export default function BillingPage() {
        pdfContent += `Email: ${doctorProfile.contactDetails.emailContacto}\n`;
     }
 
-
     pdfContent += `\n-- Datos del Cliente --\n`;
     pdfContent += `Paciente: ${invoice.patientName}\n`;
-    
+
     pdfContent += `\n-- Detalles de la Factura --\n`;
     invoice.items.forEach(item => {
       pdfContent += `- ${item.description} (Cant: ${item.quantity}, P.Unit: $${item.unitPrice.toFixed(2)}): $${item.total.toFixed(2)}\n`;
@@ -180,32 +178,30 @@ export default function BillingPage() {
             <Receipt className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Gestión de Facturación</CardTitle>
           </div>
-          <CardDescription className="mb-6">
+        </CardHeader>
+        <CardContent className="space-y-6 p-6 pt-0">
+          <CardDescription>
             Cree, gestione y realice el seguimiento de las facturas por los servicios médicos prestados.
             La generación de facturas electrónicas (SRI) no está implementada.
           </CardDescription>
-           <Button 
-            onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")} 
-            disabled 
+          <Button
+            onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")}
+            disabled
             className="w-full sm:w-auto"
             size="lg"
-           >
+          >
             <FilePlus2 className="mr-2 h-5 w-5" />
             Crear Nueva Factura
           </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-6">
-            <Input
-              placeholder="Buscar por paciente o número de factura..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="max-w-md"
-            />
-          </div>
+          <Input
+            placeholder="Buscar por paciente o número de factura..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="max-w-md"
+          />
 
           {isLoading ? (
             <p>Cargando facturas...</p>
@@ -297,7 +293,7 @@ export default function BillingPage() {
 
            <CardFooter className="pt-8 mt-6 border-t">
             <p className="text-xs text-muted-foreground">
-                Funcionalidades como la creación detallada de facturas y edición se encuentran en desarrollo. 
+                Funcionalidades como la creación detallada de facturas y edición se encuentran en desarrollo.
                 La impresión genera un archivo de texto con formato PDF (simulado).
             </p>
            </CardFooter>

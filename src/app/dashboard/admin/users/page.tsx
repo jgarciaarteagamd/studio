@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { UserPlus, MoreHorizontal, UserCog, AtSign, Fingerprint, ShieldCheck, ShieldOff, MailWarning, Trash2, ChevronLeft, ChevronRight, Settings } from "lucide-react"; // Added Settings
+import { UserPlus, MoreHorizontal, UserCog, AtSign, Fingerprint, ShieldCheck, ShieldOff, MailWarning, Trash2, ChevronLeft, ChevronRight, Settings } from "lucide-react";
 import type { AssistantUser } from "@/lib/types";
-import { getMockAssistants, SIMULATED_CURRENT_ROLE } from "@/lib/mock-data"; 
+import { getMockAssistants, SIMULATED_CURRENT_ROLE } from "@/lib/mock-data";
 
 
-const ITEMS_PER_PAGE = 6; 
+const ITEMS_PER_PAGE = 6;
 
 export default function UserManagementPage() {
   const [assistants, setAssistants] = useState<AssistantUser[]>([]);
@@ -30,7 +30,7 @@ export default function UserManagementPage() {
       </div>
     );
   }
-  
+
   useEffect(() => {
     setAssistants(getMockAssistants());
     setIsLoading(false);
@@ -64,7 +64,7 @@ export default function UserManagementPage() {
       default: return 'outline';
     }
   };
-  
+
   const getStatusText = (status: AssistantUser['estado']): string => {
     const map: Record<AssistantUser['estado'], string> = {
       activo: "Activo",
@@ -82,31 +82,29 @@ export default function UserManagementPage() {
               <Settings className="h-8 w-8 text-primary" />
               <CardTitle className="text-3xl">Gestión de Usuarios Asistenciales</CardTitle>
           </div>
-          <CardDescription className="mb-6">
+        </CardHeader>
+        <CardContent className="space-y-6 p-6 pt-0">
+          <CardDescription>
             Administre las cuentas y permisos del personal asistencial (secretarios/as).
           </CardDescription>
-          <Button 
-            onClick={() => alert("Abrir modal para crear nuevo usuario asistencial (no implementado).")} 
-            disabled 
-            className="w-full sm:w-auto" 
+          <Button
+            onClick={() => alert("Abrir modal para crear nuevo usuario asistencial (no implementado).")}
+            disabled
+            className="w-full sm:w-auto"
             size="lg"
           >
             <UserPlus className="mr-2 h-5 w-5" />
             Crear Usuario Asistencial
           </Button>
-        </CardHeader>
-        <CardContent>
-           <div className="mb-6">
-            <Input
-              placeholder="Buscar por nombre, usuario o email..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="max-w-md"
-            />
-          </div>
+          <Input
+            placeholder="Buscar por nombre, usuario o email..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="max-w-md"
+          />
           {isLoading ? (
             <p>Cargando usuarios...</p>
           ) : paginatedAssistants.length > 0 ? (
@@ -192,7 +190,7 @@ export default function UserManagementPage() {
               </Button>
             </div>
           )}
-          
+
           <CardFooter className="pt-8 mt-6 border-t">
             <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
                 <li>La creación de nuevos usuarios, edición de permisos y otras acciones se implementarán en futuras versiones.</li>
