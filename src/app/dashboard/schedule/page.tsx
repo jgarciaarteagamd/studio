@@ -5,8 +5,8 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDescriptionComponent, DialogFooter } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription as AlertDialogUIDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -42,7 +42,7 @@ const appointmentFormSchema = z.object({
   return true;
 }, {
   message: "Si es un bloqueo, debe indicar un motivo. Si es una cita, debe seleccionar un paciente.",
-  path: ["isBlocker"], 
+  path: ["isBlocker"],
 });
 
 
@@ -104,7 +104,6 @@ export default function SchedulePage() {
       isBlocker: blockerMode,
       blockerReason: "",
     });
-    form.setValue('isBlocker', blockerMode);
     setIsFormOpen(true);
   };
 
@@ -266,7 +265,6 @@ export default function SchedulePage() {
               <CalendarDays className="h-8 w-8 text-primary" />
               <CardTitle className="text-3xl">Agenda de Citas</CardTitle>
             </div>
-            {/* CardDescription eliminada */}
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
               {canProgramAppointments && (
                 <Button size="lg" onClick={() => openFormDialog(false)} className="w-full">
@@ -468,7 +466,7 @@ export default function SchedulePage() {
         <Card className="shadow-lg w-full overflow-hidden max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
            <CardHeader>
             <CardTitle>Calendario</CardTitle>
-            <CardDescriptionComponent>Navegue por los meses y haga clic en un día para ver las citas programadas.</CardDescriptionComponent>
+            <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas.</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
             <div className="max-w-xl mx-auto">
@@ -489,25 +487,24 @@ export default function SchedulePage() {
                   day: (date, modifiers, dayProps) => {
                     let klasses = cn(
                       buttonVariants({ variant: "ghost" }),
-                      "h-full w-full p-0 font-normal text-foreground",
-                      "flex items-center justify-center text-xs sm:text-sm" 
+                      "h-full w-full p-0 font-normal text-xs sm:text-sm",
+                      "flex items-center justify-center"
                     );
-                  
+
                     if (modifiers.outside || modifiers.disabled) {
                       klasses = cn(klasses, "text-muted-foreground opacity-50");
                     } else {
+                      klasses = cn(klasses, "text-foreground"); // Default text color for active days
                       if (modifiers.selected) {
-                        klasses = cn(klasses, "bg-primary/70 text-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full"); 
+                        klasses = cn(klasses, "bg-primary/70 text-primary-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full");
                       } else if (modifiers.today) {
                         klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
-                      } else if (dayProps.onPointerEnter) { 
+                      } else if (dayProps.onPointerEnter) {
                         klasses = cn(klasses, "hover:bg-muted hover:text-foreground hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:hover:!w-7 hover:rounded-full");
                       }
                     }
                     return klasses;
                   },
-                  day_selected: undefined, 
-                  day_today: undefined,  
                 }}
               />
             </div>
@@ -526,12 +523,16 @@ export default function SchedulePage() {
         />
 
         <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !open && setAppointmentToDelete(null)}>
+          <AlertDialogTrigger asChild>
+            {/* This trigger is not strictly necessary here if delete is only from sidebar/list */}
+            <button className="hidden"></button>
+          </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogUIDescription>
                 Esta acción no se puede deshacer. Esto eliminará permanentemente la entrada.
-              </AlertDialogDescription>
+              </AlertDialogUIDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setAppointmentToDelete(null)}>Cancelar</AlertDialogCancel>
@@ -655,4 +656,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
