@@ -35,7 +35,7 @@ export default function PatientsPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="shadow-lg w-full">
-        <CardHeader className="space-y-1.5">
+        <CardHeader className="space-y-1.5 p-6 pt-4">
           <div className="flex items-center gap-3 mb-2">
             <Users className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl">Historiales de Pacientes</CardTitle>
@@ -43,11 +43,9 @@ export default function PatientsPage() {
           {/* CardDescription fue eliminada según solicitud previa */}
           <div className="pt-4 space-y-4">
             <Button asChild size="lg" className="w-full">
-              <Link href="/dashboard/patients/new" legacyBehavior passHref>
-                <a> {/* Explicit a tag for legacyBehavior */}
-                  <PlusCircle className="h-4 w-4" /> {/* Changed: Removed mr-2, changed size to h-4 w-4 */}
-                  Agregar Nuevo Paciente
-                </a>
+              <Link href="/dashboard/patients/new">
+                <PlusCircle className="h-4 w-4" />
+                Agregar Nuevo Paciente
               </Link>
             </Button>
             <Input
