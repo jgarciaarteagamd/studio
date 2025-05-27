@@ -31,7 +31,7 @@ export default function PatientsPage() {
           <CardDescription>
             Ver, buscar, gestionar y crear historiales de pacientes.
           </CardDescription>
-          <Button asChild size="lg" className="w-full sm:w-auto mt-4">
+          <Button asChild size="lg" className="w-full sm:w-auto mt-6">
             <Link href="/dashboard/patients/new">
               <PlusCircle className="mr-2 h-5 w-5" />
               Agregar Nuevo Paciente

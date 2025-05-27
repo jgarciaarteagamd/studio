@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { UserPlus, LockKeyhole, Settings, MoreHorizontal, Edit, Trash2, ShieldCheck, ShieldOff, MailWarning, ChevronLeft, ChevronRight, UserCog, AtSign, Fingerprint } from "lucide-react";
+import { UserPlus, MoreHorizontal, UserCog, AtSign, Fingerprint, ShieldCheck, ShieldOff, MailWarning, Trash2, ChevronLeft, ChevronRight, Settings } from "lucide-react"; // Added Settings
 import type { AssistantUser } from "@/lib/types";
-import { getMockAssistants, SIMULATED_CURRENT_ROLE } from "@/lib/mock-data";
-import { cn } from '@/lib/utils';
+import { getMockAssistants, SIMULATED_CURRENT_ROLE } from "@/lib/mock-data"; // Removed unused LockKeyhole, Edit
+// Removed cn as it's not used
 
 const ITEMS_PER_PAGE = 6; 
 
@@ -82,13 +82,13 @@ export default function UserManagementPage() {
               <Settings className="h-8 w-8 text-primary" />
               <CardTitle className="text-3xl">Gestión de Usuarios Asistenciales</CardTitle>
           </div>
-          <CardDescription className="mb-4">
+          <CardDescription>
             Administre las cuentas y permisos del personal asistencial (secretarios/as).
           </CardDescription>
           <Button 
             onClick={() => alert("Abrir modal para crear nuevo usuario asistencial (no implementado).")} 
             disabled 
-            className="w-full sm:w-auto mt-4" // Added mt-4 for spacing
+            className="w-full sm:w-auto mt-6" 
             size="lg"
           >
             <UserPlus className="mr-2 h-5 w-5" />
