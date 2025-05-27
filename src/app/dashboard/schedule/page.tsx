@@ -133,7 +133,7 @@ export default function SchedulePage() {
 
     try {
       addAppointment(newAppointmentData);
-      setAppointments(getAppointments());
+      setAppointments(getAppointments()); // Refresh appointments from mock data
       toast({
         title: data.isBlocker ? "Horario Bloqueado" : "Cita Agendada",
         description: data.isBlocker ? "El periodo ha sido bloqueado exitosamente." : "La nueva cita ha sido programada exitosamente.",
@@ -266,18 +266,16 @@ export default function SchedulePage() {
               <CalendarDays className="h-8 w-8 text-primary" />
               <CardTitle className="text-3xl">Agenda de Citas</CardTitle>
             </div>
-            <CardDescription className="mb-4">
-              Ver y programar citas o bloqueos de horario.
-            </CardDescription>
+            {/* CardDescription eliminada */}
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
               {canProgramAppointments && (
-                <Button size="lg" onClick={() => openFormDialog(false)} className="w-full sm:w-auto">
+                <Button size="lg" onClick={() => openFormDialog(false)} className="w-full">
                   <PlusCircle className="mr-2 h-5 w-5" />
                   Programar Cita
                 </Button>
               )}
               {canBlockTime && (
-                <Button size="lg" variant="outline" onClick={() => openFormDialog(true)} className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" onClick={() => openFormDialog(true)} className="w-full">
                   <ShieldOff className="mr-2 h-5 w-5" />
                   Bloquear Horario
                 </Button>
@@ -467,10 +465,10 @@ export default function SchedulePage() {
           </DialogContent>
         </Dialog>
 
-        <Card className="shadow-lg w-full overflow-hidden">
+        <Card className="shadow-lg w-full overflow-hidden max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
            <CardHeader>
             <CardTitle>Calendario</CardTitle>
-            <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas.</CardDescription>
+            <CardDescriptionComponent>Navegue por los meses y haga clic en un día para ver las citas programadas.</CardDescriptionComponent>
           </CardHeader>
           <CardContent className="p-4">
             <div className="max-w-xl mx-auto">
@@ -484,30 +482,32 @@ export default function SchedulePage() {
                 modifiers={calendarModifiers}
                 modifiersClassNames={calendarModifiersClassNames}
                 locale={es}
-                 classNames={{
+                classNames={{
                   caption_label: "text-lg font-medium",
                   head_cell: cn("text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-xs sm:text-sm p-0 text-center", "h-8 sm:h-10 md:h-12"),
                   cell: cn("flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", "h-8 sm:h-10 md:h-12"),
                   day: (date, modifiers, dayProps) => {
                     let klasses = cn(
                       buttonVariants({ variant: "ghost" }),
-                      "h-full w-full p-0 font-normal flex items-center justify-center text-foreground"
+                      "h-full w-full p-0 font-normal text-foreground",
+                      "flex items-center justify-center text-xs sm:text-sm" 
                     );
                   
                     if (modifiers.outside || modifiers.disabled) {
                       klasses = cn(klasses, "text-muted-foreground opacity-50");
                     } else {
-                      // Active days
                       if (modifiers.selected) {
-                        klasses = cn(klasses, "bg-primary/70 !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full text-foreground"); 
+                        klasses = cn(klasses, "bg-primary/70 text-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full"); 
                       } else if (modifiers.today) {
                         klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
-                      } else if (dayProps.onPointerEnter) { // Check if hover is applicable
-                        klasses = cn(klasses, "hover:bg-muted hover:text-foreground hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full");
+                      } else if (dayProps.onPointerEnter) { 
+                        klasses = cn(klasses, "hover:bg-muted hover:text-foreground hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:hover:!w-7 hover:rounded-full");
                       }
                     }
                     return klasses;
                   },
+                  day_selected: undefined, 
+                  day_today: undefined,  
                 }}
               />
             </div>
@@ -521,8 +521,8 @@ export default function SchedulePage() {
           appointmentsForDay={appointmentsOnSelectedDay}
           onStatusChange={handleStatusChange}
           requestDeleteBlocker={openDeleteBlockerDialog}
-          canChangeStatus={canChangeStatus && isDoctor}
-          canDeleteAppointmentsOrBlockers={canDeleteAppointmentsOrBlockers && isDoctor}
+          canChangeStatus={canChangeStatus}
+          canDeleteAppointmentsOrBlockers={canDeleteAppointmentsOrBlockers}
         />
 
         <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !open && setAppointmentToDelete(null)}>
@@ -556,84 +556,80 @@ export default function SchedulePage() {
                     {groupedAppointments[dateKey].sort((a,b) => parseISO(a.dateTime).getTime() - parseISO(b.dateTime).getTime()).map((appointment) => (
                       <li key={appointment.id} className={cn(
                         "border p-4 rounded-lg hover:shadow-lg transition-shadow",
+                        "flex flex-col sm:flex-row justify-between items-start gap-4",
                         appointment.isBlocker && "bg-muted/70 border-dashed"
                       )}>
-                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                          <div className="flex-grow">
-                            <p className="font-semibold text-primary text-lg flex items-center">
-                              {appointment.isBlocker ? <Lock className="mr-2 h-5 w-5 text-gray-500" /> : <Clock className="mr-2 h-5 w-5" />}
-                              {format(parseISO(appointment.dateTime), "HH:mm", { locale: es })}
-                              <span className="text-muted-foreground text-sm ml-2">({appointment.durationMinutes} min)</span>
-                            </p>
-                            <p className="text-md flex items-center mt-1 break-words">
-                              {appointment.isBlocker ? (
-                                <span className="text-gray-700 font-medium break-words">{appointment.blockerReason || "Horario Bloqueado"}</span>
-                              ) : (
-                                <>
-                                  <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                                  <span className="break-words">{appointment.patientName}</span>
-                                </>
-                              )}
-                            </p>
-                             {appointment.notes && !appointment.isBlocker && (
-                                <p className="text-sm text-muted-foreground mt-2 pt-2 border-t border-dashed break-words">
-                                    <strong>Notas:</strong> {appointment.notes}
-                                </p>
-                            )}
-                          </div>
-                          <div className="flex-shrink-0 w-full sm:w-auto">
-                            {!appointment.isBlocker ? (
-                              <Select
-                                value={appointment.status}
-                                onValueChange={(newStatus) => handleStatusChange(appointment.id, newStatus as Appointment['status'])}
-                                disabled={!canChangeStatus}
-                              >
-                                <SelectTrigger className="w-full sm:w-[180px] text-xs h-9">
-                                   <div className="flex items-center gap-1">
-                                    {getStatusIcon(appointment.status)}
-                                    <span>{getStatusText(appointment.status)}</span>
-                                  </div>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="programada">
-                                    <div className="flex items-center gap-2">
-                                      {getStatusIcon("programada")} Programada
-                                    </div>
-                                  </SelectItem>
-                                  <SelectItem value="confirmada">
-                                    <div className="flex items-center gap-2">
-                                     {getStatusIcon("confirmada")} Confirmada
-                                    </div>
-                                  </SelectItem>
-                                  <SelectItem value="cancelada">
-                                    <div className="flex items-center gap-2">
-                                      {getStatusIcon("cancelada")} Cancelada
-                                    </div>
-                                  </SelectItem>
-                                  <SelectItem value="completada">
-                                    <div className="flex items-center gap-2">
-                                      {getStatusIcon("completada")} Completada
-                                    </div>
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
+                        <div className="flex-grow">
+                          <p className="font-semibold text-primary text-lg flex items-center">
+                            {appointment.isBlocker ? <Lock className="mr-2 h-5 w-5 text-gray-500" /> : <Clock className="mr-2 h-5 w-5" />}
+                            {format(parseISO(appointment.dateTime), "HH:mm", { locale: es })}
+                            <span className="text-muted-foreground text-sm ml-2">({appointment.durationMinutes} min)</span>
+                          </p>
+                          <p className="text-md flex items-center mt-1 break-words">
+                            {appointment.isBlocker ? (
+                              <span className="text-gray-700 font-medium break-words">{appointment.blockerReason || "Horario Bloqueado"}</span>
                             ) : (
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="w-full sm:w-auto text-destructive hover:bg-destructive/10"
-                                      disabled={!canDeleteAppointmentsOrBlockers}
-                                      onClick={(e) => { e.stopPropagation(); openDeleteBlockerDialog(appointment.id); }}
-                                    >
-                                      <Trash2 className="mr-2 h-4 w-4" /> Eliminar Bloqueo
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  {/* AlertDialogContent for delete confirmation moved to main page scope */}
-                                </AlertDialog>
+                              <>
+                                <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <span className="break-words">{appointment.patientName}</span>
+                              </>
                             )}
-                          </div>
+                          </p>
+                           {appointment.notes && !appointment.isBlocker && (
+                              <p className="text-sm text-muted-foreground mt-2 pt-2 border-t border-dashed break-words">
+                                  <strong>Notas:</strong> {appointment.notes}
+                              </p>
+                          )}
+                        </div>
+                        <div className="flex-shrink-0 w-full sm:w-auto">
+                          {!appointment.isBlocker ? (
+                            <Select
+                              value={appointment.status}
+                              onValueChange={(newStatus) => handleStatusChange(appointment.id, newStatus as Appointment['status'])}
+                              disabled={!canChangeStatus}
+                            >
+                              <SelectTrigger className="w-full sm:w-[180px] text-xs h-9">
+                                 <div className="flex items-center gap-1">
+                                  {getStatusIcon(appointment.status)}
+                                  <span>{getStatusText(appointment.status)}</span>
+                                </div>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="programada">
+                                  <div className="flex items-center gap-2">
+                                    {getStatusIcon("programada")} Programada
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="confirmada">
+                                  <div className="flex items-center gap-2">
+                                   {getStatusIcon("confirmada")} Confirmada
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="cancelada">
+                                  <div className="flex items-center gap-2">
+                                    {getStatusIcon("cancelada")} Cancelada
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="completada">
+                                  <div className="flex items-center gap-2">
+                                    {getStatusIcon("completada")} Completada
+                                  </div>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full sm:w-auto text-destructive hover:bg-destructive/10"
+                                  disabled={!canDeleteAppointmentsOrBlockers}
+                                  onClick={(e) => { e.stopPropagation(); openDeleteBlockerDialog(appointment.id); }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Eliminar Bloqueo
+                                </Button>
+                              </AlertDialogTrigger>
+                          )}
                         </div>
                       </li>
                     ))}
@@ -659,3 +655,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
