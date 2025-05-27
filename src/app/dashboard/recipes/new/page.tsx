@@ -115,7 +115,7 @@ export default function NewRecipePage() {
         title: "Receta Guardada",
         description: `Nueva receta para ${getPatientFullName(updatedPatient)} guardada exitosamente.`,
       });
-      setSelectedPatient(updatedPatient); 
+      setSelectedPatient({...updatedPatient}); 
       setCurrentRecipeHistoryPage(1); 
       form.reset({ 
         medications: [{ drugName: '', presentation: '', indications: '' }],
@@ -235,14 +235,15 @@ export default function NewRecipePage() {
         <CardHeader>
           <div className="flex items-center gap-3 mb-2">
             <PlusCircle className="mr-1 h-8 w-8 text-primary" />
-            <CardTitle className="text-3xl">Crear Nueva Receta</CardTitle>
+            <CardTitle className="text-3xl">Nueva Receta</CardTitle>
           </div>
+          
         </CardHeader>
         <CardContent className="space-y-6">
           {!selectedPatient ? (
             <>
               
-              <div className="flex items-center space-x-2 mb-4">
+              <div className="flex items-center space-x-2">
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <Input
                   id="patientSearchRecipe"
