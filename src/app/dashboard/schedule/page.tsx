@@ -116,7 +116,7 @@ export default function SchedulePage() {
     const newAppointmentData: Omit<Appointment, 'id' | 'patientName'> = {
       dateTime: dateTime.toISOString(),
       durationMinutes: data.durationMinutes,
-      status: data.isBlocker ? 'programada' : data.status,
+      status: data.isBlocker ? 'programada' : data.status, // Status no es relevante para bloqueos o fijo
       isBlocker: data.isBlocker,
     };
 
@@ -140,7 +140,7 @@ export default function SchedulePage() {
       setIsFormOpen(false);
       if (isDaySidebarOpen && selectedCalendarDay) {
          setIsDaySidebarOpen(false);
-         setTimeout(() => setIsDaySidebarOpen(true), 50);
+         setTimeout(() => setIsDaySidebarOpen(true), 50); // Re-open to refresh sidebar data
       }
     } catch (error) {
       console.error("Error agendando/bloqueando:", error);
@@ -203,9 +203,14 @@ export default function SchedulePage() {
       if (success) {
         setAppointments(prev => prev.filter(app => app.id !== appointmentToDelete));
         toast({ title: "Cita/Bloqueo Eliminado", description: "La entrada ha sido eliminada." });
-        if (isDaySidebarOpen && selectedCalendarDay) {
-         setIsDaySidebarOpen(false);
-         setTimeout(() => setIsDaySidebarOpen(true), 50);
+        if (isDaySidebarOpen && selectedCalendarDay) { // If sidebar is open for the day
+          const dayStillHasAppointments = appointments.some(app => app.id !== appointmentToDelete && isSameDay(parseISO(app.dateTime), selectedCalendarDay));
+          if (!dayStillHasAppointments) { // If no appointments left for that day after deletion
+            setIsDaySidebarOpen(false); // Close sidebar
+          } else { // If there are still appointments, refresh the sidebar
+            setIsDaySidebarOpen(false);
+            setTimeout(() => setIsDaySidebarOpen(true), 50);
+          }
         }
       } else {
         toast({ title: "Error", description: "No se pudo eliminar la entrada.", variant: "destructive" });
@@ -463,7 +468,7 @@ export default function SchedulePage() {
           </DialogContent>
         </Dialog>
 
-        <Card className="shadow-lg w-full overflow-hidden max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
+         <Card className="shadow-lg w-full overflow-hidden max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
            <CardHeader>
             <CardTitle>Calendario</CardTitle>
             <CardDescription>Navegue por los meses y haga clic en un día para ver las citas programadas.</CardDescription>
@@ -486,21 +491,24 @@ export default function SchedulePage() {
                   cell: cn("flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", "h-8 sm:h-10 md:h-12"),
                   day: (date, modifiers, dayProps) => {
                     let klasses = cn(
-                      buttonVariants({ variant: "ghost" }),
-                      "h-full w-full p-0 font-normal text-xs sm:text-sm",
-                      "flex items-center justify-center"
+                      "h-full w-full p-0 font-normal flex items-center justify-center", // Removido buttonVariants
+                      "text-foreground" // Asegurar color de texto
                     );
-
+                  
                     if (modifiers.outside || modifiers.disabled) {
                       klasses = cn(klasses, "text-muted-foreground opacity-50");
                     } else {
-                      klasses = cn(klasses, "text-foreground"); // Default text color for active days
+                      // Estilo de Selección
                       if (modifiers.selected) {
-                        klasses = cn(klasses, "bg-primary/70 text-primary-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full");
-                      } else if (modifiers.today) {
+                        klasses = cn(klasses, "bg-primary/70 text-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full");
+                      }
+                      // Estilo de Hoy (si no está seleccionado)
+                      else if (modifiers.today) {
                         klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
-                      } else if (dayProps.onPointerEnter) {
-                        klasses = cn(klasses, "hover:bg-muted hover:text-foreground hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:hover:!w-7 hover:rounded-full");
+                      }
+                      // Estilo de Hover (para días normales, interactivos)
+                      else if (dayProps.onPointerEnter) {
+                        klasses = cn(klasses, "hover:bg-muted hover:text-foreground hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full");
                       }
                     }
                     return klasses;
@@ -523,10 +531,7 @@ export default function SchedulePage() {
         />
 
         <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !open && setAppointmentToDelete(null)}>
-          <AlertDialogTrigger asChild>
-            {/* This trigger is not strictly necessary here if delete is only from sidebar/list */}
-            <button className="hidden"></button>
-          </AlertDialogTrigger>
+          {/* AlertDialogTrigger is not needed here as it's state-controlled */}
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
@@ -592,7 +597,7 @@ export default function SchedulePage() {
                               <SelectTrigger className="w-full sm:w-[180px] text-xs h-9">
                                  <div className="flex items-center gap-1">
                                   {getStatusIcon(appointment.status)}
-                                  <span>{getStatusText(appointment.status)}</span>
+                                   <span>{getStatusText(appointment.status)}</span>
                                 </div>
                               </SelectTrigger>
                               <SelectContent>
@@ -619,7 +624,6 @@ export default function SchedulePage() {
                               </SelectContent>
                             </Select>
                           ) : (
-                              <AlertDialogTrigger asChild>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -629,7 +633,6 @@ export default function SchedulePage() {
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" /> Eliminar Bloqueo
                                 </Button>
-                              </AlertDialogTrigger>
                           )}
                         </div>
                       </li>
