@@ -188,7 +188,7 @@ export default function BillingPage() {
            <Button 
             onClick={() => alert("Abrir modal/página para crear nueva factura (no implementado).")} 
             disabled 
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto mt-4"
             size="lg"
            >
             <FilePlus2 className="mr-2 h-5 w-5" />
