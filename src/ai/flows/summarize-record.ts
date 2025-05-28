@@ -9,7 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import type { PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from '@/lib/types';
+import type { PersonalDetails, BackgroundInformation, MedicalEncounter } from '@/lib/types';
 
 // Define Zod schemas for the new structured input
 const PersonalDetailsSchema = z.object({
@@ -22,19 +22,11 @@ const PersonalDetailsSchema = z.object({
   email: z.string().email().optional(),
 });
 
-const DatosFacturacionSchema = z.object({
-  ruc: z.string().optional(),
-  direccionFiscal: z.string().optional(),
-  telefonoFacturacion: z.string().optional(),
-  emailFacturacion: z.string().email().optional(),
-}).optional();
-
-
 const BackgroundInformationSchema = z.object({
-  personalHistory: z.string().optional(),
-  allergies: z.string().optional(),
-  habitualMedication: z.string().optional(),
-}).optional(); // Make the whole object optional
+  personalHistory: z.string().optional().nullable(),
+  allergies: z.string().optional().nullable(),
+  habitualMedication: z.string().optional().nullable(),
+}).optional().nullable();
 
 const MedicalEncounterSchema = z.object({
   id: z.string(),
@@ -44,9 +36,9 @@ const MedicalEncounterSchema = z.object({
 
 const SummarizeRecordInputSchema = z.object({
   personalDetails: PersonalDetailsSchema.describe("Detalles personales del paciente."),
-  // datosFacturacion is not typically needed for a medical summary, so we omit it here
-  backgroundInformation: BackgroundInformationSchema.describe("Antecedentes e información general del paciente.").nullable(),
+  backgroundInformation: BackgroundInformationSchema.describe("Antecedentes e información general del paciente."),
   medicalEncounters: z.array(MedicalEncounterSchema).describe("Lista de encuentros o consultas médicas del paciente."),
+  formattedMedicalEncounters: z.string().describe("Cadena pre-formateada del historial de consultas."),
 });
 export type SummarizeRecordInput = z.infer<typeof SummarizeRecordInputSchema>;
 
@@ -55,11 +47,7 @@ const SummarizeRecordOutputSchema = z.object({
 });
 export type SummarizeRecordOutput = z.infer<typeof SummarizeRecordOutputSchema>;
 
-export async function summarizeRecord(input: SummarizeRecordInput): Promise<SummarizeRecordOutput> {
-  return summarizeRecordFlow(input);
-}
-
-// Helper function to format encounters for the prompt
+// Helper function to format encounters for the prompt - remains the same
 function formatEncountersForPrompt(encounters: MedicalEncounter[]): string {
   if (!encounters || encounters.length === 0) {
     return "No hay consultas médicas registradas.";
@@ -70,9 +58,14 @@ function formatEncountersForPrompt(encounters: MedicalEncounter[]): string {
     .join('\n\n---\n\n');
 }
 
+export async function summarizeRecord(input: Omit<SummarizeRecordInput, 'formattedMedicalEncounters'>): Promise<SummarizeRecordOutput> {
+  const formattedEncounters = formatEncountersForPrompt(input.medicalEncounters);
+  return summarizeRecordFlow({ ...input, formattedMedicalEncounters: formattedEncounters });
+}
+
 const prompt = ai.definePrompt({
   name: 'summarizeRecordPrompt',
-  input: {schema: SummarizeRecordInputSchema},
+  input: {schema: SummarizeRecordInputSchema}, // Input schema now includes formattedMedicalEncounters
   output: {schema: SummarizeRecordOutputSchema},
   prompt: `Eres un asistente de IA que resume historiales médicos para doctores.
 
@@ -81,8 +74,9 @@ const prompt = ai.definePrompt({
   === Detalles Personales ===
   Nombre Completo: {{{personalDetails.nombres}}} {{{personalDetails.apellidos}}}
   Fecha de Nacimiento: {{{personalDetails.fechaNacimiento}}}
-  Documento: {{{personalDetails.documentoIdentidad}}}
-  Contacto: Email: {{{personalDetails.email}}}, Tel1: {{{personalDetails.telefono1}}}, Tel2: {{{personalDetails.telefono2}}}
+  Documento: {{#if personalDetails.documentoIdentidad}}{{{personalDetails.documentoIdentidad}}}{{else}}No registrado{{/if}}
+  Contacto: {{#if personalDetails.email}}Email: {{{personalDetails.email}}}{{/if}}{{#if personalDetails.telefono1}}, Tel1: {{{personalDetails.telefono1}}}{{/if}}{{#if personalDetails.telefono2}}, Tel2: {{{personalDetails.telefono2}}}{{/if}}
+
 
   === Antecedentes e Información General ===
   {{#if backgroundInformation}}
@@ -94,25 +88,20 @@ const prompt = ai.definePrompt({
   {{/if}}
 
   === Historial de Consultas Médicas ===
-  {{{formatEncountersForPrompt medicalEncounters}}}
+  {{{formattedMedicalEncounters}}}
 
   Proporciona un resumen que integre la información más relevante de todas las secciones.
   `,
-  customize: (model) => {
-    const Handlebars = model.registry?.lookupHandler('handlebars');
-    if (Handlebars) {
-      Handlebars.registerHelper('formatEncountersForPrompt', formatEncountersForPrompt);
-    }
-  }
+  // 'customize' property removed
 });
 
 const summarizeRecordFlow = ai.defineFlow(
   {
     name: 'summarizeRecordFlow',
-    inputSchema: SummarizeRecordInputSchema,
+    inputSchema: SummarizeRecordInputSchema, // Full input schema including the pre-formatted string
     outputSchema: SummarizeRecordOutputSchema,
   },
-  async (input: SummarizeRecordInput) => {
+  async (input: SummarizeRecordInput) => { // Input now expects the formatted string
     const {output} = await prompt(input);
     return output!;
   }

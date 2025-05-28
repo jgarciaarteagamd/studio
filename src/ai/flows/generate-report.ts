@@ -11,9 +11,9 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import type { PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from '@/lib/types'; // Import new types
+import type { PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from '@/lib/types';
 
-// Define Zod schemas for the new structured input, similar to summarize-record.ts
+// Define Zod schemas for the new structured input
 const PersonalDetailsSchema = z.object({
   nombres: z.string(),
   apellidos: z.string(),
@@ -24,20 +24,19 @@ const PersonalDetailsSchema = z.object({
   email: z.string().email().optional(),
 });
 
-// DatosFacturacion is not usually part of a clinical report, so we might omit it or make it optional if needed for some reports
 const DatosFacturacionSchema = z.object({
   ruc: z.string().optional(),
   direccionFiscal: z.string().optional(),
   telefonoFacturacion: z.string().optional(),
   emailFacturacion: z.string().email().optional(),
-}).optional();
+}).optional().nullable();
 
 
 const BackgroundInformationSchema = z.object({
-  personalHistory: z.string().optional(),
-  allergies: z.string().optional(),
-  habitualMedication: z.string().optional(),
-}).optional(); // Make the whole object optional
+  personalHistory: z.string().optional().nullable(),
+  allergies: z.string().optional().nullable(),
+  habitualMedication: z.string().optional().nullable(),
+}).optional().nullable();
 
 const MedicalEncounterSchema = z.object({
   id: z.string(),
@@ -47,9 +46,10 @@ const MedicalEncounterSchema = z.object({
 
 const GenerateReportInputSchema = z.object({
   personalDetails: PersonalDetailsSchema.describe("Detalles personales del paciente."),
-  datosFacturacion: DatosFacturacionSchema.describe("Datos de facturación del paciente (opcional para el informe clínico).").nullable(),
-  backgroundInformation: BackgroundInformationSchema.describe("Antecedentes e información general del paciente.").nullable(),
+  datosFacturacion: DatosFacturacionSchema.describe("Datos de facturación del paciente (opcional para el informe clínico)."),
+  backgroundInformation: BackgroundInformationSchema.describe("Antecedentes e información general del paciente."),
   medicalEncounters: z.array(MedicalEncounterSchema).describe("Lista de encuentros o consultas médicas del paciente."),
+  formattedMedicalEncounters: z.string().describe("Cadena pre-formateada del historial de consultas."),
 });
 export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
 
@@ -58,11 +58,7 @@ const GenerateReportOutputSchema = z.object({
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
 
-export async function generateReport(input: GenerateReportInput): Promise<GenerateReportOutput> {
-  return generateReportFlow(input);
-}
-
-// Helper function to format encounters for the prompt
+// Helper function to format encounters for the report - remains the same
 function formatEncountersForReport(encounters: MedicalEncounter[]): string {
   if (!encounters || encounters.length === 0) {
     return "No hay consultas médicas registradas para incluir en el informe.";
@@ -77,10 +73,14 @@ ${enc.details}
     .join('\n------------------------------------\n');
 }
 
+export async function generateReport(input: Omit<GenerateReportInput, 'formattedMedicalEncounters'>): Promise<GenerateReportOutput> {
+  const formattedEncounters = formatEncountersForReport(input.medicalEncounters);
+  return generateReportFlow({ ...input, formattedMedicalEncounters: formattedEncounters });
+}
 
 const generateReportPrompt = ai.definePrompt({
   name: 'generateReportPrompt',
-  input: {schema: GenerateReportInputSchema},
+  input: {schema: GenerateReportInputSchema}, // Input schema now includes formattedMedicalEncounters
   output: {schema: GenerateReportOutputSchema},
   prompt: `Eres un asistente de IA que genera informes médicos detallados para doctores.
 
@@ -115,7 +115,7 @@ const generateReportPrompt = ai.definePrompt({
 
   **HISTORIAL DE CONSULTAS**
   (Ordenado de la más reciente a la más antigua)
-  {{{formatEncountersForReport medicalEncounters}}}
+  {{{formattedMedicalEncounters}}}
 
   **CONCLUSIONES Y RECOMENDACIONES GENERALES**
   (Basado en toda la información, si es aplicable, o dejar espacio para que el médico complete)
@@ -125,21 +125,16 @@ const generateReportPrompt = ai.definePrompt({
   El informe debe ser bien estructurado, fácil de leer y contener toda la información relevante de forma clara y profesional.
   Utiliza Markdown para el formato del informe (encabezados, negritas, listas).
   `,
-  customize: (model) => {
-    const Handlebars = model.registry?.lookupHandler('handlebars');
-    if (Handlebars) {
-      Handlebars.registerHelper('formatEncountersForReport', formatEncountersForReport);
-    }
-  }
+  // 'customize' property removed
 });
 
 const generateReportFlow = ai.defineFlow(
   {
     name: 'generateReportFlow',
-    inputSchema: GenerateReportInputSchema,
+    inputSchema: GenerateReportInputSchema, // Full input schema including the pre-formatted string
     outputSchema: GenerateReportOutputSchema,
   },
-  async (input: GenerateReportInput) => {
+  async (input: GenerateReportInput) => { // Input now expects the formatted string
     const {output} = await generateReportPrompt(input);
     return output!;
   }
