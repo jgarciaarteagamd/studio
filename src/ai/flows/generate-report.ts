@@ -58,7 +58,7 @@ const GenerateReportOutputSchema = z.object({
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
 
-// Helper function to format encounters for the report - remains the same
+// Helper function to format encounters for the report
 function formatEncountersForReport(encounters: MedicalEncounter[]): string {
   if (!encounters || encounters.length === 0) {
     return "No hay consultas médicas registradas para incluir en el informe.";
@@ -80,7 +80,7 @@ export async function generateReport(input: Omit<GenerateReportInput, 'formatted
 
 const generateReportPrompt = ai.definePrompt({
   name: 'generateReportPrompt',
-  input: {schema: GenerateReportInputSchema}, // Input schema now includes formattedMedicalEncounters
+  input: {schema: GenerateReportInputSchema},
   output: {schema: GenerateReportOutputSchema},
   prompt: `Eres un asistente de IA que genera informes médicos detallados para doctores.
 
@@ -125,16 +125,15 @@ const generateReportPrompt = ai.definePrompt({
   El informe debe ser bien estructurado, fácil de leer y contener toda la información relevante de forma clara y profesional.
   Utiliza Markdown para el formato del informe (encabezados, negritas, listas).
   `,
-  // 'customize' property removed
 });
 
 const generateReportFlow = ai.defineFlow(
   {
     name: 'generateReportFlow',
-    inputSchema: GenerateReportInputSchema, // Full input schema including the pre-formatted string
+    inputSchema: GenerateReportInputSchema,
     outputSchema: GenerateReportOutputSchema,
   },
-  async (input: GenerateReportInput) => { // Input now expects the formatted string
+  async (input: GenerateReportInput) => {
     const {output} = await generateReportPrompt(input);
     return output!;
   }

@@ -47,7 +47,7 @@ const SummarizeRecordOutputSchema = z.object({
 });
 export type SummarizeRecordOutput = z.infer<typeof SummarizeRecordOutputSchema>;
 
-// Helper function to format encounters for the prompt - remains the same
+// Helper function to format encounters for the prompt
 function formatEncountersForPrompt(encounters: MedicalEncounter[]): string {
   if (!encounters || encounters.length === 0) {
     return "No hay consultas médicas registradas.";
@@ -65,7 +65,7 @@ export async function summarizeRecord(input: Omit<SummarizeRecordInput, 'formatt
 
 const prompt = ai.definePrompt({
   name: 'summarizeRecordPrompt',
-  input: {schema: SummarizeRecordInputSchema}, // Input schema now includes formattedMedicalEncounters
+  input: {schema: SummarizeRecordInputSchema},
   output: {schema: SummarizeRecordOutputSchema},
   prompt: `Eres un asistente de IA que resume historiales médicos para doctores.
 
@@ -92,16 +92,15 @@ const prompt = ai.definePrompt({
 
   Proporciona un resumen que integre la información más relevante de todas las secciones.
   `,
-  // 'customize' property removed
 });
 
 const summarizeRecordFlow = ai.defineFlow(
   {
     name: 'summarizeRecordFlow',
-    inputSchema: SummarizeRecordInputSchema, // Full input schema including the pre-formatted string
+    inputSchema: SummarizeRecordInputSchema,
     outputSchema: SummarizeRecordOutputSchema,
   },
-  async (input: SummarizeRecordInput) => { // Input now expects the formatted string
+  async (input: SummarizeRecordInput) => {
     const {output} = await prompt(input);
     return output!;
   }
