@@ -11,18 +11,18 @@ export interface Attachment {
 export interface PersonalDetails {
   nombres: string;
   apellidos: string;
-  documentoIdentidad?: string;
-  fechaNacimiento: string; // ISO date string
-  telefono1?: string;
-  telefono2?: string;
-  email?: string;
+  documentoIdentidad?: string | null;
+  fechaNacimiento: string; // ISO date string YYYY-MM-DD
+  telefono1?: string | null;
+  telefono2?: string | null;
+  email?: string | null;
 }
 
 export interface DatosFacturacion {
-  ruc?: string;
-  direccionFiscal?: string;
-  telefonoFacturacion?: string;
-  emailFacturacion?: string;
+  ruc?: string | null;
+  direccionFiscal?: string | null;
+  telefonoFacturacion?: string | null;
+  emailFacturacion?: string | null;
 }
 
 export interface BackgroundInformation {
@@ -91,7 +91,7 @@ export interface DoctorProfessionalDetails {
   otrasEspecialidades?: string;
   numeroMatricula: string;
   otrosRegistros?: string;
-  logotipoUrl?: string; // URL del logotipo
+  logotipoUrl?: string; 
 }
 
 export interface DoctorFiscalDetails {
@@ -106,7 +106,6 @@ export interface DoctorProfile {
   contactDetails: DoctorContactDetails;
   professionalDetails: DoctorProfessionalDetails;
   fiscalDetails: DoctorFiscalDetails;
-  // logotipoUrl fue movido a DoctorProfessionalDetails
   updatedAt: string;
 }
 
@@ -135,7 +134,7 @@ export interface Invoice {
   totalAmount: number;
   status: InvoiceStatus;
   notes?: string;
-  doctorFiscalDetailsSnapshot: DoctorFiscalDetails;
+  doctorFiscalDetailsSnapshot: DoctorFiscalDetails; // Snapshot de los datos fiscales del médico al momento de emitir
   updatedAt?: string; 
 }
 

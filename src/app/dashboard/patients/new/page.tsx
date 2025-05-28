@@ -9,6 +9,7 @@ import type { PersonalDetails, BackgroundInformation, DatosFacturacion } from "@
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { createPatientRecord } from "@/app/actions/patient-actions"; // Import Server Action
+import { PlusCircle, Users } from "lucide-react";
 
 export default function NewPatientPage() {
   const router = useRouter();
@@ -20,13 +21,16 @@ export default function NewPatientPage() {
   const canSecretaryEditBilling = isSecretary && SIMULATED_SECRETARY_PERMISSIONS.patients.canModifyPersonalAndBilling;
 
 
-  const handleSubmit = async (data: PatientFormValues) => { // Make async
+  const handleSubmit = async (data: PatientFormValues) => { 
     const patientDataForCreation: {
       personalDetails: PersonalDetails;
       datosFacturacion?: DatosFacturacion | null;
       backgroundInformation?: BackgroundInformation | null;
     } = {
-      personalDetails: data.personalDetails,
+      personalDetails: {
+        ...data.personalDetails,
+        fechaNacimiento: new Date(data.personalDetails.fechaNacimiento).toISOString().split('T')[0], // Convert Date to YYYY-MM-DD string
+      },
       datosFacturacion: (data.datosFacturacion && Object.values(data.datosFacturacion).some(val => val && val !== '')) 
         ? data.datosFacturacion 
         : null,
@@ -35,7 +39,7 @@ export default function NewPatientPage() {
         : null,
     };
 
-    const newPatient = await createPatientRecord(patientDataForCreation); // Call Server Action
+    const newPatient = await createPatientRecord(patientDataForCreation); 
 
     if (newPatient) {
       toast({
@@ -94,8 +98,11 @@ export default function NewPatientPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto w-full">
       <Card className="w-full shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-3xl">Agregar Nuevo Paciente</CardTitle>
+        <CardHeader className="p-6">
+           <div className="flex items-center gap-3 mb-2">
+            <PlusCircle className="h-8 w-8 text-primary" />
+            <CardTitle className="text-3xl">Agregar Nuevo Paciente</CardTitle>
+          </div>
           {isDoctor ? (
             <CardDescription>
               Complete todos los detalles del paciente. El historial de consultas y recetas se gestionará por separado.
@@ -106,16 +113,16 @@ export default function NewPatientPage() {
             </CardDescription>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6 pt-0">
           <PatientForm
             onSubmit={handleSubmit}
             initialData={initialValues as any} 
             submitButtonText="Agregar Paciente"
             showPersonalDetailsSection={true}
             showDatosFacturacionSection={true}
-            showBackgroundInformationSection={isDoctor} // Solo el médico ve y edita antecedentes al crear
-            allowEditFacturacionInfo={isDoctor || canSecretaryEditBilling} // Médico y secretaria (con permiso) pueden editar facturación
-            allowEditBackgroundInfo={isDoctor} // Solo el médico edita antecedentes
+            showBackgroundInformationSection={isDoctor} 
+            allowEditFacturacionInfo={isDoctor || canSecretaryEditBilling} 
+            allowEditBackgroundInfo={isDoctor} 
           />
         </CardContent>
       </Card>

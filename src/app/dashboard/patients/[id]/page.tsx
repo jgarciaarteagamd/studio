@@ -9,7 +9,7 @@ import { FileUploadSection } from "@/components/patients/FileUploadSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { getPatientById, getPatientFullName, calculateAge, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS, updatePatient as mockUpdatePatient } from "@/lib/mock-data";
+import { getPatientById, getPatientFullName, calculateAge, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays, ClipboardList, FolderOpen } from "lucide-react";
@@ -64,7 +64,11 @@ export default function PatientDetailPage() {
       };
 
       if (data.personalDetails !== undefined) {
-        updatedPatientData.personalDetails = data.personalDetails;
+        const personalDetailsToSave: PersonalDetails = {
+          ...data.personalDetails,
+          fechaNacimiento: new Date(data.personalDetails.fechaNacimiento).toISOString().split('T')[0], // Convert Date to YYYY-MM-DD string
+        };
+        updatedPatientData.personalDetails = personalDetailsToSave;
       }
       if (data.datosFacturacion !== undefined) {
          updatedPatientData.datosFacturacion = (data.datosFacturacion && Object.values(data.datosFacturacion).some(val => val && val !== ''))
@@ -80,7 +84,7 @@ export default function PatientDetailPage() {
       const updatedRecord = await updatePatientRecord(patient.id, updatedPatientData);
 
       if (updatedRecord) {
-        setPatient({...updatedRecord});
+        setPatient({...updatedRecord}); // Use spread for new reference to trigger re-render
         setPatientAge(calculateAge(updatedRecord.personalDetails.fechaNacimiento));
          toast({
           title: "Historial Actualizado",
@@ -99,19 +103,17 @@ export default function PatientDetailPage() {
 
   const handleFileUpload = async (file: File) => {
     if (patient) {
-      // Simular la carga del archivo y obtener un nuevo objeto Attachment
-      // En una app real, esto implicaría subir a un servicio de almacenamiento y obtener una URL.
       const attachmentData: Omit<Attachment, 'id'> = {
         name: file.name,
         type: file.type.startsWith('image/') ? 'image' : (file.type === 'application/pdf' ? 'pdf' : 'other'),
-        driveLink: '#', // Placeholder para la URL del archivo (ej. Cloud Storage)
+        driveLink: '#', 
         uploadedAt: new Date().toISOString(),
       };
   
       const updatedRecord = await addPatientAttachment(patient.id, attachmentData);
   
       if (updatedRecord) {
-        setPatient({...updatedRecord});
+        setPatient({...updatedRecord}); // Use spread for new reference
         toast({
           title: "Archivo Adjuntado",
           description: `${file.name} ha sido adjuntado (simulado).`,
@@ -131,7 +133,7 @@ export default function PatientDetailPage() {
       const updatedRecord = await deletePatientAttachments(patient.id, attachmentIdsToDelete);
   
       if (updatedRecord) {
-        setPatient({ ...updatedRecord });
+        setPatient({ ...updatedRecord }); // Use spread for new reference
         toast({
           title: "Adjuntos Eliminados",
           description: `${attachmentIdsToDelete.length} archivo(s) ha(n) sido eliminado(s) (simulado).`,
@@ -196,7 +198,10 @@ export default function PatientDetailPage() {
   }
 
   const patientFormInitialData: PatientFormValues = {
-    personalDetails: patient.personalDetails,
+    personalDetails: {
+        ...patient.personalDetails,
+        fechaNacimiento: new Date(patient.personalDetails.fechaNacimiento), // Convert string to Date for form
+    },
     datosFacturacion: patient.datosFacturacion || { ruc: '', direccionFiscal: '', telefonoFacturacion: '', emailFacturacion: '' },
     backgroundInformation: patient.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' },
   };
@@ -209,16 +214,17 @@ export default function PatientDetailPage() {
   const showHistoryTab = isDoctor;
   const showAttachmentsTab = isDoctor || canSecretaryManageAttachments;
 
-  let tabCount = 0;
-  if (showPatientDataTab) tabCount++;
-  if (showBackgroundTab) tabCount++;
-  if (showHistoryTab) tabCount++;
-  if (showAttachmentsTab) tabCount++;
-
   const tabsListGridColsClass = () => {
-    if (isDoctor) return "md:grid-cols-4"; // Datos, Antecedentes, Historial, Adjuntos
-    if (canSecretaryManageAttachments) return "md:grid-cols-2"; // Datos, Adjuntos
-    return "md:grid-cols-1"; // Solo Datos
+    let cols = 1;
+    if (isDoctor) cols = 4; // Datos, Antecedentes, Historial, Adjuntos
+    else if (canSecretaryManageAttachments) cols = 2; // Datos, Adjuntos
+    // else cols = 1; // Solo Datos
+
+    if (cols === 1) return "md:grid-cols-1";
+    if (cols === 2) return "md:grid-cols-2";
+    // For 3 tabs (not currently a case but for future)
+    // if (cols === 3) return "md:grid-cols-3"; 
+    return "md:grid-cols-4"; // Default for 4 tabs or more
   };
 
 
@@ -244,9 +250,8 @@ export default function PatientDetailPage() {
             {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil: {patient.personalDetails.telefono1}</p>)}
             {patient.personalDetails.telefono2 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono opcional: {patient.personalDetails.telefono2}</p>)}
           </div>
+           {(patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal)) && <Separator className="my-3"/> }
           {patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal) && (
-            <>
-              <Separator className="my-3" />
               <div className="pb-2">
                 <h4 className="text-sm font-medium mb-2 flex items-center"><BuildingIcon className="mr-2 h-4 w-4 text-primary/70" /> Datos de Facturación Rápidos</h4>
                 <div className="text-xs text-muted-foreground space-y-0.5">
@@ -254,7 +259,6 @@ export default function PatientDetailPage() {
                     {patient.datosFacturacion.direccionFiscal && <p>Dirección: {patient.datosFacturacion.direccionFiscal}</p>}
                 </div>
               </div>
-            </>
           )}
            <Badge variant="secondary" className="w-fit mt-4">
             Última actualización general: {new Date(patient.updatedAt).toLocaleDateString(currentLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -292,7 +296,7 @@ export default function PatientDetailPage() {
                   showDatosFacturacionSection={true}
                   allowEditFacturacionInfo={isDoctor || canSecretaryModifyPatientData}
                   showBackgroundInformationSection={false}
-                  allowEditBackgroundInfo={false}
+                  allowEditBackgroundInfo={false} // Antecedentes se editan en su propia pestaña
                 />
               </CardContent>
             </Card>
@@ -314,7 +318,7 @@ export default function PatientDetailPage() {
                    showPersonalDetailsSection={false}
                    showDatosFacturacionSection={false}
                    showBackgroundInformationSection={true}
-                   allowEditBackgroundInfo={isDoctor}
+                   allowEditBackgroundInfo={isDoctor} // Solo el médico puede editar esta sección
                  />
                </CardContent>
              </Card>
@@ -398,7 +402,7 @@ export default function PatientDetailPage() {
                       <DialogHeader>
                         <DialogTitle>Archivos Adjuntos de {getPatientFullName(patient)}</DialogTitle>
                         <DialogDescription>
-                          Suba nuevos archivos o elimine existentes. Los metadatos se guardarán en Firestore (simulado).
+                          Suba nuevos archivos o elimine existentes. Los metadatos se guardarán (simulado).
                         </DialogDescription>
                       </DialogHeader>
                       <div className="flex-1 overflow-y-auto min-h-0">
