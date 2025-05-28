@@ -11,9 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ActivitySquare, LogIn } from "lucide-react";
 import Image from 'next/image';
+import Link from 'next/link'; // Import Link
 import { setSimulatedRole } from '@/lib/mock-data';
-import { auth } from '@/lib/firebase-config'; // Importar auth de Firebase
-import { GoogleAuthProvider, signInWithPopup, type UserCredential } from "firebase/auth"; // Importar funciones de autenticación
+import { auth } from '@/lib/firebase-config';
+import { GoogleAuthProvider, signInWithPopup, type UserCredential } from "firebase/auth";
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -60,7 +61,7 @@ export default function LoginPage() {
         title: "Inicio de Sesión Exitoso",
         description: `Bienvenido Dr(a). ${user.displayName || user.email}`,
       });
-      setSimulatedRole('doctor'); // Aún simulamos el rol para la UI
+      setSimulatedRole('doctor');
       router.push('/dashboard');
     } catch (error: any) {
       console.error("Error en inicio de sesión con Google:", error);
@@ -77,12 +78,9 @@ export default function LoginPage() {
   const handleSecretaryLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoadingSecretary(true);
-    // Simulación de login de secretaria
     console.log("Intento de login de secretaria:", { user: secretaryUser, pass: secretaryPassword });
     await new Promise(resolve => setTimeout(resolve, 1000));
-    // En una app real, aquí validarías user/pass
-    // y si es exitoso:
-    setSimulatedRole('secretary'); // Actualiza el rol simulado
+    setSimulatedRole('secretary');
     setIsLoadingSecretary(false);
     router.push('/dashboard');
   };
@@ -126,7 +124,7 @@ export default function LoginPage() {
               )}
             </Button>
             <CardDescription className="text-xs text-muted-foreground text-center mt-2">
-              (Para administradores y acceso a Google Drive)
+              (Para administradores)
             </CardDescription>
           </div>
 
@@ -164,7 +162,6 @@ export default function LoginPage() {
                 {isLoadingSecretary ? 'Ingresando...' : 'Iniciar Sesión'}
               </Button>
             </form>
-            {/* Podríamos añadir un enlace de "Olvidé mi contraseña" aquí en el futuro */}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col items-center p-6 pt-2">
@@ -174,6 +171,9 @@ export default function LoginPage() {
           <p className="mt-4 text-xs text-muted-foreground/70">
             &copy; {new Date().getFullYear()} MedLog. Todos los derechos reservados.
           </p>
+          <Link href="/superadmin/login" className="mt-3 text-xs text-muted-foreground/50 hover:text-muted-foreground/70 hover:underline">
+            SuperAdmin
+          </Link>
         </CardFooter>
       </Card>
     </div>
