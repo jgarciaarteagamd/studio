@@ -9,10 +9,10 @@ import { FileUploadSection } from "@/components/patients/FileUploadSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { getPatientById, getPatientFullName, calculateAge, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS, updatePatient as mockUpdatePatient } from "@/lib/mock-data";
+import { getPatientById, getPatientFullName, calculateAge, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays, ClipboardList, FolderOpen } from "lucide-react";
+import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays, ClipboardList, FolderOpen, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -66,6 +66,7 @@ export default function PatientDetailPage() {
       if (data.personalDetails !== undefined) {
         const personalDetailsToSave: PersonalDetails = {
           ...data.personalDetails,
+          // Convert Date object from form back to YYYY-MM-DD string for storage/API
           fechaNacimiento: new Date(data.personalDetails.fechaNacimiento).toISOString().split('T')[0],
         };
         updatedPatientData.personalDetails = personalDetailsToSave;
@@ -197,10 +198,12 @@ export default function PatientDetailPage() {
     );
   }
 
-  const patientFormInitialData: PatientFormValues = {
+  // patientFormInitialData should conform to the PatientForm's initialData prop type,
+  // which expects fechaNacimiento as a string (from PatientRecord).
+  // The PatientForm component internally converts this string to a Date object.
+  const patientFormInitialData = {
     personalDetails: {
-        ...patient.personalDetails,
-        fechaNacimiento: new Date(patient.personalDetails.fechaNacimiento), 
+        ...patient.personalDetails, // patient.personalDetails.fechaNacimiento is already a string
     },
     datosFacturacion: patient.datosFacturacion || { ruc: '', direccionFiscal: '', telefonoFacturacion: '', emailFacturacion: '' },
     backgroundInformation: patient.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' },
@@ -214,17 +217,13 @@ export default function PatientDetailPage() {
   const showHistoryTab = isDoctor;
   const showAttachmentsTab = isDoctor || canSecretaryManageAttachments;
 
-  const tabsListGridColsClass = () => {
-    let cols = 0;
-    if (showPatientDataTab) cols++;
-    if (showBackgroundTab) cols++;
-    if (showHistoryTab) cols++;
-    if (showAttachmentsTab) cols++;
-    
-    if (cols <= 1) return "md:grid-cols-1";
-    if (cols === 2) return "md:grid-cols-2";
-    if (cols === 3) return "md:grid-cols-3";
-    return "md:grid-cols-4"; 
+  const tabsListCols = () => {
+    let count = 0;
+    if (showPatientDataTab) count++;
+    if (showBackgroundTab) count++;
+    if (showHistoryTab) count++;
+    if (showAttachmentsTab) count++;
+    return count;
   };
 
 
@@ -244,8 +243,10 @@ export default function PatientDetailPage() {
             {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil: {patient.personalDetails.telefono1}</p>)}
             {patient.personalDetails.telefono2 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono opcional: {patient.personalDetails.telefono2}</p>)}
           </div>
-          {(patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal)) && <Separator className="my-3"/> }
-          {patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal) && (
+          
+          {(patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal)) && 
+            <>
+              <Separator className="my-3"/> 
               <div className="pb-2">
                 <h4 className="text-sm font-medium mb-2 flex items-center"><BuildingIcon className="mr-2 h-4 w-4 text-primary/70" /> Datos de Facturación Rápidos</h4>
                 <div className="text-xs text-muted-foreground space-y-0.5">
@@ -253,17 +254,18 @@ export default function PatientDetailPage() {
                     {patient.datosFacturacion.direccionFiscal && <p>Dirección: {patient.datosFacturacion.direccionFiscal}</p>}
                 </div>
               </div>
-          )}
+            </>
+          }
           <Badge variant="secondary" className="w-fit mt-4">
             Última actualización general: {new Date(patient.updatedAt).toLocaleDateString(currentLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
           </Badge>
         </CardHeader>
       </Card>
-      <Tabs className="w-full">
+      <Tabs className="w-full" defaultValue="personalData">
         <TabsList className={cn(
             "w-full h-auto mb-4 p-1 bg-muted rounded-md",
-            "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
-            tabsListGridColsClass()
+            "grid sm:flex sm:flex-wrap sm:justify-start gap-1",
+            `grid-cols-${Math.min(tabsListCols(), 2)} md:grid-cols-${tabsListCols()}`
             )}>
           {showPatientDataTab && <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2" /> Datos</TabsTrigger>}
           {showBackgroundTab && <TabsTrigger value="backgroundInfo" className="flex-grow md:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2" /> Antecedentes</TabsTrigger> }
@@ -311,7 +313,7 @@ export default function PatientDetailPage() {
                    showPersonalDetailsSection={false}
                    showDatosFacturacionSection={false}
                    showBackgroundInformationSection={true}
-                   allowEditBackgroundInfo={isDoctor}
+                   allowEditBackgroundInfo={isDoctor} // Solo el médico puede editar antecedentes
                  /> 
                </CardContent>
              </Card>
@@ -415,3 +417,4 @@ export default function PatientDetailPage() {
     </div>
 );
 }
+
