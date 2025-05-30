@@ -9,7 +9,7 @@ import { FileUploadSection } from "@/components/patients/FileUploadSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { getPatientById, getPatientFullName, calculateAge, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
+import { getPatientById, getPatientFullName, calculateAge, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS, updatePatient as mockUpdatePatient } from "@/lib/mock-data";
 import type { PatientRecord, Attachment, PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFacturacion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, FileEdit, Paperclip, History, Stethoscope, User, FileTextIcon, BuildingIcon, PhoneCall, Download, CalendarDays, ClipboardList, FolderOpen } from "lucide-react";
@@ -66,7 +66,7 @@ export default function PatientDetailPage() {
       if (data.personalDetails !== undefined) {
         const personalDetailsToSave: PersonalDetails = {
           ...data.personalDetails,
-          fechaNacimiento: new Date(data.personalDetails.fechaNacimiento).toISOString().split('T')[0], // Convert Date to YYYY-MM-DD string
+          fechaNacimiento: new Date(data.personalDetails.fechaNacimiento).toISOString().split('T')[0],
         };
         updatedPatientData.personalDetails = personalDetailsToSave;
       }
@@ -84,7 +84,7 @@ export default function PatientDetailPage() {
       const updatedRecord = await updatePatientRecord(patient.id, updatedPatientData);
 
       if (updatedRecord) {
-        setPatient({...updatedRecord}); // Use spread for new reference to trigger re-render
+        setPatient({...updatedRecord});
         setPatientAge(calculateAge(updatedRecord.personalDetails.fechaNacimiento));
          toast({
           title: "Historial Actualizado",
@@ -113,7 +113,7 @@ export default function PatientDetailPage() {
       const updatedRecord = await addPatientAttachment(patient.id, attachmentData);
   
       if (updatedRecord) {
-        setPatient({...updatedRecord}); // Use spread for new reference
+        setPatient({...updatedRecord}); 
         toast({
           title: "Archivo Adjuntado",
           description: `${file.name} ha sido adjuntado (simulado).`,
@@ -133,7 +133,7 @@ export default function PatientDetailPage() {
       const updatedRecord = await deletePatientAttachments(patient.id, attachmentIdsToDelete);
   
       if (updatedRecord) {
-        setPatient({ ...updatedRecord }); // Use spread for new reference
+        setPatient({ ...updatedRecord });
         toast({
           title: "Adjuntos Eliminados",
           description: `${attachmentIdsToDelete.length} archivo(s) ha(n) sido eliminado(s) (simulado).`,
@@ -154,22 +154,11 @@ export default function PatientDetailPage() {
   };
 
   const handleDownloadConsultationPdf = (encounter: MedicalEncounter, patientName: string) => {
-    let pdfContent = `== CONSULTA MÉDICA ==
-
-`;
-    pdfContent += `Paciente: ${patientName}
-`;
-    pdfContent += `Fecha de Consulta: ${format(new Date(encounter.date), "PPP", { locale: es })}
-
-`;
-    pdfContent += `Detalles de la Consulta:
-${encounter.details}
-
-`;
-    pdfContent += `
-
-Firma del Médico:
-_________________________`;
+    let pdfContent = `== CONSULTA MÉDICA ==\n\n`;
+    pdfContent += `Paciente: ${patientName}\n`;
+    pdfContent += `Fecha de Consulta: ${format(new Date(encounter.date), "PPP", { locale: es })}\n\n`;
+    pdfContent += `Detalles de la Consulta:\n${encounter.details}\n\n`;
+    pdfContent += `\n\nFirma del Médico:\n_________________________`;
 
     const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
     const link = document.createElement('a');
@@ -211,7 +200,7 @@ _________________________`;
   const patientFormInitialData: PatientFormValues = {
     personalDetails: {
         ...patient.personalDetails,
-        fechaNacimiento: patient.personalDetails.fechaNacimiento, // Ensure this is a string as expected by PatientFormValues
+        fechaNacimiento: new Date(patient.personalDetails.fechaNacimiento), 
     },
     datosFacturacion: patient.datosFacturacion || { ruc: '', direccionFiscal: '', telefonoFacturacion: '', emailFacturacion: '' },
     backgroundInformation: patient.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' },
@@ -226,65 +215,65 @@ _________________________`;
   const showAttachmentsTab = isDoctor || canSecretaryManageAttachments;
 
   const tabsListGridColsClass = () => {
-    let cols = 1;
-    if (isDoctor) cols = 4; // Datos, Antecedentes, Historial, Adjuntos
-    else if (canSecretaryManageAttachments) cols = 2; // Datos, Adjuntos
-    // else cols = 1; // Solo Datos
-
-    if (cols === 1) return "md:grid-cols-1";
+    let cols = 0;
+    if (showPatientDataTab) cols++;
+    if (showBackgroundTab) cols++;
+    if (showHistoryTab) cols++;
+    if (showAttachmentsTab) cols++;
+    
+    if (cols <= 1) return "md:grid-cols-1";
     if (cols === 2) return "md:grid-cols-2";
-    // For 3 tabs (not currently a case but for future)
-    // if (cols === 3) return "md:grid-cols-3"; 
-    return "md:grid-cols-4"; // Default for 4 tabs or more
+    if (cols === 3) return "md:grid-cols-3";
+    return "md:grid-cols-4"; 
   };
 
 
   return (
-    <Card className="shadow-lg w-full">
-      <CardHeader>
-        <CardTitle className="text-3xl">{getPatientFullName(patient)}</CardTitle>
-        <div className="text-sm text-muted-foreground space-y-1 mt-1">
-          {patient.personalDetails.documentoIdentidad && (
-              <p className="flex items-center"><FileTextIcon className="mr-2 h-4 w-4 text-primary/70" /> Doc. Identidad: {patient.personalDetails.documentoIdentidad}</p>
-          )}
-          {patientAge && (
-           <p className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary/70" /> Edad: {patientAge}</p>
-          )}
-          {patient.personalDetails.email && (<p className="flex items-center"><User className="mr-2 h-4 w-4 text-primary/70" /> Email: {patient.personalDetails.email}</p>)}
-          {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil: {patient.personalDetails.telefono1}</p>)}
-          {patient.personalDetails.telefono2 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono opcional: {patient.personalDetails.telefono2}</p>)}
-        </div>
-         {(patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal)) && <Separator className="my-3"/> }
-        {patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal) && (
-            <div className="pb-2">
-              <h4 className="text-sm font-medium mb-2 flex items-center"><BuildingIcon className="mr-2 h-4 w-4 text-primary/70" /> Datos de Facturación Rápidos</h4>
-              <div className="text-xs text-muted-foreground space-y-0.5">
-                  {patient.datosFacturacion.ruc && <p>RUC: {patient.datosFacturacion.ruc}</p>}
-                  {patient.datosFacturacion.direccionFiscal && <p>Dirección: {patient.datosFacturacion.direccionFiscal}</p>}
+    <div className="space-y-6 max-w-5xl mx-auto w-full">
+      <Card className="shadow-lg w-full">
+        <CardHeader>
+          <CardTitle className="text-3xl">{getPatientFullName(patient)}</CardTitle>
+          <div className="text-sm text-muted-foreground space-y-1 mt-1">
+            {patient.personalDetails.documentoIdentidad && (
+                <p className="flex items-center"><FileTextIcon className="mr-2 h-4 w-4 text-primary/70" /> Doc. Identidad: {patient.personalDetails.documentoIdentidad}</p>
+            )}
+            {patientAge && (
+             <p className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary/70" /> Edad: {patientAge}</p>
+            )}
+            {patient.personalDetails.email && (<p className="flex items-center"><User className="mr-2 h-4 w-4 text-primary/70" /> Email: {patient.personalDetails.email}</p>)}
+            {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil: {patient.personalDetails.telefono1}</p>)}
+            {patient.personalDetails.telefono2 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono opcional: {patient.personalDetails.telefono2}</p>)}
+          </div>
+          {(patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal)) && <Separator className="my-3"/> }
+          {patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal) && (
+              <div className="pb-2">
+                <h4 className="text-sm font-medium mb-2 flex items-center"><BuildingIcon className="mr-2 h-4 w-4 text-primary/70" /> Datos de Facturación Rápidos</h4>
+                <div className="text-xs text-muted-foreground space-y-0.5">
+                    {patient.datosFacturacion.ruc && <p>RUC: {patient.datosFacturacion.ruc}</p>}
+                    {patient.datosFacturacion.direccionFiscal && <p>Dirección: {patient.datosFacturacion.direccionFiscal}</p>}
+                </div>
               </div>
-            </div>
-        )}
-         <Badge variant="secondary" className="w-fit mt-4">
-          Última actualización general: {new Date(patient.updatedAt).toLocaleDateString(currentLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
-        </Badge>
-      </CardHeader>
-    </Card>
-    <Tabs className="w-full">
-      <TabsList className={cn(
-          "w-full h-auto mb-4 p-1 bg-muted rounded-md",
-          "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
-          tabsListGridColsClass()
-          )}>
-        {showPatientDataTab && <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2" /> Datos</TabsTrigger>}
-        {showBackgroundTab && <TabsTrigger value="backgroundInfo" className="flex-grow md:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2" /> Antecedentes</TabsTrigger> }
-        {showHistoryTab && <TabsTrigger value="encounters" className="flex-grow md:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Historial</TabsTrigger>}
-        {showAttachmentsTab && <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>}
-      </TabsList>
-
+          )}
+          <Badge variant="secondary" className="w-fit mt-4">
+            Última actualización general: {new Date(patient.updatedAt).toLocaleDateString(currentLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
+          </Badge>
+        </CardHeader>
+      </Card>
+      <Tabs className="w-full">
+        <TabsList className={cn(
+            "w-full h-auto mb-4 p-1 bg-muted rounded-md",
+            "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
+            tabsListGridColsClass()
+            )}>
+          {showPatientDataTab && <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2" /> Datos</TabsTrigger>}
+          {showBackgroundTab && <TabsTrigger value="backgroundInfo" className="flex-grow md:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2" /> Antecedentes</TabsTrigger> }
+          {showHistoryTab && <TabsTrigger value="encounters" className="flex-grow md:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Historial</TabsTrigger>}
+          {showAttachmentsTab && <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>}
+        </TabsList>
 
         {showPatientDataTab && (
           <TabsContent value="personalData">
-            <Card className="w-full">
+            <Card className="w-full"> 
               <CardHeader> 
                 <CardTitle>Información Personal y de Facturación</CardTitle>
                 <CardDescription>
@@ -300,7 +289,7 @@ _________________________`;
                   showDatosFacturacionSection={true} 
                   allowEditFacturacionInfo={isDoctor || canSecretaryModifyPatientData}
                   showBackgroundInformationSection={false}
-                  allowEditBackgroundInfo={false} // Antecedentes se editan en su propia pestaña 
+                  allowEditBackgroundInfo={false} 
                 />
               </CardContent>
             </Card>
@@ -322,7 +311,7 @@ _________________________`;
                    showPersonalDetailsSection={false}
                    showDatosFacturacionSection={false}
                    showBackgroundInformationSection={true}
-                   allowEditBackgroundInfo={isDoctor} // Solo el médico puede editar esta sección
+                   allowEditBackgroundInfo={isDoctor}
                  /> 
                </CardContent>
              </Card>
@@ -372,8 +361,7 @@ _________________________`;
                                 <p className="text-sm whitespace-pre-wrap">{encounter.details}</p>
                               ) : (
                                 <p className="text-sm whitespace-pre-wrap truncate line-clamp-3 hover:line-clamp-none transition-all duration-300 ease-in-out">
-                                  {encounter.details.split('
-')[0]}
+                                  {encounter.details.split('\n\n')[0]}
                                 </p>
                               )}
                             </CardContent>
@@ -424,6 +412,6 @@ _________________________`;
             </TabsContent>
         )}
       </Tabs>
-    </>
+    </div>
 );
 }
