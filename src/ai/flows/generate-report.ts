@@ -99,10 +99,12 @@ const generateReportPrompt = ai.definePrompt({
   Teléfono Principal: {{#if personalDetails.telefono1}}{{{personalDetails.telefono1}}}{{else}}No registrado{{/if}}
   Correo Electrónico: {{#if personalDetails.email}}{{{personalDetails.email}}}{{else}}No registrado{{/if}}
 
-  {{#if datosFacturacion.ruc}}
-  **DATOS DE FACTURACIÓN (Si es relevante para el contexto del informe)**
-  RUC: {{{datosFacturacion.ruc}}}
-  Dirección Fiscal: {{{datosFacturacion.direccionFiscal}}}
+  {{#if datosFacturacion}}
+    {{#if datosFacturacion.ruc}}
+    **DATOS DE FACTURACIÓN (Si es relevante para el contexto del informe)**
+    RUC: {{{datosFacturacion.ruc}}}
+    Dirección Fiscal: {{{datosFacturacion.direccionFiscal}}}
+    {{/if}}
   {{/if}}
 
   **ANTECEDENTES Y MEDICACIÓN HABITUAL**

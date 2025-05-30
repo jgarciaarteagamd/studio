@@ -1,4 +1,4 @@
-run bul# Firebase Studio
+buildrun bul# Firebase Studio
 
 This is a NextJS starter in Firebase Studio.
 

@@ -1,3 +1,4 @@
+
 // src/app/dashboard/recipes/new/page.tsx
 "use client";
 
@@ -15,7 +16,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { mockPatients, getPatientById, addRecipeToPatient, getPatientFullName, type PatientRecord, type Recipe, type MedicationItem, calculateAge } from '@/lib/mock-data';
+import { mockPatients, getPatientById, addRecipeToPatient, getPatientFullName, calculateAge } from '@/lib/mock-data';
+import type { PatientRecord, Recipe, MedicationItem } from '@/lib/types';
 import { User, FileText, History, PlusCircle, Search, ListChecks, Pill, ShieldAlert, ClipboardEdit, Trash2, Printer, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -242,7 +244,6 @@ export default function NewRecipePage() {
         <CardContent className="space-y-6">
           {!selectedPatient ? (
             <>
-              
               <div className="flex items-center space-x-2">
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <Input
@@ -380,39 +381,21 @@ export default function NewRecipePage() {
                           <FormLabel className="flex items-center text-lg mb-2"><Pill className="mr-2 h-5 w-5 text-primary" />Medicación</FormLabel>
                           {fields.map((field, index) => (
                             <Card key={field.id} className="w-full mb-4 p-4 relative shadow-sm border">
-                              <FormField
-                                control={form.control}
-                                name={`medications.${index}.drugName`}
-                                render={({ field }) => (
-                                  <FormItem className="w-full">
-                                    <FormLabel>Nombre del Fármaco</FormLabel>
-                                    <FormControl><Input placeholder="Ej: Amoxicilina 500mg" {...field} className="w-full" /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={form.control}
-                                name={`medications.${index}.presentation`}
-                                render={({ field }) => (
-                                  <FormItem className="w-full mt-3">
-                                    <FormLabel>Presentación</FormLabel>
-                                    <FormControl><Input placeholder="Ej: Comprimidos, Jarabe 125mg/5ml" {...field} className="w-full" /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={form.control}
-                                name={`medications.${index}.indications`}
-                                render={({ field }) => (
-                                  <FormItem className="w-full mt-3">
-                                    <FormLabel>Indicaciones (Dosis, frecuencia, duración)</FormLabel>
-                                    <FormControl><Textarea placeholder="Ej: Tomar 1 comprimido cada 8 horas por 7 días." rows={2} {...field} className="w-full" /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                              <FormItem className="w-full">
+                                <FormLabel>Nombre del Fármaco</FormLabel>
+                                <FormControl><Input placeholder="Ej: Amoxicilina 500mg" {...form.register(`medications.${index}.drugName`)} className="w-full" /></FormControl>
+                                <FormMessage>{form.formState.errors.medications?.[index]?.drugName?.message}</FormMessage>
+                              </FormItem>
+                              <FormItem className="w-full mt-3">
+                                <FormLabel>Presentación</FormLabel>
+                                <FormControl><Input placeholder="Ej: Comprimidos, Jarabe 125mg/5ml" {...form.register(`medications.${index}.presentation`)} className="w-full" /></FormControl>
+                                <FormMessage>{form.formState.errors.medications?.[index]?.presentation?.message}</FormMessage>
+                              </FormItem>
+                              <FormItem className="w-full mt-3">
+                                <FormLabel>Indicaciones (Dosis, frecuencia, duración)</FormLabel>
+                                <FormControl><Textarea placeholder="Ej: Tomar 1 comprimido cada 8 horas por 7 días." rows={2} {...form.register(`medications.${index}.indications`)} className="w-full" /></FormControl>
+                                <FormMessage>{form.formState.errors.medications?.[index]?.indications?.message}</FormMessage>
+                              </FormItem>
                               {fields.length > 1 && (
                                 <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="absolute top-3 right-3 text-destructive hover:bg-destructive/10 h-7 w-7">
                                   <Trash2 className="h-4 w-4" />
@@ -482,3 +465,5 @@ export default function NewRecipePage() {
     </div>
   );
 }
+
+    
