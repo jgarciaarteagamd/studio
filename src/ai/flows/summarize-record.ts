@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Summarizes a patient's medical record using AI.
@@ -15,11 +16,11 @@ import type { PersonalDetails, BackgroundInformation, MedicalEncounter } from '@
 const PersonalDetailsSchema = z.object({
   nombres: z.string(),
   apellidos: z.string(),
-  documentoIdentidad: z.string().optional(),
+  documentoIdentidad: z.string().nullable().optional(),
   fechaNacimiento: z.string(), // Keep as string for AI, will be ISO date
-  telefono1: z.string().optional(),
-  telefono2: z.string().optional(),
-  email: z.string().email().optional(),
+  telefono1: z.string().nullable().optional(),
+  telefono2: z.string().nullable().optional(),
+  email: z.string().email("Formato de correo electrónico inválido.").nullable().optional(),
 });
 
 const BackgroundInformationSchema = z.object({
@@ -60,10 +61,16 @@ function formatEncountersForPrompt(encounters: MedicalEncounter[]): string {
 
 export async function summarizeRecord(input: Omit<SummarizeRecordInput, 'formattedMedicalEncounters'>): Promise<SummarizeRecordOutput> {
   const formattedEncounters = formatEncountersForPrompt(input.medicalEncounters);
-  return summarizeRecordFlow({ ...input, formattedMedicalEncounters: formattedEncounters });
+  const flowInput: SummarizeRecordInput = {
+    personalDetails: input.personalDetails,
+    backgroundInformation: input.backgroundInformation,
+    medicalEncounters: input.medicalEncounters,
+    formattedMedicalEncounters: formattedEncounters
+  };
+  return summarizeRecordFlow(flowInput);
 }
 
-const prompt = ai.definePrompt({
+const summarizeRecordPrompt = ai.definePrompt({
   name: 'summarizeRecordPrompt',
   input: {schema: SummarizeRecordInputSchema},
   output: {schema: SummarizeRecordOutputSchema},
@@ -101,7 +108,7 @@ const summarizeRecordFlow = ai.defineFlow(
     outputSchema: SummarizeRecordOutputSchema,
   },
   async (input: SummarizeRecordInput) => {
-    const {output} = await prompt(input);
+    const {output} = await summarizeRecordPrompt(input);
     return output!;
   }
 );

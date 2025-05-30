@@ -154,11 +154,22 @@ export default function PatientDetailPage() {
   };
 
   const handleDownloadConsultationPdf = (encounter: MedicalEncounter, patientName: string) => {
-    let pdfContent = `== CONSULTA MÉDICA ==\n\n`;
-    pdfContent += `Paciente: ${patientName}\n`;
-    pdfContent += `Fecha de Consulta: ${format(new Date(encounter.date), "PPP", { locale: es })}\n\n`;
-    pdfContent += `Detalles de la Consulta:\n${encounter.details}\n\n`;
-    pdfContent += `\n\nFirma del Médico:\n_________________________`;
+    let pdfContent = `== CONSULTA MÉDICA ==
+
+`;
+    pdfContent += `Paciente: ${patientName}
+`;
+    pdfContent += `Fecha de Consulta: ${format(new Date(encounter.date), "PPP", { locale: es })}
+
+`;
+    pdfContent += `Detalles de la Consulta:
+${encounter.details}
+
+`;
+    pdfContent += `
+
+Firma del Médico:
+_________________________`;
 
     const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
     const link = document.createElement('a');
@@ -200,7 +211,7 @@ export default function PatientDetailPage() {
   const patientFormInitialData: PatientFormValues = {
     personalDetails: {
         ...patient.personalDetails,
-        fechaNacimiento: new Date(patient.personalDetails.fechaNacimiento), // Convert string to Date for form
+        fechaNacimiento: patient.personalDetails.fechaNacimiento, // Ensure this is a string as expected by PatientFormValues
     },
     datosFacturacion: patient.datosFacturacion || { ruc: '', direccionFiscal: '', telefonoFacturacion: '', emailFacturacion: '' },
     backgroundInformation: patient.backgroundInformation || { personalHistory: '', allergies: '', habitualMedication: '' },
@@ -229,74 +240,67 @@ export default function PatientDetailPage() {
 
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto w-full">
-       <Button variant="outline" size="sm" asChild className="mb-4">
-        <Link href="/dashboard/patients">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver a Pacientes
-        </Link>
-      </Button>
-      <Card className="shadow-lg w-full">
-        <CardHeader>
-          <CardTitle className="text-3xl">{getPatientFullName(patient)}</CardTitle>
-          <div className="text-sm text-muted-foreground space-y-1 mt-1">
-            {patient.personalDetails.documentoIdentidad && (
-                <p className="flex items-center"><FileTextIcon className="mr-2 h-4 w-4 text-primary/70" /> Doc. Identidad: {patient.personalDetails.documentoIdentidad}</p>
-            )}
-            {patientAge && (
-             <p className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary/70" /> Edad: {patientAge}</p>
-            )}
-            {patient.personalDetails.email && (<p className="flex items-center"><User className="mr-2 h-4 w-4 text-primary/70" /> Email: {patient.personalDetails.email}</p>)}
-            {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil: {patient.personalDetails.telefono1}</p>)}
-            {patient.personalDetails.telefono2 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono opcional: {patient.personalDetails.telefono2}</p>)}
-          </div>
-           {(patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal)) && <Separator className="my-3"/> }
-          {patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal) && (
-              <div className="pb-2">
-                <h4 className="text-sm font-medium mb-2 flex items-center"><BuildingIcon className="mr-2 h-4 w-4 text-primary/70" /> Datos de Facturación Rápidos</h4>
-                <div className="text-xs text-muted-foreground space-y-0.5">
-                    {patient.datosFacturacion.ruc && <p>RUC: {patient.datosFacturacion.ruc}</p>}
-                    {patient.datosFacturacion.direccionFiscal && <p>Dirección: {patient.datosFacturacion.direccionFiscal}</p>}
-                </div>
-              </div>
+    <Card className="shadow-lg w-full">
+      <CardHeader>
+        <CardTitle className="text-3xl">{getPatientFullName(patient)}</CardTitle>
+        <div className="text-sm text-muted-foreground space-y-1 mt-1">
+          {patient.personalDetails.documentoIdentidad && (
+              <p className="flex items-center"><FileTextIcon className="mr-2 h-4 w-4 text-primary/70" /> Doc. Identidad: {patient.personalDetails.documentoIdentidad}</p>
           )}
-           <Badge variant="secondary" className="w-fit mt-4">
-            Última actualización general: {new Date(patient.updatedAt).toLocaleDateString(currentLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
-          </Badge>
-        </CardHeader>
-      </Card>
+          {patientAge && (
+           <p className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary/70" /> Edad: {patientAge}</p>
+          )}
+          {patient.personalDetails.email && (<p className="flex items-center"><User className="mr-2 h-4 w-4 text-primary/70" /> Email: {patient.personalDetails.email}</p>)}
+          {patient.personalDetails.telefono1 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono móvil: {patient.personalDetails.telefono1}</p>)}
+          {patient.personalDetails.telefono2 && (<p className="flex items-center"><PhoneCall className="mr-2 h-4 w-4 text-primary/70" /> Teléfono opcional: {patient.personalDetails.telefono2}</p>)}
+        </div>
+         {(patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal)) && <Separator className="my-3"/> }
+        {patient.datosFacturacion && (patient.datosFacturacion.ruc || patient.datosFacturacion.direccionFiscal) && (
+            <div className="pb-2">
+              <h4 className="text-sm font-medium mb-2 flex items-center"><BuildingIcon className="mr-2 h-4 w-4 text-primary/70" /> Datos de Facturación Rápidos</h4>
+              <div className="text-xs text-muted-foreground space-y-0.5">
+                  {patient.datosFacturacion.ruc && <p>RUC: {patient.datosFacturacion.ruc}</p>}
+                  {patient.datosFacturacion.direccionFiscal && <p>Dirección: {patient.datosFacturacion.direccionFiscal}</p>}
+              </div>
+            </div>
+        )}
+         <Badge variant="secondary" className="w-fit mt-4">
+          Última actualización general: {new Date(patient.updatedAt).toLocaleDateString(currentLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
+        </Badge>
+      </CardHeader>
+    </Card>
+    <Tabs className="w-full">
+      <TabsList className={cn(
+          "w-full h-auto mb-4 p-1 bg-muted rounded-md",
+          "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
+          tabsListGridColsClass()
+          )}>
+        {showPatientDataTab && <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2" /> Datos</TabsTrigger>}
+        {showBackgroundTab && <TabsTrigger value="backgroundInfo" className="flex-grow md:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2" /> Antecedentes</TabsTrigger> }
+        {showHistoryTab && <TabsTrigger value="encounters" className="flex-grow md:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Historial</TabsTrigger>}
+        {showAttachmentsTab && <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>}
+      </TabsList>
 
-      <Tabs defaultValue="personalData" className="w-full">
-         <TabsList className={cn(
-            "w-full h-auto mb-4 p-1 bg-muted rounded-md",
-            "grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-start gap-1",
-            tabsListGridColsClass()
-            )}>
-          {showPatientDataTab && <TabsTrigger value="personalData" className="flex-grow md:flex-grow-0"><FileEdit className="mr-1 h-4 w-4 sm:mr-2"/> Datos</TabsTrigger>}
-          {showBackgroundTab && <TabsTrigger value="backgroundInfo" className="flex-grow md:flex-grow-0"><ClipboardList className="mr-1 h-4 w-4 sm:mr-2"/> Antecedentes</TabsTrigger>}
-          {showHistoryTab && <TabsTrigger value="encounters" className="flex-grow md:flex-grow-0"><History className="mr-1 h-4 w-4 sm:mr-2"/> Historial</TabsTrigger>}
-          {showAttachmentsTab && <TabsTrigger value="attachments" className="flex-grow md:flex-grow-0"><Paperclip className="mr-1 h-4 w-4 sm:mr-2"/> Adjuntos</TabsTrigger>}
-        </TabsList>
 
         {showPatientDataTab && (
           <TabsContent value="personalData">
             <Card className="w-full">
-              <CardHeader>
+              <CardHeader> 
                 <CardTitle>Información Personal y de Facturación</CardTitle>
                 <CardDescription>
                   Actualice los datos personales, de contacto y facturación del paciente.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent> 
                 <PatientForm
                   onSubmit={handleFormSubmit}
                   initialData={patientFormInitialData}
-                  submitButtonText="Guardar Cambios"
+                  submitButtonText="Guardar Cambios" 
                   showPersonalDetailsSection={true}
-                  showDatosFacturacionSection={true}
+                  showDatosFacturacionSection={true} 
                   allowEditFacturacionInfo={isDoctor || canSecretaryModifyPatientData}
                   showBackgroundInformationSection={false}
-                  allowEditBackgroundInfo={false} // Antecedentes se editan en su propia pestaña
+                  allowEditBackgroundInfo={false} // Antecedentes se editan en su propia pestaña 
                 />
               </CardContent>
             </Card>
@@ -305,12 +309,12 @@ export default function PatientDetailPage() {
 
         {showBackgroundTab && (
            <TabsContent value="backgroundInfo">
-             <Card className="w-full">
-               <CardHeader>
+             <Card className="w-full"> 
+               <CardHeader> 
                  <CardTitle>Antecedentes y Medicación Habitual</CardTitle>
                  <CardDescription>Actualice los antecedentes personales, alergias y medicación habitual del paciente.</CardDescription>
                </CardHeader>
-               <CardContent>
+               <CardContent> 
                  <PatientForm
                    onSubmit={handleFormSubmit}
                    initialData={patientFormInitialData}
@@ -319,7 +323,7 @@ export default function PatientDetailPage() {
                    showDatosFacturacionSection={false}
                    showBackgroundInformationSection={true}
                    allowEditBackgroundInfo={isDoctor} // Solo el médico puede editar esta sección
-                 />
+                 /> 
                </CardContent>
              </Card>
            </TabsContent>
@@ -327,7 +331,7 @@ export default function PatientDetailPage() {
 
         {showHistoryTab && (
             <TabsContent value="encounters">
-              <Card className="w-full">
+              <Card className="w-full"> 
                 <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div className="flex-1">
                     <CardTitle>Historial</CardTitle>
@@ -338,7 +342,7 @@ export default function PatientDetailPage() {
                     Nueva Consulta
                   </Button>
                 </CardHeader>
-                <CardContent>
+                <CardContent> 
                   {patient.medicalEncounters && patient.medicalEncounters.length > 0 ? (
                     <ScrollArea className="h-[600px] pr-4">
                       <div className="space-y-6">
@@ -346,7 +350,7 @@ export default function PatientDetailPage() {
                           .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                           .map((encounter, index) => (
                           <Card key={encounter.id} className="shadow-md">
-                            <CardHeader className="pb-3">
+                            <CardHeader className="pb-3"> 
                               <div className="flex justify-between items-center">
                                 <CardTitle className="text-lg flex items-center">
                                   <CalendarDays className="mr-2 h-5 w-5 text-primary" />
@@ -362,13 +366,14 @@ export default function PatientDetailPage() {
                                     <Download className="h-4 w-4" />
                                 </Button>
                               </div>
-                            </CardHeader>
+                            </CardHeader> 
                             <CardContent>
                               {index === 0 ? (
                                 <p className="text-sm whitespace-pre-wrap">{encounter.details}</p>
                               ) : (
                                 <p className="text-sm whitespace-pre-wrap truncate line-clamp-3 hover:line-clamp-none transition-all duration-300 ease-in-out">
-                                  {encounter.details.split('\n\n')[0]}
+                                  {encounter.details.split('
+')[0]}
                                 </p>
                               )}
                             </CardContent>
@@ -386,11 +391,11 @@ export default function PatientDetailPage() {
 
         {showAttachmentsTab && (
             <TabsContent value="attachments">
-              <Card className="w-full">
+              <Card className="w-full"> 
                 <CardHeader>
                   <CardTitle>Archivos Adjuntos</CardTitle>
                   <CardDescription>Administre archivos vinculados a este paciente.</CardDescription>
-                </CardHeader>
+                </CardHeader> 
                 <CardContent className="overflow-hidden">
                   <Dialog open={isAttachmentDialogOpen} onOpenChange={setIsAttachmentDialogOpen}>
                     <DialogTrigger asChild>
@@ -411,7 +416,7 @@ export default function PatientDetailPage() {
                           onFileUpload={handleFileUpload}
                           onDeleteAttachments={handleDeleteAttachments}
                         />
-                      </div>
+                      </div> 
                     </DialogContent>
                   </Dialog>
                 </CardContent>
@@ -419,6 +424,6 @@ export default function PatientDetailPage() {
             </TabsContent>
         )}
       </Tabs>
-    </div>
-  );
+    </>
+);
 }

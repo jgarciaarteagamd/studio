@@ -1,6 +1,5 @@
-// src/ai/flows/generate-report.ts
-'use server';
 
+'use server';
 /**
  * @fileOverview Generates a patient report from structured data.
  *
@@ -17,18 +16,18 @@ import type { PersonalDetails, BackgroundInformation, MedicalEncounter, DatosFac
 const PersonalDetailsSchema = z.object({
   nombres: z.string(),
   apellidos: z.string(),
-  documentoIdentidad: z.string().optional(),
+  documentoIdentidad: z.string().nullable().optional(),
   fechaNacimiento: z.string(), // Keep as string for AI, will be ISO date
-  telefono1: z.string().optional(),
-  telefono2: z.string().optional(),
-  email: z.string().email().optional(),
+  telefono1: z.string().nullable().optional(),
+  telefono2: z.string().nullable().optional(),
+  email: z.string().email("Formato de correo electrónico inválido.").nullable().optional(),
 });
 
 const DatosFacturacionSchema = z.object({
-  ruc: z.string().optional(),
-  direccionFiscal: z.string().optional(),
-  telefonoFacturacion: z.string().optional(),
-  emailFacturacion: z.string().email().optional(),
+  ruc: z.string().nullable().optional(),
+  direccionFiscal: z.string().nullable().optional(),
+  telefonoFacturacion: z.string().nullable().optional(),
+  emailFacturacion: z.string().email("Formato de correo electrónico inválido.").nullable().optional(),
 }).optional().nullable();
 
 
@@ -75,7 +74,14 @@ ${enc.details}
 
 export async function generateReport(input: Omit<GenerateReportInput, 'formattedMedicalEncounters'>): Promise<GenerateReportOutput> {
   const formattedEncounters = formatEncountersForReport(input.medicalEncounters);
-  return generateReportFlow({ ...input, formattedMedicalEncounters: formattedEncounters });
+  const flowInput: GenerateReportInput = {
+    personalDetails: input.personalDetails,
+    datosFacturacion: input.datosFacturacion,
+    backgroundInformation: input.backgroundInformation,
+    medicalEncounters: input.medicalEncounters,
+    formattedMedicalEncounters: formattedEncounters
+  };
+  return generateReportFlow(flowInput);
 }
 
 const generateReportPrompt = ai.definePrompt({
