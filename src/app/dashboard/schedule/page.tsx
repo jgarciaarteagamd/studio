@@ -1,3 +1,4 @@
+
 // src/app/dashboard/schedule/page.tsx
 "use client";
 
@@ -15,7 +16,8 @@ import { Calendar as ShadCalendar } from "@/components/ui/calendar";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { mockPatients, getAppointments, addAppointment, type Appointment, type PatientRecord, getPatientFullName, updateAppointmentStatus as apiUpdateAppointmentStatus, deleteAppointment as apiDeleteAppointment, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
+import { mockPatients, getAppointments, addAppointment, getPatientFullName, updateAppointmentStatus as apiUpdateAppointmentStatus, deleteAppointment as apiDeleteAppointment, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
+import type { Appointment, PatientRecord } from "@/lib/types"; // Corrected import
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Calendar as CalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff, CalendarDays } from "lucide-react";
 import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
@@ -659,3 +661,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
