@@ -17,14 +17,15 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { mockPatients, getAppointments, addAppointment, getPatientFullName, updateAppointmentStatus as apiUpdateAppointmentStatus, deleteAppointment as apiDeleteAppointment, SIMULATED_CURRENT_ROLE, SIMULATED_SECRETARY_PERMISSIONS } from "@/lib/mock-data";
-import type { Appointment, PatientRecord } from "@/lib/types"; // Corrected import
+import type { Appointment, PatientRecord } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Calendar as CalendarIcon, Clock, User, Edit3, Trash2, CheckCircle, AlertCircle, XCircle, CalendarClock, Lock, ShieldOff, CalendarDays } from "lucide-react";
-import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameMonth, isPast, isToday, isSameDay } from "date-fns";
+import { format, parseISO, setHours, setMinutes, startOfDay, startOfMonth, isSameDay, isSameMonth, isPast, isToday } from "date-fns";
 import { es } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 import { DayAppointmentsSidebar } from "@/components/schedule/DayAppointmentsSidebar";
 
+import type { DayModifiers } from 'react-day-picker';
 const appointmentFormSchema = z.object({
   patientId: z.string().optional(),
   date: z.date({ required_error: "La fecha es obligatoria." }),
@@ -239,10 +240,11 @@ export default function SchedulePage() {
     return appointments.map(app => parseISO(app.dateTime));
   }, [appointments]);
 
-  const calendarModifiers = {
-    hasAppointments: daysWithAppointments,
-    selected: selectedCalendarDay || undefined,
-  };
+  const calendarModifiers: DayModifiers = { // Cast to DayModifiers type
+ hasAppointments: daysWithAppointments,
+ ...(selectedCalendarDay && { selected: selectedCalendarDay }), // Conditionally include selected
+
+  }; 
 
   const calendarModifiersClassNames = {
     hasAppointments: 'day-with-appointments',
@@ -487,40 +489,11 @@ export default function SchedulePage() {
                 modifiers={calendarModifiers}
                 modifiersClassNames={calendarModifiersClassNames}
                 locale={es}
-                classNames={{
-                  caption_label: "text-lg font-medium",
-                  head_cell: cn("text-muted-foreground rounded-md flex-1 min-w-0 font-normal text-xs sm:text-sm p-0 text-center", "h-8 sm:h-10 md:h-12"),
-                  cell: cn("flex-1 min-w-0 text-center text-xs sm:text-sm p-0 relative flex items-center justify-center", "h-8 sm:h-10 md:h-12"),
-                  day: (date, modifiers, dayProps) => {
-                    let klasses = cn(
-                      "h-full w-full p-0 font-normal flex items-center justify-center", // Removido buttonVariants
-                      "text-foreground" // Asegurar color de texto
-                    );
-                  
-                    if (modifiers.outside || modifiers.disabled) {
-                      klasses = cn(klasses, "text-muted-foreground opacity-50");
-                    } else {
-                      // Estilo de Selección
-                      if (modifiers.selected) {
-                        klasses = cn(klasses, "bg-primary/70 text-foreground !h-6 !w-6 sm:!h-7 sm:!w-7 rounded-full");
-                      }
-                      // Estilo de Hoy (si no está seleccionado)
-                      else if (modifiers.today) {
-                        klasses = cn(klasses, "ring-1 ring-primary rounded-full text-foreground");
-                      }
-                      // Estilo de Hover (para días normales, interactivos)
-                      else if (dayProps.onPointerEnter) {
-                        klasses = cn(klasses, "hover:bg-muted hover:text-foreground hover:!h-6 hover:!w-6 sm:hover:!h-7 sm:!w-7 hover:rounded-full");
-                      }
-                    }
-                    return klasses;
-                  },
-                }}
+                
               />
             </div>
           </CardContent>
         </Card>
-
         <DayAppointmentsSidebar
           isOpen={isDaySidebarOpen}
           onOpenChange={setIsDaySidebarOpen}

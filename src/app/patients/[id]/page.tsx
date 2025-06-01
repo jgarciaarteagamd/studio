@@ -7,12 +7,13 @@ import { PatientForm } from "@/components/patients/PatientForm";
 import { FileUploadSection } from "@/components/patients/FileUploadSection";
 import { ReportGenerationSection } from "@/components/patients/ReportGenerationSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import { getPatientById, updatePatient } from "@/lib/mock-data";
-import type { PatientRecord, Attachment } from "@/lib/types";
+import type { PatientRecord, Attachment, PersonalDetails, DatosFacturacion, BackgroundInformation } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, FileEdit, Paperclip, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { format, isValid } from "date-fns";
 import Link from "next/link";
 
 export default function PatientDetailPage() {
@@ -21,7 +22,15 @@ export default function PatientDetailPage() {
   const { toast } = useToast();
   const [patient, setPatient] = useState<PatientRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false); // State for deletion loading
+
   const [currentLocale, setCurrentLocale] = useState('es-ES'); // Default to Spanish
+
+  // Helper to get full name, assuming personalDetails has nombres and apellidos
+  const getPatientFullName = (patient: PatientRecord | null) => {
+    if (!patient?.personalDetails) return "Paciente Desconocido";
+    return `${patient.personalDetails.nombres || ''} ${patient.personalDetails.apellidos || ''}`.trim();
+  };
 
   const patientId = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -45,14 +54,59 @@ export default function PatientDetailPage() {
     }
   }, [patientId, router, toast]);
 
-  const handleFormSubmit = (data: Omit<PatientRecord, 'id' | 'createdAt' | 'updatedAt'>) => {
+  // Define the type for data received directly from the form
+  interface PatientFormData {
+ personalDetails: Omit<PersonalDetails, 'fechaNacimiento'> & { fechaNacimiento: Date };
+    datosFacturacion?: DatosFacturacion | null;
+    backgroundInformation?: BackgroundInformation | null;
+  }
+
+  const handleFormSubmit = async (data: PatientFormData) => {
+    const formattedData = {
+      ...data,
+      personalDetails: data.personalDetails.fechaNacimiento && isValid(new Date(data.personalDetails.fechaNacimiento)) ?
+ {
+        ...data.personalDetails,
+        fechaNacimiento: format(new Date(data.personalDetails.fechaNacimiento), 'yyyy-MM-dd'),
+      } :
+ {
+        ...data.personalDetails,
+        fechaNacimiento: format(new Date(data.personalDetails.fechaNacimiento), 'yyyy-MM-dd'), // Should this fallback to data.personalDetails?
+      },
+    };
+
     if (patient) {
-      const updatedRecord = updatePatient(patient.id, data);
+      const updatedRecord = updatePatient(patient.id, formattedData);
       setPatient(updatedRecord || patient); // Update local state
       toast({
         title: "Historial Actualizado",
-        description: `El historial de ${patient.name} ha sido actualizado exitosamente.`,
+        description: `El historial de ${getPatientFullName(patient)} ha sido actualizado exitosamente.`,
       });
+    }
+  };
+
+  const handleDeleteAttachments = async (attachmentIds: string[]) => {
+    if (!patient) return;
+
+    setIsDeleting(true);
+    try {
+      // Mock deletion: Filter out the attachments to be deleted
+      const updatedAttachments = patient.attachments.filter(
+        (attachment) => !attachmentIds.includes(attachment.id)
+      );
+
+      // Update the patient record with the remaining attachments
+      const updatedRecord = updatePatient(patient.id, { attachments: updatedAttachments });
+      setPatient(updatedRecord || patient); // Update local state
+
+      toast({
+        title: "Archivos Eliminados",
+        description: `${attachmentIds.length} archivo(s) adjunto(s) han sido eliminados.`,
+      });
+    } catch (error) {
+      toast({ title: "Error al eliminar", description: "No se pudieron eliminar los archivos.", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -76,6 +130,7 @@ export default function PatientDetailPage() {
     }
   };
 
+  // Use conditional rendering within a single return statement
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -105,9 +160,9 @@ export default function PatientDetailPage() {
       </Button>
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-3xl">{patient.name}</CardTitle>
-          <CardDescription>
-            Fecha de Nacimiento: {new Date(patient.dateOfBirth).toLocaleDateString(currentLocale)} | Contacto: {patient.contactInfo}
+          <CardTitle className="text-3xl">{getPatientFullName(patient)}</CardTitle>
+          <CardDescription className="text-lg font-medium">
+ Fecha de Nacimiento: {new Date(patient.personalDetails.fechaNacimiento).toLocaleDateString(currentLocale)} | Contacto: {patient.personalDetails.telefono1}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -145,6 +200,7 @@ export default function PatientDetailPage() {
               <FileUploadSection 
                 attachments={patient.attachments} 
                 onFileUpload={handleFileUpload} 
+                onDeleteAttachments={handleDeleteAttachments}
               />
             </CardContent>
           </Card>
