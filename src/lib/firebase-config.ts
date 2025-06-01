@@ -1,10 +1,11 @@
 // src/lib/firebase-config.ts
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore"; // Importamos Firestore
 
 // Configuración para el proyecto "endocloud-notes"
 const firebaseConfig = {
-  apiKey: "AIzaSyC-7cWhzO7AS0smYySv6MG-m8qw95FzzVE",
+  apiKey: "AIzaSyC-7cWhzO7AS0smYySv6MG-m8qw95FzzVE", // **¡Importante! Considera usar variables de entorno para esto en producción.**
   authDomain: "endocloud-notes.firebaseapp.com",
   projectId: "endocloud-notes",
   storageBucket: "endocloud-notes.appspot.com", // Corregido al formato .appspot.com
@@ -15,6 +16,7 @@ const firebaseConfig = {
 
 let app: FirebaseApp;
 let auth: Auth;
+let db: Firestore; // Declaramos la variable para Firestore
 
 if (getApps().length === 0) {
   app = initializeApp(firebaseConfig);
@@ -23,5 +25,6 @@ if (getApps().length === 0) {
 }
 
 auth = getAuth(app);
+db = getFirestore(app); // Inicializamos Firestore
 
-export { app, auth };
+export { app, auth, db }; // Exportamos 'db' también
